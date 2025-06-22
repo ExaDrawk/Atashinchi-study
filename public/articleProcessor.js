@@ -322,62 +322,173 @@ function showQAPopup(qaIndex, qNumber) {
     }
     
     // 既存のポップアップを削除
-    const existingPopup = document.getElementById('qa-popup');
-    if (existingPopup) {
-        existingPopup.remove();
+    document.querySelectorAll('.qa-ref-popup').forEach(el => el.remove());
+    
+    // 一意のポップアップIDを生成
+    const popupId = `qa-popup-${qaIndex}-${Date.now()}`;
+    
+    // ポップアップ状態を保存
+    if (window.qaPopupState) {
+        window.qaPopupState.savePopup(popupId, qaIndex, qNumber);
     }
     
-    // ポップアップ作成
-    const popup = document.createElement('div');
-    popup.id = 'qa-popup';
-    popup.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in';
+    // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
+    let qaQuestionWithArticleRefs = processArticleReferences(qaData.question, window.currentCaseData.supportedLaws || []);
+    let qaQuestion = processBlankFillText(qaQuestionWithArticleRefs, `qa-q-${qaIndex}`);
     
-    const rankConfig = getRankConfig(qaData.rank);
+    // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
+    let qaAnswerWithArticleRefs = processArticleReferences(qaData.answer, window.currentCaseData.supportedLaws || []);
+    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-${qaIndex}`);
     
-    popup.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto m-4">
-            <div class="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="px-2 py-1 rounded text-xs font-bold ${rankConfig.bgColor} ${rankConfig.textColor}">
-                        ${qaData.rank}ランク
-                    </span>
-                    <h3 class="text-lg font-bold">Q${qNumber}</h3>
-                </div>
-                <button id="close-qa-popup" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+    const popupHtml = `
+        <div id="${popupId}" class="qa-ref-popup">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
+                <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
             </div>
-            <div class="p-6">
-                <div class="mb-6">
-                    <h4 class="text-md font-bold mb-3 text-gray-800">📋 問題</h4>
-                    <p class="bg-gray-50 p-4 rounded-lg border-l-4 ${rankConfig.borderColor}">
-                        ${qaData.question}
-                    </p>
-                </div>
-                <div>
-                    <h4 class="text-md font-bold mb-3 text-gray-800">💡 解答例</h4>
-                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                        ${processAllReferences(qaData.answer, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || [])}
+            <div class="mb-2"><span class="font-bold">問題：</span>${qaQuestion}</div>
+            <div class="mb-2">
+                <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
+                <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">� 全て表示</button>
+                        <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
                     </div>
+                    <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
                 </div>
             </div>
         </div>
     `;
-    
-    document.body.appendChild(popup);
-    
-    // 解答内の参照ボタンにイベントリスナーを設定
-    setupArticleRefButtons(popup);
-    
-    // 閉じるボタンのイベントリスナー
-    document.getElementById('close-qa-popup').addEventListener('click', () => {
-        popup.remove();
-    });
-    
-    // 背景クリックで閉じる
-    popup.addEventListener('click', (e) => {
-        if (e.target === popup) {
-            popup.remove();
+
+    // グローバルポップアップコンテナに追加
+    const globalContainer = document.getElementById('qa-ref-popup-global-container');
+    if (globalContainer) {
+        globalContainer.insertAdjacentHTML('beforeend', popupHtml);
+    } else {
+        document.body.insertAdjacentHTML('beforeend', popupHtml);
+    }
+
+    // ポップアップ内のイベントリスナーを設定
+    const createdPopup = document.getElementById(popupId);
+    if (createdPopup) {
+        // 問題文と解答内の条文参照ボタンのイベントリスナーを設定
+        setupArticleRefButtons(createdPopup);
+        console.log('✅ ポップアップ内の条文ボタン設定完了:', popupId);
+        
+        // 解答表示ボタンのイベントリスナーを設定
+        const answerToggleBtn = createdPopup.querySelector('.toggle-qa-answer-btn');
+        const answerContent = createdPopup.querySelector('.qa-answer-content');
+        if (answerToggleBtn && answerContent) {
+            answerToggleBtn.addEventListener('click', function() {
+                const isHidden = answerContent.classList.toggle('hidden');
+                this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
+                
+                // 解答内の条文参照ボタンも再度有効にする
+                if (!isHidden) {
+                    setupArticleRefButtons(answerContent);
+                }
+            });
         }
-    });
+          // 空欄一括操作ボタンのイベントリスナーを設定
+        const showAllBlanksBtn = createdPopup.querySelector('.show-all-blanks-btn');
+        const hideAllBlanksBtn = createdPopup.querySelector('.hide-all-blanks-btn');
+        
+        if (showAllBlanksBtn && answerContent) {
+            showAllBlanksBtn.addEventListener('click', function() {
+                // 空欄一括表示機能（暫定実装）
+                const blanks = answerContent.querySelectorAll('.blank-text');
+                blanks.forEach(blank => {
+                    if (blank.dataset.answer && blank.dataset.revealed !== 'true') {
+                        blank.click(); // toggleBlankReveal関数を呼び出し
+                    }
+                });
+            });
+        }
+        
+        if (hideAllBlanksBtn && answerContent) {
+            hideAllBlanksBtn.addEventListener('click', function() {
+                // 空欄一括非表示機能（暫定実装）
+                const blanks = answerContent.querySelectorAll('.blank-text');
+                blanks.forEach(blank => {
+                    if (blank.dataset.answer && blank.dataset.revealed === 'true') {
+                        blank.click(); // toggleBlankReveal関数を呼び出し
+                    }
+                });
+            });
+        }
+        
+        // 閉じるボタンのイベントリスナーを設定
+        const closeBtn = createdPopup.querySelector('.qa-ref-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                createdPopup.remove();                // ポップアップ状態からも削除
+                if (window.qaPopupState) {
+                    window.qaPopupState.removePopup(popupId);
+                }
+            });
+        }
+    }
+}
+
+// ★★★ 空欄処理関数 ★★★
+function processBlankFillText(text, uniqueId = '') {
+    if (!text) return text;
+    
+    // {{}}で囲まれた部分を検出する正規表現
+    const blankPattern = /\{\{([^}]+)\}\}/g;
+    let blankCounter = 0;
+    
+    // まず、{{}}の外側にある【】を条文参照ボタン化
+    let outsideBlankText = text;
+    let blankMatches = [];
+    let match;
+    
+    // {{}}の内容を一時的にプレースホルダーに置換
+    while ((match = blankPattern.exec(text)) !== null) {
+        blankMatches.push(match[1]);
+        const placeholder = `__BLANK_${blankMatches.length - 1}__`;
+        outsideBlankText = outsideBlankText.replace(match[0], placeholder);
+    }
+    
+    // プレースホルダーを空欄に戻す
+    for (let i = 0; i < blankMatches.length; i++) {
+        blankCounter++;
+        const content = blankMatches[i];
+        const blankId = `blank-${uniqueId}-${blankCounter}`;
+        
+        // {{}}内に【】が含まれているかチェック
+        const hasArticleRef = /【([^】]+)】/.test(content);
+        let displayContent, dataAnswer;
+        
+        if (hasArticleRef) {
+            // 条文参照がある場合：ボタン化して色を変える
+            displayContent = content.replace(/【([^】]+)】/g, (match, lawText) => {
+                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-name='${lawText}' data-article-ref=''>${lawText}</button>`;
+            });
+            dataAnswer = content.replace(/【([^】]+)】/g, '$1'); // data-answerはプレーンテキスト
+        } else {
+            // 通常の空欄
+            displayContent = content;
+            dataAnswer = content;
+        }
+        
+        const blankLength = Math.max(4, Math.floor(dataAnswer.length * 0.9));
+        const underscores = '＿'.repeat(blankLength);
+        
+        // 条文参照がある場合は背景色を変える
+        const bgClass = hasArticleRef ? 'bg-blue-100 hover:bg-blue-200 border-blue-400 text-blue-800' : 'bg-yellow-100 hover:bg-yellow-200 border-yellow-400 text-yellow-800';
+        
+        const blankHtml = `<span class="blank-container inline-block">
+            <span id="${blankId}" class="blank-text cursor-pointer ${bgClass} px-2 py-1 rounded border-b-2 font-bold transition-all duration-200" 
+                  data-answer="${dataAnswer.replace(/"/g, '&quot;')}" data-display-content="${displayContent.replace(/"/g, '&quot;')}" data-blank-id="${blankId}" onclick="toggleBlankReveal(this)" title="クリックして答えを表示">
+                ${underscores}
+            </span>
+        </span>`;
+        
+        outsideBlankText = outsideBlankText.replace(`__BLANK_${i}__`, blankHtml);
+    }
+    
+    return outsideBlankText;
 }
 
 // ★★★ ランク設定取得関数 ★★★
