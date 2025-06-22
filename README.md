@@ -11,16 +11,28 @@
 - 🤖 **AI法学質問**: Gemini AIによる法学質問サポート
 - 📱 **レスポンシブデザイン**: スマホ・タブレット対応
 
+## 🗂️ 重要な変更履歴
+
+### プロジェクト名変更
+- フォルダ名: `hanrei-app` → `Atashinchi-study`
+- プロジェクト名: `atashinchi-study`
+- 説明: `Atashin'chi Study App - 法学学習アプリ`
+
+### GitHubリポジトリ設定
+- リポジトリ名: `Atashinchi-study`
+- URL: `https://github.com/YOUR_USERNAME/Atashinchi-study.git`
+- ホームページ: `https://atashinchi-study.onrender.com`
+
 ## 🚀 Render.com デプロイ手順
 
 ### 1. GitHubリポジトリの準備
 
 ```bash
 # プロジェクトをGitHubにプッシュ
-git init
-git add .
-git commit -m "Initial commit for Render.com deployment"
-git remote add origin https://github.com/YOUR_USERNAME/atashinchi-study.git
+git init  # (既に実行済み)
+git add .  # (既に実行済み)
+git commit -m "Initial commit for Render.com deployment"  # (既に実行済み)
+git remote add origin https://github.com/YOUR_USERNAME/Atashinchi-study.git
 git push -u origin main
 ```
 
@@ -28,7 +40,7 @@ git push -u origin main
 
 1. [Render.com](https://render.com) にログイン
 2. "New" → "Web Service" を選択
-3. GitHubリポジトリ `atashinchi-study` を選択
+3. GitHubリポジトリ `Atashinchi-study` を選択
 4. 以下の設定を入力:
 
 ```
