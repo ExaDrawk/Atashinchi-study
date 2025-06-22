@@ -76,7 +76,7 @@ npm run dev
 ```
 Atashinchi-study/
 ├── public/              # 静的ファイル（HTML, CSS, JS）
-│   ├── cases/          # ケーススタディデータ
+│   ├── modules/        # ケーススタディデータ
 │   ├── data/           # キャラクター・設定データ
 │   ├── pages/          # ページ別JavaScriptモジュール
 │   └── index.html      # メインHTML

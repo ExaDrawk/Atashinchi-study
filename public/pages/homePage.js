@@ -1,6 +1,6 @@
 // pages/homePage.js - ホームページ専用モジュール（タグ複数選択 + ランク絞り込み対応）
 
-import { caseSummaries, caseLoaders } from '../cases/index.js';
+import { caseSummaries, caseLoaders } from '../modules/index.js';
 
 // ケースデータを実際に読み込んでランク情報を取得する関数
 async function loadCaseWithRank(caseId) {
@@ -438,7 +438,7 @@ async function reloadCaseIndex() {
     try {
         // モジュールキャッシュをクリアするためにタイムスタンプを付与
         const timestamp = Date.now();
-        const indexModule = await import(`../cases/index.js?timestamp=${timestamp}`);
+        const indexModule = await import(`../modules/index.js?timestamp=${timestamp}`);
         
         // グローバルな参照を更新（危険だが必要）
         window.caseSummaries = indexModule.caseSummaries;

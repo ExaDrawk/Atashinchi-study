@@ -1,6 +1,6 @@
 // pages/casePage.js - ケースページ専用モジュール（ランク付け表示対応）
 
-import { caseLoaders } from '../cases/index.js';
+import { caseLoaders } from '../modules/index.js';
 import { characters } from '../data/characters.js';
 import { processArticleReferences, processAllReferences, setupArticleRefButtons, processBoldText } from '../articleProcessor.js';
 import { showArticlePanel } from '../articlePanel.js';
