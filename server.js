@@ -119,11 +119,12 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdn.tailwindcss.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdn.tailwindcss.com", "https://fonts.googleapis.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.tailwindcss.com"],
+            scriptSrcAttr: ["'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'", "https://generativelanguage.googleapis.com"],
-            fontSrc: ["'self'", "https://cdn.jsdelivr.net"]
+            fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com"]
         }
     }
 }));
