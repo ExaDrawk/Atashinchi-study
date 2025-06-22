@@ -463,7 +463,9 @@ function processBlankFillText(text, uniqueId = '') {
         if (hasArticleRef) {
             // 条文参照がある場合：ボタン化して色を変える
             displayContent = content.replace(/【([^】]+)】/g, (match, lawText) => {
-                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-name='${lawText}' data-article-ref=''>${lawText}</button>`;
+                // 法令名と条文番号を分離
+                const lawRef = parseLawReference(lawText);
+                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-name='${lawRef.lawName}' data-article-ref='${lawRef.articleRef}'>${lawText}</button>`;
             });
             dataAnswer = content.replace(/【([^】]+)】/g, '$1'); // data-answerはプレーンテキスト
         } else {
@@ -489,6 +491,27 @@ function processBlankFillText(text, uniqueId = '') {
     }
     
     return outsideBlankText;
+}
+
+/**
+ * 法令参照文字列をパースして法令名と条文番号に分離
+ * @param {string} lawText - 法令参照文字列（例: "民事訴訟法228条4項"）
+ * @returns {{lawName: string, articleRef: string}} 分離された法令名と条文番号
+ */
+function parseLawReference(lawText) {
+    // 正規表現で法令名と条文番号を分離
+    const match = lawText.match(/^(.+?)(\d+条.*)$/);
+    if (match) {
+        return {
+            lawName: match[1],
+            articleRef: match[2]
+        };
+    }
+    // パースできない場合は全体を法令名として扱う
+    return {
+        lawName: lawText,
+        articleRef: ''
+    };
 }
 
 // ★★★ ランク設定取得関数 ★★★
