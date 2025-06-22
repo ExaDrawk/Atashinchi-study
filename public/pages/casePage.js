@@ -143,16 +143,15 @@ function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex }) {
     if (!qa) return;
 
     // 既存のポップアップがあれば削除
-    const existing = document.getElementById(popupId);
-    if (existing) existing.remove();    // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
-    let qaQuestion = processArticleReferences(qa.question, window.currentCaseData.supportedLaws || []);
-    
-    // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
+    const existing = document.getElementById(popupId);    if (existing) existing.remove();    // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
+    let qaQuestionWithArticleRefs = processArticleReferences(qa.question, window.currentCaseData.supportedLaws || []);
+    let qaQuestion = processBlankFillText(qaQuestionWithArticleRefs, `qa-recreate-q-${qaIndex}`);
+      // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
     let qaAnswerWithArticleRefs = processArticleReferences(qa.answer, window.currentCaseData.supportedLaws || []);
     let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-recreate-${qaIndex}`);
 
     const popupHtml = `
-        <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
+        <div id="${popupId}" class="qa-ref-popup">
             <div class="flex justify-between items-center mb-2">
                 <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
                 <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
@@ -1091,15 +1090,16 @@ document.addEventListener('click', function(e) {
         document.querySelectorAll('.qa-ref-popup').forEach(el => el.remove());
         if (window.qaPopupState) {
             window.qaPopupState.clearAll();
-        }          // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
-        let qaQuestion = processArticleReferences(qa.question, window.currentCaseData.supportedLaws || []);
+        }        // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
+        let qaQuestionWithArticleRefs = processArticleReferences(qa.question, window.currentCaseData.supportedLaws || []);
+        let qaQuestion = processBlankFillText(qaQuestionWithArticleRefs, `qa-q-${qaIndex}`);
+        
         // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
         let qaAnswerWithArticleRefs = processArticleReferences(qa.answer, window.currentCaseData.supportedLaws || []);
         let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-${qaIndex}`);
-        
-        console.log('ポップアップ表示:', `Q${qNumber}`, qa.question);
+          console.log('ポップアップ表示:', `Q${qNumber}`, qa.question);
           const popupHtml = `
-            <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
+            <div id="${popupId}" class="qa-ref-popup">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
                     <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>

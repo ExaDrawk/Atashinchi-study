@@ -256,6 +256,37 @@
                 background-color: #dbeafe !important;
                 transform: scale(0.95);
             }
+        }        /* ★★★ QAsポップアップ専用スタイル ★★★ */
+        .qa-ref-popup {
+            position: fixed !important;
+            top: 50% !important;
+            right: 2.5rem !important;
+            transform: translateY(-50%) !important;
+            z-index: 50 !important;
+            max-width: 400px !important;
+            max-height: 80vh !important;
+            overflow-y: auto !important;
+            background: white !important;
+            border: 2px solid #fbbf24 !important;
+            border-radius: 0.75rem !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            padding: 1rem !important;
+        }
+
+        /* ポップアップ内のスクロール */
+        .qa-ref-popup::-webkit-scrollbar {
+            width: 6px;
+        }
+        .qa-ref-popup::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .qa-ref-popup::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        .qa-ref-popup::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
         /* 小さい画面での調整 */
@@ -265,6 +296,12 @@
                 right: 2.5vw;
                 top: 2vh;
                 max-height: 90vh;
+            }
+            
+            .qa-ref-popup {
+                right: 1rem !important;
+                max-width: calc(100vw - 2rem) !important;
+                max-height: 70vh !important;
             }
             
             .virtual-key {
