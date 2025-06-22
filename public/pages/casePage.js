@@ -145,15 +145,10 @@ function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex }) {
     // 既存のポップアップがあれば削除
     const existing = document.getElementById(popupId);
     if (existing) existing.remove();    // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
-    let qaQuestion = qa.question.replace(/(【[^】]+】)/g, match => {
-        const lawText = match.replace(/[【】]/g, '');
-        // 法令名と条文番号を分離
-        const lawRef = parseLawReference(lawText);
-        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-name='${lawRef.lawName}' data-article-ref='${lawRef.articleRef}'>${lawText}</button>`;
-    });
+    let qaQuestion = processArticleReferences(qa.question, window.currentCaseData.supportedLaws || []);
     
     // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
-    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer);
+    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer, window.currentCaseData.supportedLaws || []);
     let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-recreate-${qaIndex}`);
 
     const popupHtml = `
@@ -185,25 +180,20 @@ function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex }) {
     }    // ポップアップ内のイベントリスナーを設定
     const recreatedPopup = document.getElementById(popupId);
     if (recreatedPopup) {
-        // 問題文内の条文参照ボタンのイベントリスナーを設定
-        if (recreatedPopup.querySelectorAll('.article-ref-btn').length > 0) {
-            setupArticleRefButtons(recreatedPopup);
-        }
-          // 解答表示ボタンのイベントリスナーを設定
+        // 問題文と解答内の条文参照ボタンのイベントリスナーを設定
+        setupArticleRefButtons(recreatedPopup);
+        console.log('✅ 復元ポップアップ内の条文ボタン設定完了:', popupId);
+        
+        // 解答表示ボタンのイベントリスナーを設定
         const answerToggleBtn = recreatedPopup.querySelector('.toggle-qa-answer-btn');
         const answerContent = recreatedPopup.querySelector('.qa-answer-content');
         if (answerToggleBtn && answerContent) {
-            // 解答内に条文参照ボタンがある場合のみセットアップ
-            if (answerContent.querySelectorAll('.article-ref-btn').length > 0) {
-                setupArticleRefButtons(answerContent);
-            }
-            
             answerToggleBtn.addEventListener('click', function() {
                 const isHidden = answerContent.classList.toggle('hidden');
                 this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
                 
-                // 解答内の条文参照ボタンも有効にする
-                if (!isHidden && answerContent.querySelectorAll('.article-ref-btn').length > 0) {
+                // 解答内の条文参照ボタンも再度有効にする
+                if (!isHidden) {
                     setupArticleRefButtons(answerContent);
                 }
             });
@@ -224,12 +214,15 @@ function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex }) {
                 toggleAllBlanks(answerContent, false);
             });
         }
-        
-        // 閉じるボタンのイベントリスナーを設定
+          // 閉じるボタンのイベントリスナーを設定
         const closeBtn = recreatedPopup.querySelector('.qa-ref-close-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
                 recreatedPopup.remove();
+                // ポップアップ状態からも削除
+                if (window.qaPopupState) {
+                    window.qaPopupState.removePopup(popupId);
+                }
             });
         }
     }
@@ -901,20 +894,13 @@ window.toggleBlankReveal = function(element) {
         // 表示時の色
         element.className = element.className.replace(/bg-\w+-\d+|border-\w+-\d+|text-\w+-\d+/g, '');
         element.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
-        
-        // 条文参照ボタンがある場合は、そのイベントリスナーを有効化
+          // 条文参照ボタンがある場合は、そのイベントリスナーを有効化
         const articleButtons = element.querySelectorAll('.article-ref-btn');
-        articleButtons.forEach(btn => {
-            if (btn.dataset.lawText) {
-                // 既存のクリックイベントを上書き
-                btn.onclick = function(event) {
-                    event.stopPropagation();
-                    if (window.showArticlePanel) {
-                        window.showArticlePanel(btn.dataset.lawText);
-                    }
-                };
-            }
-        });
+        if (articleButtons.length > 0) {
+            // setupArticleRefButtonsを使って統一的にイベントリスナーを設定
+            setupArticleRefButtons(element);
+            console.log('✅ 空欄内条文ボタンのイベントリスナー設定完了:', articleButtons.length, '個');
+        }
     }
 };
 
@@ -1143,31 +1129,24 @@ document.addEventListener('click', function(e) {
         }        // ポップアップ内の条文参照ボタンのイベントリスナーを設定
         const createdPopup = document.getElementById(popupId);
         if (createdPopup) {
-            // ポップアップ全体に条文参照ボタンがある場合のみセットアップ
-            if (createdPopup.querySelectorAll('.article-ref-btn').length > 0) {
-                setupArticleRefButtons(createdPopup);
-                console.log('ポップアップ内の条文ボタンのイベントリスナー設定完了:', popupId);
-            }
+            // 問題文と解答内すべての条文参照ボタンを設定
+            setupArticleRefButtons(createdPopup);
+            console.log('✅ 新規ポップアップ内の条文ボタン設定完了:', popupId);
             
             // 解答表示ボタンのイベントリスナーを設定
             const answerToggleBtn = createdPopup.querySelector('.toggle-qa-answer-btn');
             const answerContent = createdPopup.querySelector('.qa-answer-content');
             if (answerToggleBtn && answerContent) {
-                // 解答内に条文参照ボタンがある場合のみセットアップ
-                if (answerContent.querySelectorAll('.article-ref-btn').length > 0) {
-                    setupArticleRefButtons(answerContent);
-                }
-                  answerToggleBtn.addEventListener('click', function() {
+                answerToggleBtn.addEventListener('click', function() {
                     const isHidden = answerContent.classList.toggle('hidden');
                     this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
                     
-                    // 解答内の条文参照ボタンも有効にする
-                    if (!isHidden && answerContent.querySelectorAll('.article-ref-btn').length > 0) {
+                    // 解答内の条文参照ボタンも再度有効にする
+                    if (!isHidden) {
                         setupArticleRefButtons(answerContent);
                     }
                 });
-            }
-            
+            }            
             // 空欄一括操作ボタンのイベントリスナーを設定
             const showAllBlanksBtn = createdPopup.querySelector('.show-all-blanks-btn');
             const hideAllBlanksBtn = createdPopup.querySelector('.hide-all-blanks-btn');
