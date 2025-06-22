@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>あたしンち学習アプリ - 法学をもっと身近に！</title>    <!-- Favicon設定（複数形式で確実に適用） -->
+    <link rel="icon" type="image/x-icon" href="/yuzu.ico?v=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/yuzu.ico?v=1.0">
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/yuzu.ico?v=1.0">
+    <link rel="icon" sizes="16x16" href="/yuzu.ico?v=1.0">
+    <link rel="icon" sizes="32x32" href="/yuzu.ico?v=1.0">    <link rel="apple-touch-icon" href="/yuzu.ico?v=1.0">
+    <meta name="msapplication-TileImage" content="/yuzu.ico?v=1.0">
+    <meta name="msapplication-TileColor" content="#FEF3C7">    <meta name="theme-color" content="#FEF3C7">
+    
+    <!-- Tailwind CSS (開発環境用CDN版) -->
+    <!-- 本番環境ではPostCSS plugin版への移行を推奨 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 基本スタイル */
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            background-color: #FFFBEB; 
+        }
+        .main-container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+        }
+
+        /* カードとタブのスタイル */
+        .case-card { 
+            transition: transform 0.2s, box-shadow 0.2s; 
+        }
+        .case-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+        }
+        .tab-button.active { 
+            background-color: #F9A825; 
+            color: white; 
+            font-weight: 700; 
+        }
+
+        /* キャラクターアイコンのスタイル */
+        .character-icon { 
+            width: 80px;
+            height: 80px;
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 3px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
+        /* 吹き出しのスタイル */
+        .chat-bubble { 
+            max-width: 80%; 
+        }
+        .chat-bubble-left { 
+            background-color: #ffffff; 
+        }
+        .chat-bubble-right { 
+            background-color: #D1FAE5; 
+        }
+        
+        /* 画像反転用のクラス */
+        .flipped {
+            transform: scaleX(-1);
+        }
+
+        /* 背景とエリアのスタイル */
+        .prose-bg {
+            background-color: #f9fafb;
+        }
+
+        /* ★★★ 状態管理用のCSS ★★★ */
+        .tab-content-panel {
+            display: block;
+        }
+
+        .tab-content-panel.hidden {
+            display: none;
+        }
+
+        .chat-area {
+            display: none; /* 初期状態では非表示 */
+        }
+        
+        /* ローディングとアニメーションのスタイル */
+        .loader { 
+            border: 4px solid #f3f3f3; 
+            border-radius: 50%; 
+            border-top: 4px solid #F9A825; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+        }
+        
+        .loader-small { 
+            border: 2px solid #f3f3f3; 
+            border-radius: 50%; 
+            border-top: 2px solid #ffffff; 
+            width: 16px; 
+            height: 16px; 
+            animation: spin 1s linear infinite; 
+        }
+        
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AIの回答デコレーション用クラス */
+        .ai-reply-strong { 
+            font-weight: 800; 
+            color: #D97706; 
+        }
+
+        /* ユーティリティクラス */
+        .focus-ring:focus {
+            outline: 2px solid #F9A825;
+            outline-offset: 2px;
+        }
+
+        .btn-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* スクロールバーのカスタマイズ */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }        /* ★★★ 条文表示パネル専用スタイル ★★★ */
+        #article-panel {
+            max-height: 90vh;
+            z-index: 1000;
+        }
+        
+        /* パネルヘッダーの固定 */
+        #article-panel .bg-blue-500 {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            margin: 0;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        
+        /* 条文内容エリアの調整 */
+        #article-content {
+            flex: 1;
+            min-height: 200px;
+            max-height: none;
+        }
+        
+        /* 二重カッコ強調スタイル */
+        .double-parentheses-highlight {
+            font-weight: bold;
+            color: #1d4ed8;
+            background-color: #dbeafe;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        #article-panel .transition-all {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .show-article-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .show-article-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .show-article-btn:hover::before {
+            left: 100%;
+        }
+
+        /* ★★★ バーチャルキーボード専用スタイル ★★★ */
+        .virtual-key {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease-in-out;
+        }
+
+        .virtual-key:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .virtual-key:active {
+            transform: scale(0.95) translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #virtual-backspace, #virtual-clear {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease-in-out;
+        }
+
+        #virtual-backspace:hover, #virtual-clear:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        #virtual-backspace:active, #virtual-clear:active {
+            transform: scale(0.95) translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* タッチデバイス対応 */
+        @media (hover: none) and (pointer: coarse) {
+            .virtual-key, #virtual-backspace, #virtual-clear {
+                padding: 12px;
+                font-size: 18px;
+            }
+            
+            .virtual-key:active, #virtual-backspace:active, #virtual-clear:active {
+                background-color: #dbeafe !important;
+                transform: scale(0.95);
+            }
+        }
+
+        /* 小さい画面での調整 */
+        @media (max-width: 480px) {
+            #article-panel {
+                width: 95vw;
+                right: 2.5vw;
+                top: 2vh;
+                max-height: 90vh;
+            }
+            
+            .virtual-key {
+                padding: 8px;
+                font-size: 16px;
+            }
+            
+            #virtual-backspace, #virtual-clear {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
+
+    </style>
+</head>
+<body class="text-gray-800">
+    
+    <div id="app" class="main-container p-4 md:p-8">
+        <!-- コンテンツはJSによってここに描画されます -->
+    </div>    <script src="app.js" type="module" defer></script>
+    <script src="speedQuiz.js" type="module" defer></script>
+
+</body>
+</html>

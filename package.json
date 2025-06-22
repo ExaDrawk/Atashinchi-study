@@ -1,0 +1,42 @@
+{
+  "name": "atashinchi-study",
+  "version": "1.0.0",
+  "description": "Atashin'chi Study App - 法学学習アプリ",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "npm run build && node server.js",
+    "build": "node scripts/build-case-index.js",
+    "test": "jest",
+    "dev": "node server.js"
+  },
+  "keywords": ["law", "education", "japan", "legal", "atashinchi", "study", "shinnosuke", "family"],
+  "author": "Atashin'chi Study Team",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/Atashinchi-study.git"
+  },
+  "homepage": "https://atashinchi-study.onrender.com",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/Atashinchi-study/issues"
+  },
+  "dependencies": {
+    "@google/genai": "^1.5.1",
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "xml2js": "^0.6.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "express-session": "^1.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^24.1.1"
+  }
+}
