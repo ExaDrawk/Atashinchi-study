@@ -3,7 +3,6 @@
 export const caseSummaries = [
     {
         "id": "1",
-        "originalId": "1",
         "category": "刑法",
         "title": "【刑法各論】窃盗罪を中心とした財産犯の重要論点",
         "citation": "占有の意義 / 不法領得の意思 / 抽象的事実の錯誤",
@@ -15,12 +14,10 @@ export const caseSummaries = [
             "不法領得の意思",
             "自救行為",
             "抽象的事実の錯誤"
-        ],
-        "filePath": "刑法/1.js"
+        ]
     },
     {
         "id": "4.1-4",
-        "originalId": "4.1-4",
         "category": "商法",
         "title": "【会社法】分配可能額と株主の地位",
         "citation": "分配可能額・剰余金配当・株主の地位・名義株",
@@ -30,12 +27,10 @@ export const caseSummaries = [
             "剰余金配当",
             "株主の地位",
             "名義株"
-        ],
-        "filePath": "商法/4.1-4.js"
+        ]
     },
     {
         "id": "4.5-20",
-        "originalId": "4.5-20",
         "category": "商法",
         "title": "【会社法】募集株式の発行と新株予約権",
         "citation": "特に有利な金額・株式発行差止請求・募集株式発行無効・新株予約権",
@@ -46,12 +41,10 @@ export const caseSummaries = [
             "差止請求",
             "発行無効",
             "新株予約権"
-        ],
-        "filePath": "商法/4.5-20.js"
+        ]
     },
     {
         "id": "2",
-        "originalId": "2",
         "category": "地理学",
         "title": "【都市地理学】都市の基本概念と定義",
         "citation": "長田進『総合科目 地理学Ⅰ(2)都市の基本概念』",
@@ -61,12 +54,10 @@ export const caseSummaries = [
             "都市化",
             "集落",
             "国際比較"
-        ],
-        "filePath": "地理学/2.js"
+        ]
     },
     {
         "id": "3",
-        "originalId": "3",
         "category": "地理学",
         "title": "【都市地理学】日本の都市設定基準",
         "citation": "長田進『総合科目 地理学Ⅰ(3)日本の都市の設定基準』",
@@ -78,12 +69,10 @@ export const caseSummaries = [
             "DID",
             "大都市圏",
             "平成の大合併"
-        ],
-        "filePath": "地理学/3.js"
+        ]
     },
     {
         "id": "4",
-        "originalId": "4",
         "category": "地理学",
         "title": "【都市地理学】人口指標と日本の都市・地域問題",
         "citation": "長田進『総合科目 地理学Ⅰ(4)各種人口関連指標から都市・地域問題を考える』",
@@ -95,12 +84,10 @@ export const caseSummaries = [
             "地方消滅",
             "人口ピラミッド",
             "合計特殊出生率"
-        ],
-        "filePath": "地理学/4.js"
+        ]
     },
     {
         "id": "5",
-        "originalId": "5",
         "category": "地理学",
         "title": "【都市地理学】都市の成長と発展段階説",
         "citation": "長田進『総合科目 地理学Ⅰ(5)都市の成長について』",
@@ -113,12 +100,10 @@ export const caseSummaries = [
             "反都市化",
             "機能的都市圏",
             "クラッセン"
-        ],
-        "filePath": "地理学/5.js"
+        ]
     },
     {
-        "id": "地理学-6",
-        "originalId": "6",
+        "id": "6",
         "category": "地理学",
         "title": "【都市地理学】都市システムと順位・規模の法則",
         "citation": "長田進『総合科目 地理学Ⅰ(6)都市の階層性(1)』",
@@ -129,12 +114,10 @@ export const caseSummaries = [
             "プライメイトシティ",
             "階層性",
             "都市雇用圏"
-        ],
-        "filePath": "地理学/6.js"
+        ]
     },
     {
         "id": "fufu-dousei",
-        "originalId": "fufu-dousei",
         "category": "憲法",
         "title": "【憲法・人権】夫婦同氏制度の合憲性（最大判平27.12.16）",
         "citation": "最大判平27.12.16（夫婦別姓訴訟）",
@@ -147,12 +130,10 @@ export const caseSummaries = [
             "13条",
             "14条",
             "24条"
-        ],
-        "filePath": "憲法/fufu-dousei.js"
+        ]
     },
     {
         "id": "seizikenkin",
-        "originalId": "seizikenkin",
         "category": "憲法",
         "title": "【憲法・人権】団体の政治活動と構成員の協力義務",
         "citation": "最判昭50.11.28（国労広島地本事件）、最判平8.3.19（南九州税理士会事件）、最判平14.4.25（群馬司法書士会事件）、最大判昭45.6.24（八幡製鉄政治献金事件）",
@@ -163,12 +144,10 @@ export const caseSummaries = [
             "政治活動の自由",
             "団体自治",
             "強制加入団体"
-        ],
-        "filePath": "憲法/seizikenkin.js"
+        ]
     },
     {
         "id": "0611",
-        "originalId": "0611",
         "category": "朝鮮語",
         "title": "【韓国語文法】間接話法と疑問詞の使い分け",
         "citation": "JLPT N4リーディング対応",
@@ -178,12 +157,10 @@ export const caseSummaries = [
             "疑問詞",
             "省略形",
             "不定表現"
-        ],
-        "filePath": "朝鮮語/0611.js"
+        ]
     },
     {
         "id": "3.75-88",
-        "originalId": "3.75-88",
         "category": "民事訴訟法",
         "title": "【民事訴訟法】書証と文書提出命令",
         "citation": "【民事訴訟法220条】文書提出義務 / 【民事訴訟法228条】成立の真正・二段の推定",
@@ -195,12 +172,10 @@ export const caseSummaries = [
             "二段の推定",
             "職業の秘密",
             "自己利用文書"
-        ],
-        "filePath": "民事訴訟法/3.75-88.js"
+        ]
     },
     {
         "id": "1.65-113",
-        "originalId": "1.65-113",
         "category": "民法",
         "title": "【民法総則】代理制度の重要論点（総合演習）",
         "citation": "無権代理・表見代理・代理権濫用・相続との交錯など",
@@ -213,12 +188,10 @@ export const caseSummaries = [
             "代理権の濫用",
             "相続",
             "意思表示"
-        ],
-        "filePath": "民法/1.65-113.js"
+        ]
     },
     {
         "id": "4.13-23",
-        "originalId": "4.13-23",
         "category": "民法",
         "title": "【民法債権】債権侵害と損害賠償の要件",
         "citation": "不法行為（【民法709条】）・債務不履行（【民法415条】）・損害賠償範囲（【民法416条】）",
@@ -228,12 +201,10 @@ export const caseSummaries = [
             "不法行為",
             "損害賠償",
             "債務不履行"
-        ],
-        "filePath": "民法/4.13-23.js"
+        ]
     },
     {
         "id": "4.24-28",
-        "originalId": "4.24-28",
         "category": "民法",
         "title": "【民法債権】受領遅滞の要件と効果、法的性質",
         "citation": "【民法413条】改正民法と受領遅滞",
@@ -244,12 +215,10 @@ export const caseSummaries = [
             "債務不履行",
             "法定責任説",
             "債務不履行説"
-        ],
-        "filePath": "民法/4.24-28.js"
+        ]
     },
     {
-        "id": "民法-6",
-        "originalId": "6",
+        "id": "6",
         "category": "民法",
         "title": "【民法】契約の成立と効力",
         "citation": "民法522条、526条",
@@ -258,12 +227,10 @@ export const caseSummaries = [
             "契約",
             "成立",
             "効力"
-        ],
-        "filePath": "民法/6.js"
+        ]
     },
     {
         "id": "dairi4",
-        "originalId": "dairi4",
         "category": "民法",
         "title": "【民法・代理】無権代理人が後見人に就任した場合",
         "citation": "最判平成6年9月13日（後見人の追認拒絶事件）",
@@ -273,12 +240,10 @@ export const caseSummaries = [
             "無権代理",
             "後見",
             "信義則"
-        ],
-        "filePath": "民法/dairi4.js"
+        ]
     },
     {
         "id": "houmu5",
-        "originalId": "houmu5",
         "category": "民法",
         "title": "【民法・不法行為】共同不法行為と医療過誤の競合",
         "citation": "最判平成13.3.13（交通事故と医療事故の競合）",
@@ -288,12 +253,10 @@ export const caseSummaries = [
             "共同不法行為",
             "医療過誤",
             "因果関係"
-        ],
-        "filePath": "民法/houmu5.js"
+        ]
     },
     {
         "id": "3-1",
-        "originalId": "3-1",
         "category": "英語",
         "title": "【教育社会学】身体教育学と全面教育化社会",
         "citation": "Basil Bernstein, Marcel Mauss, Body Pedagogics Theory",
@@ -303,12 +266,10 @@ export const caseSummaries = [
             "全面教育化社会",
             "ベルンシュタイン",
             "マルセル・モース"
-        ],
-        "filePath": "英語/3-1.js"
+        ]
     },
     {
-        "id": "英語-6",
-        "originalId": "6",
+        "id": "6",
         "category": "英語",
         "title": "【ジェンダー研究】ジュディス・バトラーのパフォーマティヴィティ理論",
         "citation": "Judith Butler, Gender Trouble (1990), Bodies That Matter (1993)",
@@ -319,12 +280,10 @@ export const caseSummaries = [
             "セックス",
             "ジェンダー",
             "トランスジェンダー"
-        ],
-        "filePath": "英語/6.js"
+        ]
     },
     {
         "id": "10",
-        "originalId": "10",
         "category": "論理学",
         "title": "【論理学】古典論理の自然演繹（否定と背理法）",
         "citation": "論理学I 第10回（小関）",
@@ -334,12 +293,10 @@ export const caseSummaries = [
             "否定",
             "背理法",
             "古典論理"
-        ],
-        "filePath": "論理学/10.js"
+        ]
     },
     {
         "id": "8",
-        "originalId": "8",
         "category": "論理学",
         "title": "【論理学】意味論的タブローと反例の構成",
         "citation": "論理学I 第7回（小関）",
@@ -349,12 +306,10 @@ export const caseSummaries = [
             "反例",
             "妥当性",
             "推論"
-        ],
-        "filePath": "論理学/8.js"
+        ]
     },
     {
         "id": "9",
-        "originalId": "9",
         "category": "論理学",
         "title": "【論理学】古典論理の自然演繹",
         "citation": "論理学I 第9回（小関）",
@@ -364,8 +319,7 @@ export const caseSummaries = [
             "証明図",
             "推論規則",
             "古典論理"
-        ],
-        "filePath": "論理学/9.js"
+        ]
     }
 ];
 export const caseLoaders = {
@@ -376,7 +330,7 @@ export const caseLoaders = {
     '3': () => import('./地理学/3.js'),
     '4': () => import('./地理学/4.js'),
     '5': () => import('./地理学/5.js'),
-    '地理学-6': () => import('./地理学/6.js'),
+    '6': () => import('./地理学/6.js'),
     'fufu-dousei': () => import('./憲法/fufu-dousei.js'),
     'seizikenkin': () => import('./憲法/seizikenkin.js'),
     '0611': () => import('./朝鮮語/0611.js'),
@@ -384,11 +338,11 @@ export const caseLoaders = {
     '1.65-113': () => import('./民法/1.65-113.js'),
     '4.13-23': () => import('./民法/4.13-23.js'),
     '4.24-28': () => import('./民法/4.24-28.js'),
-    '民法-6': () => import('./民法/6.js'),
+    '6': () => import('./民法/6.js'),
     'dairi4': () => import('./民法/dairi4.js'),
     'houmu5': () => import('./民法/houmu5.js'),
     '3-1': () => import('./英語/3-1.js'),
-    '英語-6': () => import('./英語/6.js'),
+    '6': () => import('./英語/6.js'),
     '10': () => import('./論理学/10.js'),
     '8': () => import('./論理学/8.js'),
     '9': () => import('./論理学/9.js')
