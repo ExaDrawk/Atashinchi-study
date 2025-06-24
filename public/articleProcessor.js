@@ -172,6 +172,7 @@ export function setupArticleRefButtons(container) {
     
     console.log('🔧 条文ボタンのイベントリスナー設定開始');
     
+    // ★★★ 条文参照ボタンの設定 ★★★
     const articleRefButtons = container.querySelectorAll('.article-ref-btn');
     console.log(`📋 発見された条文ボタン: ${articleRefButtons.length}個`);
     
@@ -191,8 +192,25 @@ export function setupArticleRefButtons(container) {
         
         console.log(`✅ ボタン ${index + 1} イベントリスナー設定完了`);
     });
+      // ★★★ Q&A参照ボタンの設定 ★★★
+    const qaRefButtons = container.querySelectorAll('.qa-ref-btn');
+    console.log(`📋 発見されたQ&Aボタン: ${qaRefButtons.length}個`);
     
-    console.log('✅ 条文ボタンのイベントリスナー設定完了');
+    qaRefButtons.forEach((button, index) => {
+        console.log(`🔧 Q&Aボタン ${index + 1} 設定中:`, button.id, button.dataset);
+        console.log(`🔧 Q&Aボタン ${index + 1} の要素:`, button);
+        console.log(`🔧 Q&Aボタン ${index + 1} のクラス:`, button.className);
+        
+        // 既存のイベントリスナーを削除
+        button.removeEventListener('click', handleQAButtonClick);
+        
+        // 新しいイベントリスナーを追加
+        button.addEventListener('click', handleQAButtonClick);
+        
+        console.log(`✅ Q&Aボタン ${index + 1} イベントリスナー設定完了`);
+    });
+    
+    console.log('✅ 条文ボタンとQ&Aボタンのイベントリスナー設定完了');
 }
 
 // ★★★ 条文ボタンクリックハンドラー ★★★
@@ -215,9 +233,276 @@ function handleArticleButtonClick(e) {
         });
         return;
     }
-    
-    // 条文表示パネルを開いて、該当する条文をセット
+      // 条文表示パネルを開いて、該当する条文をセット
     showArticlePanelWithPreset(lawName, articleRef);
+}
+
+// ★★★ Q&Aボタンクリックハンドラー ★★★
+function handleQAButtonClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('🔥 Q&Aボタンがクリックされました！', e.target);
+    console.log('🔥 ボタンの全データ:', e.target.dataset);
+    console.log('🔥 ボタンのクラス:', e.target.className);
+    
+    const qaIndex = parseInt(this.dataset.qaIndex);
+    const qNumber = this.dataset.qNumber;
+    const quizIndex = this.dataset.quizIndex || 'global';
+    const subIndex = this.dataset.subIndex || '0';
+    
+    console.log(`🖱️ Q&Aボタンクリック: Q${qNumber} (Index: ${qaIndex})`);
+    console.log(`🔍 ボタンデータ:`, this.dataset);
+    
+    // データ属性が正しく設定されているかチェック
+    if (isNaN(qaIndex) || !qNumber) {
+        console.error('❌ Q&Aボタンのデータ属性が不完全です', {
+            qaIndex,
+            qNumber,
+            allData: this.dataset
+        });
+        return;
+    }
+    
+    // ★★★ 重複クリック防止 ★★★
+    if (this.dataset.clicking === 'true') {
+        console.log('⚠️ 重複クリックを防止しました');
+        return;
+    }
+    this.dataset.clicking = 'true';
+    
+    // Q&Aポップアップを表示
+    try {
+        showQAPopup(qaIndex, qNumber, quizIndex, subIndex);
+    } finally {
+        // 処理完了後にクリック防止フラグを解除
+        setTimeout(() => {
+            this.dataset.clicking = 'false';
+        }, 300);
+    }
+}
+
+// ★★★ Q&Aポップアップ表示関数 ★★★
+function showQAPopup(qaIndex, qNumber, quizIndex, subIndex) {
+    console.log(`🔥 showQAPopup開始: qaIndex=${qaIndex}, qNumber=${qNumber}`);
+    
+    if (!window.currentCaseData || !window.currentCaseData.questionsAndAnswers) {
+        console.error('❌ Q&Aデータが利用できません');
+        console.error('currentCaseData:', window.currentCaseData);
+        return;
+    }
+    
+    console.log(`🔥 Q&Aデータ配列長: ${window.currentCaseData.questionsAndAnswers.length}`);
+    
+    const qa = window.currentCaseData.questionsAndAnswers[qaIndex];
+    if (!qa) {
+        console.error(`❌ インデックス ${qaIndex} のQ&Aが見つかりません`);
+        console.error('利用可能なQ&A:', window.currentCaseData.questionsAndAnswers);
+        return;
+    }
+    
+    console.log(`🔥 Q&Aデータ取得成功:`, qa);
+    
+    const popupId = `qa-popup-${quizIndex}-${subIndex}-${qNumber}`;
+    console.log(`🔥 ポップアップID: ${popupId}`);
+    
+    // ★★★ 既存の同じポップアップがあれば削除（トグル動作） ★★★
+    const existing = document.getElementById(popupId);
+    if (existing) {
+        console.log(`🔥 既存ポップアップを削除（トグル）: ${popupId}`);
+        existing.remove();
+        window.qaPopupState.removePopup(popupId);
+        return; // トグル動作で終了
+    }
+    
+    // ★★★ 他の全てのQ&Aポップアップを閉じる ★★★
+    console.log(`🔥 既存の全Q&Aポップアップを閉じます`);
+    closeAllQAPopups();
+    
+    // ポップアップHTMLを生成
+    console.log(`🔥 ポップアップHTML生成開始`);
+    const popupHtml = createQAPopupHTML(popupId, qa, qNumber, qaIndex);
+    console.log(`🔥 生成されたHTML (最初の200文字):`, popupHtml.substring(0, 200));
+    
+    // グローバルポップアップコンテナに追加
+    const globalContainer = document.getElementById('qa-ref-popup-global-container');
+    if (globalContainer) {
+        console.log(`🔥 グローバルコンテナに追加中`);
+        globalContainer.insertAdjacentHTML('beforeend', popupHtml);
+    } else {
+        console.log(`🔥 グローバルコンテナが見つからないため、bodyに追加`);
+        document.body.insertAdjacentHTML('beforeend', popupHtml);
+    }
+    
+    // ポップアップの状態を保存
+    window.qaPopupState.savePopup(popupId, qaIndex, qNumber, quizIndex, subIndex);
+    
+    // ポップアップ内のイベントリスナーを設定
+    setupQAPopupEvents(popupId);
+    
+    console.log(`✅ Q&Aポップアップ表示完了: ${popupId}`);
+}
+
+// ★★★ Q&AポップアップHTML生成 ★★★
+function createQAPopupHTML(popupId, qa, qNumber, qaIndex) {
+    // 条文参照ボタン化処理
+    let qaQuestion = qa.question.replace(/(【[^】]+】)/g, match => {
+        const lawText = match.replace(/[【】]/g, '');
+        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}'>${lawText}</button>`;
+    });
+    
+    // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
+    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer);
+    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-popup-${qaIndex}`);
+
+    return `
+        <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
+                <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
+            </div>
+            <div class="mb-2"><span class="font-bold">問題：</span>${qaQuestion}</div>
+            <div class="mb-2">
+                <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
+                <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">🔍 全て表示</button>
+                        <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
+                    </div>
+                    <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ★★★ Q&Aポップアップ内のイベントリスナー設定 ★★★
+function setupQAPopupEvents(popupId) {
+    const popup = document.getElementById(popupId);
+    if (!popup) return;
+      // 閉じるボタン
+    const closeBtn = popup.querySelector('.qa-ref-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            console.log(`🗑️ 閉じるボタンクリック: ${popupId}`);
+            popup.remove();
+            window.qaPopupState.removePopup(popupId);
+        });
+    }
+    
+    // 解答表示ボタン
+    const answerToggleBtn = popup.querySelector('.toggle-qa-answer-btn');
+    const answerContent = popup.querySelector('.qa-answer-content');
+    if (answerToggleBtn && answerContent) {
+        // デフォルトで解答が表示されているので、条文参照ボタンを有効にする
+        setupArticleRefButtons(answerContent);
+        
+        answerToggleBtn.addEventListener('click', function() {
+            const isHidden = answerContent.classList.toggle('hidden');
+            this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
+            
+            // 解答内の条文参照ボタンも有効にする
+            if (!isHidden) {
+                setupArticleRefButtons(answerContent);
+            }
+        });
+    }
+    
+    // 空欄一括操作ボタン
+    const showAllBlanksBtn = popup.querySelector('.show-all-blanks-btn');
+    const hideAllBlanksBtn = popup.querySelector('.hide-all-blanks-btn');
+    
+    if (showAllBlanksBtn && answerContent) {
+        showAllBlanksBtn.addEventListener('click', function() {
+            toggleAllBlanks(answerContent, true);
+        });
+    }
+    
+    if (hideAllBlanksBtn && answerContent) {
+        hideAllBlanksBtn.addEventListener('click', function() {
+            toggleAllBlanks(answerContent, false);
+        });
+    }
+}
+
+// ★★★ 空欄一括操作関数（casePage.jsから移動） ★★★
+function toggleAllBlanks(container, reveal) {
+    const blanks = container.querySelectorAll('.blank-text');
+    blanks.forEach(blank => {
+        const currentRevealed = blank.dataset.revealed === 'true';
+        if (reveal && !currentRevealed) {
+            window.toggleBlankReveal(blank);
+        } else if (!reveal && currentRevealed) {
+            window.toggleBlankReveal(blank);
+        }
+    });
+}
+
+// ★★★ 空欄化処理関数（casePage.jsから移動） ★★★
+function processBlankFillText(text, uniqueId = '') {
+    if (!text) return text;
+    
+    // {{}}で囲まれた部分を検出する正規表現
+    const blankPattern = /\{\{([^}]+)\}\}/g;
+    let blankCounter = 0;
+    let processedText = text;
+    
+    // まず、{{}}の外側にある【】を条文参照ボタン化
+    let outsideBlankText = text;
+    let blankMatches = [];
+    let match;
+    
+    // {{}}の内容を一時的にプレースホルダーに置換
+    while ((match = blankPattern.exec(text)) !== null) {
+        blankMatches.push(match[1]);
+        const placeholder = `__BLANK_${blankMatches.length - 1}__`;
+        outsideBlankText = outsideBlankText.replace(match[0], placeholder);
+    }
+    
+    // {{}}の外側の【】を条文参照ボタン化
+    outsideBlankText = outsideBlankText.replace(/【([^】]+)】/g, (match, lawText) => {
+        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
+    });
+    
+    // プレースホルダーを空欄に戻す
+    for (let i = 0; i < blankMatches.length; i++) {
+        blankCounter++;
+        const content = blankMatches[i];
+        const blankId = `blank-${uniqueId}-${blankCounter}`;
+        
+        // {{}}内に【】が含まれているかチェック
+        const hasArticleRef = /【([^】]+)】/.test(content);
+        let displayContent, dataAnswer;
+        
+        if (hasArticleRef) {
+            // 条文参照がある場合：ボタン化して色を変える
+            displayContent = content.replace(/【([^】]+)】/g, (match, lawText) => {
+                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
+            });
+            dataAnswer = content.replace(/【([^】]+)】/g, '$1'); // data-answerはプレーンテキスト
+        } else {
+            // 通常の空欄
+            displayContent = content;
+            dataAnswer = content;
+        }
+        
+        const blankLength = Math.max(4, Math.floor(dataAnswer.length * 0.9));
+        const underscores = '＿'.repeat(blankLength);
+        
+        // 条文参照がある場合は背景色を変える
+        const bgClass = hasArticleRef ? 'bg-blue-100 hover:bg-blue-200 border-blue-400 text-blue-800' : 'bg-yellow-100 hover:bg-yellow-200 border-yellow-400 text-yellow-800';
+        
+        const blankHtml = `<span class="blank-container inline-block">
+            <span id="${blankId}" class="blank-text cursor-pointer ${bgClass} px-2 py-1 rounded border-b-2 font-bold transition-all duration-200" 
+                  data-answer="${dataAnswer.replace(/"/g, '&quot;')}" data-display-content="${displayContent.replace(/"/g, '&quot;')}" data-blank-id="${blankId}" onclick="toggleBlankReveal(this)" title="クリックして答えを表示">
+                ${underscores}
+            </span>
+        </span>`;
+        
+        outsideBlankText = outsideBlankText.replace(`__BLANK_${i}__`, blankHtml);
+    }
+    
+    return outsideBlankText;
 }
 
 // ★★★ デバッグ用：条文検出テスト関数（強化版） ★★★
@@ -304,4 +589,24 @@ export function processBoldText(htmlContent) {
     console.log(`📊 **囲み文字装飾結果: ${matchCount}件を装飾`);
     
     return result;
+}
+
+// ★★★ 全てのQ&Aポップアップを閉じる関数 ★★★
+function closeAllQAPopups() {
+    console.log(`🧹 全Q&Aポップアップを閉じる処理開始`);
+    
+    // DOMから全てのQ&Aポップアップを削除
+    const allQAPopups = document.querySelectorAll('.qa-ref-popup');
+    allQAPopups.forEach(popup => {
+        console.log(`🗑️ ポップアップを削除: ${popup.id}`);
+        popup.remove();
+    });
+    
+    // 状態管理をクリア
+    if (window.qaPopupState) {
+        console.log(`🧹 ポップアップ状態をクリア (${window.qaPopupState.openPopups.length}個)`);
+        window.qaPopupState.clearAll();
+    }
+    
+    console.log(`✅ 全Q&Aポップアップ閉じる処理完了`);
 }

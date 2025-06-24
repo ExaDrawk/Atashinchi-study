@@ -82,8 +82,23 @@ function renderCaseDetail() {
                 <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="essay">✍️ 論文トレーニング</button>
             </div>
             <div id="tab-content"></div>
-        </div>    `;
-    renderTabContent('story');
+        </div>    `;    renderTabContent('story');
+      // ★★★ Mermaid初期化（複数回実行で確実にレンダリング） ★★★
+    setTimeout(() => {
+        console.log('🎨 第1回Mermaid初期化開始');
+        initializeMermaidDiagrams();
+    }, 300);
+    
+    setTimeout(() => {
+        console.log('🎨 第2回Mermaid初期化開始');
+        initializeMermaidDiagrams();
+    }, 800);
+    
+    setTimeout(() => {
+        console.log('🎨 第3回Mermaid初期化開始（最終確認）');
+        initializeMermaidDiagrams();
+    }, 1500);
+    
       // ★★★ スピード条文用データを事前読み込み ★★★
     if (window.currentCaseData) {
         setTimeout(() => {
@@ -105,9 +120,16 @@ window.qaPopupState = {
     },
     removePopup: function(popupId) {
         this.openPopups = this.openPopups.filter(p => p.popupId !== popupId);
-    },
-    clearAll: function() {
+    },    clearAll: function() {
+        console.log(`🧹 Q&Aポップアップ状態をクリア (${this.openPopups.length}個)`);
         this.openPopups = [];
+        
+        // DOM上の全てのQ&Aポップアップも削除
+        const allQAPopups = document.querySelectorAll('.qa-ref-popup');
+        allQAPopups.forEach(popup => {
+            console.log(`🗑️ DOM上のポップアップも削除: ${popup.id}`);
+            popup.remove();
+        });
     },
     restorePopups: function() {
         // 現在開いているポップアップを復元
@@ -308,24 +330,49 @@ export function renderTabContent(tabName) {
             const tabBar = parent.querySelector('.flex.flex-wrap.border-b');
             if (tabBar) tabBar.innerHTML = tabButtons;
         }
-        
-        // 条文参照ボタンのイベントリスナーを設定
+          // 条文参照ボタンのイベントリスナーを設定
         setupArticleRefButtons(contentDiv);
-          // 非同期でクイズとエッセイのコンテンツを初期化
+        
+        // 非同期でクイズとエッセイのコンテンツを初期化
         initializeQuizContent();
         initializeSpeedQuizContent();
         if (hasEssay) initializeEssayContent();
     }
-    
-    // 全てのタブを非表示にする
+      // 全てのタブを非表示にする
     document.querySelectorAll('.tab-content-panel').forEach(panel => {
         panel.classList.add('hidden');
     });
+    
+    // ★★★ タブ切り替え時に全てのQ&Aポップアップを閉じる ★★★
+    if (window.qaPopupState) {
+        console.log(`🧹 タブ切り替えのため全Q&Aポップアップを閉じます: ${tabName}`);
+        window.qaPopupState.clearAll();
+    }
       // 指定されたタブのみを表示
     const targetTab = document.getElementById(`tab-${tabName}-content`);
     if (targetTab) {
         targetTab.classList.remove('hidden');
-        console.log(`✅ タブ表示完了: ${tabName}`);
+        console.log(`✅ タブ表示完了: ${tabName}`);        // ★★★ 条文・Q&Aボタンのイベントリスナーを再設定 ★★★
+        console.log(`🔧 タブ切り替え時のボタン再設定開始: ${tabName}`);
+        const qaButtons = targetTab.querySelectorAll('.qa-ref-btn');
+        console.log(`📋 タブ ${tabName} 内のQ&Aボタン: ${qaButtons.length}個`);
+        setupArticleRefButtons(targetTab);
+        
+        // ★★★ 遅延読み込みされたQ&Aボタンにも対応 ★★★
+        setTimeout(() => {
+            console.log(`🔧 遅延設定: ${tabName}タブの追加Q&Aボタンをチェック`);
+            const newQaButtons = targetTab.querySelectorAll('.qa-ref-btn');
+            console.log(`📋 遅延チェック: ${newQaButtons.length}個のQ&Aボタンを確認`);
+            if (newQaButtons.length !== qaButtons.length) {
+                console.log('🔄 新しいQ&Aボタンが見つかったため、再設定します');
+                setupArticleRefButtons(targetTab);
+            }
+        }, 200);
+        
+        // ★★★ Mermaid図表のレンダリング ★★★
+        setTimeout(() => {
+            initializeMermaidDiagrams();
+        }, 100);
         
         // Q&Aポップアップを復元
         if (window.qaPopupState) {
@@ -750,6 +797,288 @@ async function initializeSpeedQuizContent() {
     }
 }
 
+// ★★★ Mermaid図表初期化関数 ★★★
+function initializeMermaidDiagrams() {
+    console.log('🎨 Mermaid初期化開始');
+    
+    if (typeof mermaid === 'undefined') {
+        console.warn('⚠️ Mermaid.jsが読み込まれていません');
+        return;
+    }
+      try {
+        // 最も基本的なMermaid設定
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: 'M PLUS Rounded 1c, sans-serif',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'linear'
+            },
+            themeVariables: {
+                primaryColor: '#f0f9ff',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#0284c7',
+                lineColor: '#475569',
+                fontSize: '14px'
+            }
+        });
+        
+        // 現在表示されているMermaid要素をレンダリング
+        const mermaidElements = document.querySelectorAll('.mermaid');
+        console.log(`🔍 Mermaid要素を${mermaidElements.length}個発見`);
+        
+        mermaidElements.forEach(async (element, index) => {
+            if (element.getAttribute('data-processed') !== 'true') {
+                const graphDefinition = element.textContent || element.innerText;
+                console.log(`📝 図表定義 #${index}:`, graphDefinition);
+                
+                // 新しいAPIでレンダリング
+                try {
+                    const graphId = `graph-${Date.now()}-${index}`;
+                    const { svg } = await mermaid.render(graphId, graphDefinition);
+                    element.innerHTML = svg;
+                    element.setAttribute('data-processed', 'true');
+                    console.log(`✅ Mermaid図表 #${index} レンダリング完了`);
+                } catch (renderError) {
+                    console.error(`❌ Mermaid レンダリングエラー #${index}:`, renderError);
+                    element.innerHTML = `
+                        <div style="color: red; padding: 20px; border: 2px solid red; border-radius: 8px;">
+                            <h3>図表レンダリングエラー</h3>
+                            <p>${renderError.message}</p>
+                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap;">${graphDefinition}</pre>
+                        </div>
+                    `;
+                }
+            }
+        });
+          console.log('🎨 Mermaid初期化完了');
+        
+        // ズーム機能を初期化
+        initializeMermaidZoom();
+    } catch (error) {
+        console.error('❌ Mermaid初期化エラー:', error);
+    }
+}
+
+// ★★★ Mermaidズーム機能初期化関数 ★★★
+function initializeMermaidZoom() {
+    console.log('🔍 Mermaidズーム機能を初期化開始');
+    
+    const mermaidContainers = document.querySelectorAll('.mermaid-container');
+    console.log(`🎯 ${mermaidContainers.length}個のMermaidコンテナを発見`);
+    
+    mermaidContainers.forEach((container, index) => {
+        // 既にズーム機能が初期化されている場合はスキップ
+        if (container.hasAttribute('data-zoom-initialized')) {
+            return;
+        }
+        
+        const mermaidElement = container.querySelector('.mermaid');
+        if (!mermaidElement) {
+            console.warn(`⚠️ コンテナ #${index} にMermaid要素が見つかりません`);
+            return;
+        }
+        
+        // ズーム状態を初期化
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        // ズームコントロールボタンのイベント設定
+        const zoomControls = container.querySelector('.zoom-controls');
+        const zoomInBtn = container.querySelector('.zoom-in');
+        const zoomOutBtn = container.querySelector('.zoom-out');
+        const zoomResetBtn = container.querySelector('.zoom-reset');
+        
+        // ズームコントロール自体のクリックを防ぐ
+        if (zoomControls) {
+            zoomControls.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+            zoomControls.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+        
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                scale = Math.min(scale * 1.3, 4);
+                updateTransform();
+                console.log(`📈 ズームイン: ${scale.toFixed(2)}`);
+            });
+        }
+        
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                scale = Math.max(scale / 1.3, 0.2);
+                updateTransform();
+                console.log(`📉 ズームアウト: ${scale.toFixed(2)}`);
+            });
+        }
+        
+        if (zoomResetBtn) {
+            zoomResetBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                console.log(`🔄 ズームリセット`);
+            });
+        }
+        
+        // マウスホイールでズーム（ズームコントロール以外）
+        container.addEventListener('wheel', (e) => {
+            // ズームコントロール上でのホイールイベントは無視
+            if (e.target.closest('.zoom-controls')) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+            const newScale = Math.max(0.2, Math.min(4, scale * zoomFactor));
+            
+            // ズーム中心を調整
+            const scaleChange = newScale / scale;
+            translateX = centerX + (translateX - centerX) * scaleChange;
+            translateY = centerY + (translateY - centerY) * scaleChange;
+            
+            scale = newScale;
+            updateTransform();
+        });
+        
+        // ドラッグでパン（ズームコントロール以外の領域のみ）
+        container.addEventListener('mousedown', (e) => {
+            // ズームコントロールエリアのクリックは無視
+            if (e.target.closest('.zoom-controls')) {
+                return;
+            }
+            
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            // ドラッグ開始時のスタイル
+            container.style.cursor = 'grabbing !important';
+            mermaidElement.style.transition = 'none';
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('🖱️ ドラッグ開始');
+        });
+        
+        // グローバルマウス移動イベント
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - lastMouseX;
+            const deltaY = e.clientY - lastMouseY;
+            
+            translateX += deltaX;
+            translateY += deltaY;
+            
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            
+            updateTransform();
+        });
+        
+        // グローバルマウスアップイベント
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                container.style.cursor = 'grab';
+                mermaidElement.style.transition = 'transform 0.2s ease';
+                console.log('🖱️ ドラッグ終了');
+            }
+        });
+        
+        // トランスフォーム更新関数
+        function updateTransform() {
+            if (mermaidElement) {
+                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                mermaidElement.style.transformOrigin = 'center center';
+            }
+        }
+        
+        // 初期化完了をマーク
+        container.setAttribute('data-zoom-initialized', 'true');
+        console.log(`✅ コンテナ #${index} のズーム機能初期化完了`);
+    });
+    
+    console.log('🔍 Mermaidズーム機能初期化完了');
+}
+
+// ★★★ キャラクター名@表情を事前処理する関数 ★★★
+function preprocessCharacterNodes(graphDefinition) {
+    try {
+        console.log('🔄 キャラクター@表情の事前処理開始');
+          // キャラクター名@表情のパターンを検出して、IDマッピングを作成（拡張版）
+        const characterPattern = /[\"\[]([^\"@\[\]]+)@([^\"@\[\]]+)[\"\]]/g;
+        const characterMatches = [...graphDefinition.matchAll(characterPattern)];
+        
+        if (characterMatches.length === 0) {
+            console.log('⚠️ キャラクター@表情パターンが見つかりません');
+            console.log('📝 検索対象の定義:', graphDefinition.substring(0, 500));
+            return graphDefinition;
+        }
+        
+        console.log(`🎭 ${characterMatches.length}個のキャラクター指定を発見`);
+        
+        let processedDefinition = graphDefinition;
+        const characterMap = new Map();
+        
+        characterMatches.forEach((match, index) => {
+            const [fullMatch, characterName, expression] = match;
+            const nodeId = `char_${index}`;
+            const cleanName = characterName.trim();
+            
+            // キャラクター情報を保存
+            characterMap.set(nodeId, { name: cleanName, expression: expression });
+            
+            // 元のテキストをクリーンなノードIDに置換
+            const cleanText = fullMatch.replace(/@[^\"@\[\]]+/, '').replace(/[\"\[\]]/g, '');
+            const replacement = `${nodeId}["${cleanName}"]`;
+            
+            processedDefinition = processedDefinition.replace(fullMatch, replacement);
+            
+            console.log(`🔄 置換: ${fullMatch} → ${replacement}`);
+        });
+          // キャラクターマップをグローバルに保存（画像追加時に使用）
+        window.currentMermaidCharacterMap = characterMap;
+        
+        console.log('✅ キャラクター@表情の事前処理完了');
+        return processedDefinition;
+    } catch (error) {
+        console.error('❌ キャラクター事前処理エラー:', error);
+        return graphDefinition;
+    }
+}
+
+// ★★★ タブ切り替え時のMermaidレンダリング ★★★
+function renderMermaidInTab() {
+    setTimeout(() => {
+        initializeMermaidDiagrams();
+    }, 100);
+}
+
 /**
  * {{}}で囲まれた重要語句を空欄化し、クリックで開示できるHTMLに変換する
  * @param {string} text - 処理対象のテキスト
@@ -911,6 +1240,60 @@ function buildStoryHtml(storyData) {
         if (item.type === 'scene') return `<div class="text-sm text-gray-600 p-4 bg-yellow-50 rounded-lg mt-6 mb-4"><h3 class="font-bold mb-2 text-lg">${item.text}</h3></div>`;
         if (item.type === 'narration') return `<p class="text-center text-gray-600 italic my-4">${item.text}</p>`;
         
+        // ★★★ 新機能: embed要素の処理 ★★★
+        if (item.type === 'embed') {
+            console.log('🎨 Embed要素を処理中:', item);
+            const title = item.title ? `<h4 class="font-bold text-lg mb-2 text-gray-800">${item.title}</h4>` : '';
+            const description = item.description ? `<p class="text-sm text-gray-600 mb-3">${item.description}</p>` : '';            // Mermaid図表の場合
+            if (item.format === 'mermaid') {
+                const mermaidId = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+                console.log('🎨 Mermaid embed要素を作成:', mermaidId, item.content);
+                return `
+                    <div class="embed-container my-6">
+                        ${title}
+                        ${description}
+                        <div class="embed-content">
+                            <div class="mermaid-container" data-mermaid-id="${mermaidId}">
+                                <div class="zoom-controls">
+                                    <button class="zoom-btn zoom-in">拡大</button>
+                                    <button class="zoom-btn zoom-out">縮小</button>
+                                    <button class="zoom-btn zoom-reset">リセット</button>
+                                </div>
+                                <div id="${mermaidId}" class="mermaid">${item.content}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // キャラクター図表の場合
+            if (item.format === 'character-diagram') {
+                console.log('🎭 キャラクター図表要素を作成:', item);
+                return `
+                    <div class="embed-container my-6">
+                        ${title}
+                        ${description}
+                        <div class="embed-content">
+                            <div class="character-diagram">
+                                ${item.content}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // その他のembed形式（SVG、HTMLなど）
+            return `
+                <div class="embed-container my-6">
+                    ${title}
+                    ${description}
+                    <div class="embed-content">
+                        ${item.content || ''}
+                    </div>
+                </div>
+            `;
+        }
+        
         const character = characters.find(c => c.name === item.speaker);
         if (!character) return '';
 
@@ -921,7 +1304,6 @@ function buildStoryHtml(storyData) {
         const onErrorAttribute = `this.src='${fallbackSrc}'; this.onerror=null;`;
         
         const imageStyle = "width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);";
-        // ↓ここを修正
         const isRightSide = rightSideCharacters.includes(item.speaker);
         const iconTransform = isRightSide ? 'transform: scaleX(-1);' : '';
         const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;
@@ -931,776 +1313,232 @@ function buildStoryHtml(storyData) {
     }).join('');
 }
 
-function displayPastAnswers(caseId, problemType, problemIndex) {
-    const storageKey = `answers_${caseId}_${problemType}_${problemIndex}`;
-    console.log('🔍 =========================');
-    console.log('🔍 過去回答読み込み開始:', { 
-        caseId, 
-        problemType, 
-        problemIndex, 
-        storageKey,
-        timestamp: new Date().toLocaleString()
-    });
-    
-    // localStorageの状況をチェック
+// ★★★ Mermaid図表にキャラクター画像を追加する関数（大幅改良版） ★★★
+function addCharacterImagesToMermaid(mermaidElement, graphDefinition) {
     try {
-        const testKey = '__display_test__';
-        localStorage.setItem(testKey, 'test');
-        localStorage.removeItem(testKey);
-        console.log('✅ localStorage は利用可能');
-    } catch (error) {
-        console.error('❌ localStorage が利用できません:', error);
-    }
-    
-    // 実際のデータ取得
-    let pastAnswers;
-    try {
-        const rawData = localStorage.getItem(storageKey);
-        console.log('📥 localStorage.getItem結果:', { 
-            key: storageKey, 
-            hasData: !!rawData, 
-            dataLength: rawData?.length 
-        });
+        console.log('🎨 Mermaid図表にキャラクター画像を追加開始');
         
-        if (rawData) {
-            pastAnswers = JSON.parse(rawData);
-            console.log('✅ JSON.parse成功:', pastAnswers.length, '件');
+        // 保存されたキャラクターマップを使用
+        const characterMap = window.currentMermaidCharacterMap;
+        
+        if (!characterMap || characterMap.size === 0) {
+            console.log('⚠️ キャラクターマップが見つかりません');
+            return;
+        }
+        
+        console.log(`🔍 ${characterMap.size}個のキャラクター画像指定を発見`);
+        
+        // SVG要素を取得
+        const svgElement = mermaidElement.querySelector('svg');
+        if (!svgElement) {
+            console.warn('⚠️ SVG要素が見つかりません');
+            return;
+        }
+        
+        // SVGの名前空間とdefsを設定
+        svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svgElement.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        
+        let defsElement = svgElement.querySelector('defs');
+        if (!defsElement) {
+            defsElement = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svgElement.insertBefore(defsElement, svgElement.firstChild);
+        }
+        
+        // 各キャラクターに対して画像を追加
+        characterMap.forEach((characterInfo, nodeId) => {
+            const { name: characterName, expression } = characterInfo;
+            console.log(`🎭 キャラクター画像追加: ${characterName}@${expression} (ID: ${nodeId})`);
             
-            // 各回答の詳細を確認
-            pastAnswers.forEach((answer, index) => {
-                console.log(`📝 回答${index + 1}:`, {
-                    score: answer.score,
-                    timestamp: answer.timestamp,
-                    answerLength: answer.userAnswer?.length,
-                    hasProblemlText: !!answer.problemText
-                });
+            // ノードIDでテキスト要素を検索
+            const textElements = svgElement.querySelectorAll('text, tspan');
+            let targetTextElement = null;
+            
+            textElements.forEach(textEl => {
+                const textContent = textEl.textContent || '';
+                // キャラクター名で検索
+                if (textContent.trim() === characterName) {
+                    targetTextElement = textEl;
+                    console.log(`🎯 ターゲットテキスト発見: ${textContent}`);
+                }
             });
-        } else {
-            pastAnswers = [];
-            console.log('ℹ️ rawDataが空/null - 新規配列で初期化');
-        }
-    } catch (parseError) {
-        console.error('❌ JSON.parseエラー:', parseError);
-        pastAnswers = [];
-    }
-
-    console.log('� 最終結果:', pastAnswers.length, '件の過去回答');
-    console.log('🔍 =========================');
-
-    if (pastAnswers.length === 0) {
-        console.log('ℹ️ 過去回答なし - 空表示を返します');
-        return `
-            <div class="text-center p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                <p class="text-gray-500 text-sm mb-2">まだ保存された回答はありません</p>
-                <p class="text-xs text-gray-400">10点以上の回答が自動的に保存されます</p>
-                <p class="text-xs text-gray-500 mt-1">保存キー: ${storageKey}</p>
-                <p class="text-xs text-gray-400 mt-1">最終確認: ${new Date().toLocaleString()}</p>
-            </div>
-        `;
-    }
-
-    console.log('✅ 過去回答表示HTML生成開始');
-    let html = `<div class="space-y-4">
-        <div class="text-xs text-green-600 bg-green-50 p-2 rounded border">
-            📊 ${pastAnswers.length}件の保存済み回答 (キー: ${storageKey})
-        </div>`;
-    
-    [...pastAnswers].reverse().forEach((answer, index) => {
-        const date = new Date(answer.timestamp).toLocaleString();
-        const scoreColor = answer.score >= 70 ? 'text-green-600' : 
-                          answer.score >= 50 ? 'text-yellow-600' : 'text-red-600';
-        
-        html += `
-            <div class="bg-white p-4 rounded-lg border shadow-sm">
-                <div class="flex justify-between items-center mb-2">
-                    <h6 class="font-bold text-gray-800">過去の回答 ${pastAnswers.length - index}</h6>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-gray-500">${date}</span>
-                        <span class="font-bold ${scoreColor}">${answer.score}点</span>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded border max-h-40 overflow-y-auto custom-scrollbar">
-                    ${answer.userAnswer.replace(/\n/g, '<br>')}
-                </div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    
-    console.log('✅ 過去回答表示HTML生成完了');
-    return html;
-}
-
-// ★★★ Q&A参照ボタンのポップアップ表示ロジックを追加 ★★★
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('qa-ref-btn')) {
-        // ポップアップ保護フラグを設定
-        window.__preventPopupClose = true;
-        
-        const qaIndex = parseInt(e.target.dataset.qaIndex, 10);
-        const quizIndex = e.target.dataset.quizIndex;
-        const subIndex = e.target.dataset.subIndex;
-        const qNumber = e.target.dataset.qNumber || (qaIndex + 1); // data-q-numberを優先、なければqaIndex+1
-        
-        console.log('QAボタンクリック:', { qaIndex, qNumber, dataset: e.target.dataset });
-        
-        const qa = window.currentCaseData.questionsAndAnswers[qaIndex];
-        if (!qa) {
-            console.error('Q&Aが見つかりません:', qaIndex, window.currentCaseData.questionsAndAnswers);
-            window.__preventPopupClose = false;
-            return;
-        }
-        
-        const popupId = `qa-ref-popup-${quizIndex}-${subIndex}-${qaIndex}`;
-        let popup = document.getElementById(popupId);
-        
-        // 既に開いていれば閉じる
-        if (popup) {
-            popup.remove();
-            if (window.qaPopupState) {
-                window.qaPopupState.removePopup(popupId);
-            }
-            window.__preventPopupClose = false;
-            return;
-        }
-        
-        // 他のポップアップを閉じる
-        document.querySelectorAll('.qa-ref-popup').forEach(el => el.remove());
-        if (window.qaPopupState) {
-            window.qaPopupState.clearAll();
-        }          // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
-        let qaQuestion = processArticleReferences(qa.question, window.currentCaseData.supportedLaws || []);
-        // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
-        let qaAnswerWithArticleRefs = processArticleReferences(qa.answer, window.currentCaseData.supportedLaws || []);
-        let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-${qaIndex}`);
-        
-        console.log('ポップアップ表示:', `Q${qNumber}`, qa.question);
-          const popupHtml = `
-            <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
-                    <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
-                </div>
-                <div class="mb-2"><span class="font-bold">問題：</span>${qaQuestion}</div>
-                <div class="mb-2">
-                    <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
-                    <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
-                        <div class="flex gap-2 mb-2">
-                            <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">🔍 全て表示</button>
-                            <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
-                        </div>
-                        <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-          // グローバルポップアップコンテナに追加
-        const globalContainer = document.getElementById('qa-ref-popup-global-container');
-        if (globalContainer) {
-            globalContainer.insertAdjacentHTML('beforeend', popupHtml);
-            console.log('ポップアップをグローバルコンテナに追加:', popupId);
-        } else {
-            // フォールバック：body に直接追加
-            document.body.insertAdjacentHTML('beforeend', popupHtml);
-            console.log('ポップアップをbodyに追加:', popupId);
-        }
-          // ポップアップ内の条文参照ボタンのイベントリスナーを設定
-        const createdPopup = document.getElementById(popupId);
-        if (createdPopup) {
-            setupArticleRefButtons(createdPopup);
-              // 解答表示ボタンのイベントリスナーを設定
-            const answerToggleBtn = createdPopup.querySelector('.toggle-qa-answer-btn');
-            const answerContent = createdPopup.querySelector('.qa-answer-content');
-            if (answerToggleBtn && answerContent) {
-                // デフォルトで解答が表示されているので、条文参照ボタンを有効にする
-                setupArticleRefButtons(answerContent);
-                
-                answerToggleBtn.addEventListener('click', function() {
-                    const isHidden = answerContent.classList.toggle('hidden');
-                    this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
-                    
-                    // 解答内の条文参照ボタンも有効にする
-                    if (!isHidden) {
-                        setupArticleRefButtons(answerContent);
-                    }
-                });
-            }
             
-            // 空欄一括操作ボタンのイベントリスナーを設定
-            const showAllBlanksBtn = createdPopup.querySelector('.show-all-blanks-btn');
-            const hideAllBlanksBtn = createdPopup.querySelector('.hide-all-blanks-btn');
-            
-            if (showAllBlanksBtn && answerContent) {
-                showAllBlanksBtn.addEventListener('click', function() {
-                    toggleAllBlanks(answerContent, true);
-                });
-            }
-            
-            if (hideAllBlanksBtn && answerContent) {
-                hideAllBlanksBtn.addEventListener('click', function() {
-                    toggleAllBlanks(answerContent, false);
-                });
-            }
-            
-            console.log('ポップアップ内の条文ボタンのイベントリスナー設定完了:', popupId);
-        }
-        
-        // ポップアップ状態を保存
-        if (window.qaPopupState) {
-            window.qaPopupState.savePopup(popupId, qaIndex, qNumber, quizIndex, subIndex);
-        }
-        
-        // フラグをリセット（少し遅せて）
-        setTimeout(() => {
-            window.__preventPopupClose = false;
-        }, 500);
-    }
-    // ポップアップの閉じるボタン
-    if (e.target.classList.contains('qa-ref-close-btn')) {
-        const popup = e.target.closest('.qa-ref-popup');
-        if (popup) {
-            const popupId = popup.id;
-            popup.remove();
-            if (window.qaPopupState) {
-                window.qaPopupState.removePopup(popupId);
-            }
-        }    }
-    
-    // ポップアップ外クリックで閉じる（条文参照ボタンと条文パネル関連を除外）
-    if (document.querySelector('.qa-ref-popup') &&
-        !e.target.closest('.qa-ref-popup') && 
-        !e.target.classList.contains('qa-ref-btn') && 
-        !e.target.classList.contains('article-ref-btn') &&
-        !e.target.classList.contains('show-article-btn') &&
-        !e.target.closest('[id*="article-panel"]') &&
-        !e.target.closest('.article-panel') &&
-        !e.target.closest('[class*="panel"]') &&
-        !e.target.closest('form') &&        !(e.target.tagName === 'BUTTON' && e.target.textContent.includes('取得'))) {
-        
-        // 条文参照ボタンのクリック処理中の場合は閉じない
-        if (!window.__preventPopupClose) {
-            document.querySelectorAll('.qa-ref-popup').forEach(el => el.remove());
-        }
-    }
-    
-    // 条文参照ボタン押下時の処理
-    if (e.target.classList.contains('article-ref-btn')) {
-        // ポップアップを閉じないようにフラグを設定
-        window.__preventPopupClose = true;
-        
-        const lawText = e.target.dataset.lawText || e.target.textContent.replace(/[【】]/g, '');
-        
-        // 法令名と条文番号を分離（例: "民法886条" → 法令名: 民法, 条文番号: 886条）
-        let lawName = '';
-        let articleNum = '';
-        const match = lawText.match(/^(.+?)(第?\d+条.*)$/);
-        if (match) {
-            lawName = match[1].trim();
-            articleNum = match[2].replace(/^第/, '').trim();
-        } else {
-            lawName = lawText;
-        }
-        
-        console.log(`条文参照: ${lawText} → 法令名: "${lawName}", 条文番号: "${articleNum}"`);
-        
-        // グローバル変数に法令名・条文番号をセット
-        window.__articlePanelInitialLawName = lawName;
-        window.__articlePanelInitialArticleNum = articleNum;
-        
-        // MutationObserverを開始して条文パネルの表示を監視
-        startArticlePanelObserver();
-        
-        const showArticleBtn = document.querySelector('.show-article-btn');
-        if (showArticleBtn) {
-            showArticleBtn.click();
-        } else {
-            alert('条文表示ボタンが見つかりません: ' + lawText);
-        }
-        
-        // フラグをリセット（少し遅せて）
-        setTimeout(() => {
-            window.__preventPopupClose = false;
-        }, 1000);
-        
-        // ポップアップを閉じないようにイベント伝播を完全に停止
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-    }
-});
-
-// ★★★ 条文パネル初期キーワード対応（show-article-btnクリック時） ★★★
-document.addEventListener('click', function(e) {
-    if (!e.target.classList.contains('show-article-btn')) return;
-
-    // グローバル変数がセットされていなければ何もしない
-    if (!window.__articlePanelInitialLawName && !window.__articlePanelInitialArticleNum) return;
-
-    // 入力欄・ボタンのセレクタ
-    const lawNameSelectors = [
-        '#article-panel-law-name', 'select[name*="law"]', 'select[id*="law"]', 'input[name*="law"]',
-        'input[placeholder*="法令"]', 'select[class*="law"]', '#law-name', '#lawName', '.law-name-select', '.law-select'
-    ];
-    const articleNoSelectors = [
-        '#article-panel-article-no', 'input[name*="article"]', 'input[id*="article"]', 'input[placeholder*="条文"]',
-        'input[placeholder*="番号"]', 'input[placeholder*="条"]', '#article-no', '#articleNo', '.article-input', '.article-no-input'
-    ];
-    const searchBtnSelectors = [
-        '#article-panel-search-btn', 'button[id*="search"]', 'button[class*="search"]', '.search-btn', '.search-button',
-        'button:contains("検索")', 'button:contains("Search")', '[role="button"]:contains("検索")', 'button[type="submit"]',
-        'button[type="button"]:last-of-type', '.btn-primary', '.btn-search', 'button.btn:last-child'
-    ];
-    const fetchBtnSelectors = [
-        'button[id*="fetch"]', 'button[class*="fetch"]', '.fetch-btn', 'button[id*="get"]', 'button[class*="get"]', '.get-btn', 'button[type="button"]'
-    ];
-
-    // 入力欄・ボタンを探す関数
-    function findElement(selectors) {
-        for (const selector of selectors) {
-            let el = null;
-            try {
-                if (selector.includes(':contains')) {
-                    // :containsは手動で
-                    const text = selector.match(/:contains\(["']?(.*?)["']?\)/)[1];
-                    const btns = document.querySelectorAll('button');
-                    el = Array.from(btns).find(b => b.textContent.includes(text));
-                } else {
-                    el = document.querySelector(selector);
-                }
-            } catch {}
-            if (el) return el;
-        }
-        return null;
-    }
-
-    // 入力欄取得
-    const lawNameInput = findElement(lawNameSelectors);
-    const articleNoInput = findElement(articleNoSelectors);
-    const searchBtn = findElement(searchBtnSelectors);
-    const fetchBtn = findElement(fetchBtnSelectors);
-
-    // 自動入力
-    if (lawNameInput && window.__articlePanelInitialLawName) {
-        lawNameInput.value = window.__articlePanelInitialLawName;
-        lawNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        lawNameInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    if (articleNoInput && window.__articlePanelInitialArticleNum) {
-        articleNoInput.value = window.__articlePanelInitialArticleNum;
-        articleNoInput.dispatchEvent(new Event('input', { bubbles: true }));
-        articleNoInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    // 検索ボタンがあればクリック
-    if (searchBtn) {
-        searchBtn.click();
-        setTimeout(() => {
-            // 取得ボタンがあればクリック
-            const fetchBtn2 = findElement(fetchBtnSelectors);
-            if (fetchBtn2) fetchBtn2.click();
-        }, 300);
-    } else if (fetchBtn) {
-        fetchBtn.click();
-    }
-
-    // グローバル変数リセット
-    window.__articlePanelInitialLawName = null;
-    window.__articlePanelInitialArticleNum = null;
-});
-
-// ★★★ MutationObserverを使って条文パネルの表示を監視し、自動入力を実行 ★★★
-let articlePanelObserver = null;
-
-function startArticlePanelObserver() {
-    if (articlePanelObserver) {
-        articlePanelObserver.disconnect();
-    }
-    
-    articlePanelObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        // 条文パネルが追加されたかチェック
-                        const articlePanel = node.querySelector('[id*="article"], [class*="article"]') || 
-                                           (node.id && node.id.includes('article')) ? node : null;
-                        
-                        if (articlePanel && (window.__articlePanelInitialLawName || window.__articlePanelInitialArticleNum)) {
-                            console.log('条文パネル検出、自動入力を実行:', articlePanel);
-                            setTimeout(() => performAutoFill(articlePanel), 100);
-                        }
-                          // 条文取得ボタンが追加された場合も検出
-                        const newButtons = node.querySelectorAll('button');
-                        for (const btn of newButtons) {
-                            const btnText = btn.textContent.toLowerCase();
-                            if (btnText.includes('条文を取得') || btnText.includes('取得') || 
-                                btnText.includes('fetch') || btnText.includes('get')) {
-                                console.log('新しい条文取得ボタンを検出、関数を直接実行:', btn);
-                                setTimeout(() => {
-                                    if (btn.onclick) {
-                                        btn.onclick();
-                                    } else if (btn.getAttribute('onclick')) {
-                                        eval(btn.getAttribute('onclick'));                                    } else {
-                                        // グローバル関数を探して実行
-                                        if (window.fetchArticleContent) {
-                                            window.fetchArticleContent();
-                                        } else if (window.getArticle) {
-                                            window.getArticle();
-                                        } else if (window.loadArticle) {
-                                            window.loadArticle();
-                                        } else if (window.searchArticle) {
-                                            window.searchArticle();
-                                        } else if (window.fetchArticle) {
-                                            window.fetchArticle();
-                                        } else {
-                                            // デフォルト動作
-                                            btn.click();
-                                        }
-                                    }
-                                }, 50);
-                                break;
-                            }
-                        }
-                    }
-                });
+            if (targetTextElement) {
+                addCharacterImageToNode(svgElement, targetTextElement, characterName, expression, defsElement);
+            } else {
+                console.warn(`⚠️ ${characterName}のテキスト要素が見つかりません`);
+                // フォールバック: 全てのテキスト要素を確認
+                console.log('📋 利用可能なテキスト要素:');
+                textElements.forEach((el, i) => {
+                    console.log(`  ${i}: "${el.textContent}"`);                });
             }
         });
-    });
-    
-    articlePanelObserver.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+        
+        console.log('✅ キャラクター画像追加完了');
+    } catch (error) {
+        console.error('❌ キャラクター画像追加エラー:', error);
+    }
 }
 
-function performAutoFill(panelElement = document) {
-    console.log('条文パネル自動入力実行:', window.__articlePanelInitialLawName, window.__articlePanelInitialArticleNum);
-    
-    // パネル内の要素を優先的に検索
-    const lawNameSelectors = [
-        'select[name*="law"]', 'select[id*="law"]', '#law-name', '#lawName',
-        'input[name*="law"]', 'input[placeholder*="法令"]', '.law-select'
-    ];
-    
-    const articleNoSelectors = [
-        'input[name*="article"]', 'input[id*="article"]', '#article-no', '#articleNo',
-        'input[placeholder*="条文"]', 'input[placeholder*="番号"]', '.article-input'
-    ];
-      const searchBtnSelectors = [
-        'button[id*="search"]', 'button[class*="search"]', '.search-btn'
-    ];
-    
-    // 条文取得ボタンのセレクターも追加
-    const fetchBtnSelectors = [
-        'button[id*="fetch"]', 'button[class*="fetch"]', '.fetch-btn',
-        'button[id*="get"]', 'button[class*="get"]', '.get-btn'
-       ];
-
-    // 法令名入力欄を探す
-    let lawNameInput = null;
-    for (const selector of lawNameSelectors) {
-        lawNameInput = panelElement.querySelector(selector);
-        if (lawNameInput) {
-            console.log('法令名入力欄発見:', selector, lawNameInput);
-                       break;
+// ★★★ 特定のノードにキャラクター画像を追加（改良版） ★★★
+function addCharacterImageToNode(svgElement, targetTextElement, characterName, expression, defsElement) {
+    try {
+        // キャラクター名を正規化（characters.jsと照合）
+        const normalizedCharacter = normalizeCharacterName(characterName);
+        if (!normalizedCharacter) {
+            console.warn(`⚠️ 未知のキャラクター: ${characterName}`);
+            return;
         }
-    }
-    
-    // 条文番号入力欄を探す
-    let articleNoInput = null;
-    for (const selector of articleNoSelectors) {
-        articleNoInput = panelElement.querySelector(selector);
-        if (articleNoInput) {
-            console.log('条文番号入力欄発見:', selector, articleNoInput);
-            break;
-        }
-    }
-    
-    // 検索ボタンを探す
-    let searchBtn = null;
-    for (const selector of searchBtnSelectors) {
-        searchBtn = panelElement.querySelector(selector);
-        if (searchBtn) {
-            console.log('検索ボタン発見:', selector, searchBtn);
-            break;
-        }
-    }
-    
-    // 条文取得ボタンを探す
-    let fetchBtn = null;
-    for (const selector of fetchBtnSelectors) {
-        fetchBtn = panelElement.querySelector(selector);
-        if (fetchBtn) {
-            console.log('条文取得ボタン発見:', selector, fetchBtn);
-            break;
-        }
-    }
-    
-    // テキスト検索でボタンを探す
-    if (!searchBtn && !fetchBtn) {
-        const buttons = panelElement.querySelectorAll('button');
-        for (const btn of buttons) {
-            const btnText = btn.textContent.toLowerCase();
-            if (btnText.includes('検索') || btnText.includes('search')) {
-                searchBtn = btn;
-                console.log('検索ボタン発見(テキスト検索):', btn);
-            } else if (btnText.includes('取得') || btnText.includes('fetch') || btnText.includes('get')) {
-                fetchBtn = btn;
-                console.log('条文取得ボタン発見(テキスト検索):', btn);
-            }
-        }
-    }
-    
-    console.log('最終要素検出結果:', { lawNameInput, articleNoInput, searchBtn, fetchBtn });
-    
-    // 自動入力実行
-    if (lawNameInput && window.__articlePanelInitialLawName) {        lawNameInput.value = window.__articlePanelInitialLawName;
-        lawNameInput.dispatchEvent(new Event('change', { bubbles: true }));
-        lawNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        console.log('法令名入力完了:', window.__articlePanelInitialLawName);
-    }
-    
-    if (articleNoInput && window.__articlePanelInitialArticleNum) {
-        articleNoInput.value = window.__articlePanelInitialArticleNum;
-        articleNoInput.dispatchEvent(new Event('input', { bubbles: true }));
-        articleNoInput.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log('条文番号入力完了:', window.__articlePanelInitialArticleNum);
-    }
-    
-    // 検索ボタンをクリック
-    if (searchBtn) {
-        console.log('検索ボタンクリック実行');
-        searchBtn.click();
         
-        // 検索ボタンクリック後、条文取得ボタンの関数を直接実行（即座に実行）
-        const executeAfterSearch = () => {
-
-            let fetchBtnAfterSearch = null;
-            const allButtons = document.querySelectorAll('button');
-            for (const btn of allButtons) {
-                const btnText = btn.textContent.toLowerCase();
-                if (btnText.includes('条文を取得') || btnText.includes('取得') || 
-                    btnText.includes('fetch') || btnText.includes('get article')) {
-                    fetchBtnAfterSearch = btn;
-                    console.log('検索後に条文取得ボタン発見:', btn);
-                    break;
-                }
-            }
-            
-            if (fetchBtnAfterSearch) {
-                console.log('条文取得ボタンの関数を直接実行');
-                // ボタンの関数を直接実行
-                if (fetchBtnAfterSearch.onclick) {
-                    fetchBtnAfterSearch.onclick();
-                } else if (fetchBtnAfterSearch.getAttribute('onclick')) {
-                    eval(fetchBtnAfterSearch.getAttribute('onclick'));                } else {
-                    // グローバル関数を探して実行
-                    if (window.fetchArticleContent) {
-                        window.fetchArticleContent();
-                    } else if (window.getArticle) {
-                        window.getArticle();
-                    } else if (window.loadArticle) {
-                        window.loadArticle();
-                    } else if (window.searchArticle) {
-                        window.searchArticle();
-                    } else if (window.fetchArticle) {
-                        window.fetchArticle();
-                    } else {
-                        fetchBtnAfterSearch.click();
-                    }
-                }
-                return true;
-            } else {
-                console.log('条文取得ボタンが見つかりませんでした');
-                return false;
-            }
-        };
+        // 表情を正規化
+        const normalizedExpression = normalizeExpression(expression);
         
-        // より短い間隔で複数回試行
-        setTimeout(executeAfterSearch, 50);
-        setTimeout(executeAfterSearch, 150);
-        setTimeout(executeAfterSearch, 300);
-        setTimeout(executeAfterSearch, 500);
-        setTimeout(executeAfterSearch, 800);
+        // 画像パスを生成
+        const imagePath = `/images/${normalizedCharacter.baseName}_${normalizedExpression}.png`;
+        const fallbackPath = `/images/${normalizedCharacter.baseName}_normal.png`;
         
-    } else if (fetchBtn) {
-        // 検索ボタンがない場合は直接条文取得ボタンの関数を実行
-        console.log('条文取得ボタンの関数を直接実行');
-        if (fetchBtn.onclick) {
-            fetchBtn.onclick();
-        } else if (fetchBtn.getAttribute('onclick')) {
-            eval(fetchBtn.getAttribute('onclick'));
-        } else {
-            // グローバル関数を探して実行
-            if (window.fetchArticleContent) {
-                window.fetchArticleContent();
-            } else if (window.getArticle) {
-                window.getArticle();
-            } else if (window.loadArticle) {
-                window.loadArticle();
-            } else {
-                fetchBtn.click();
-            }
-        }
+        console.log(`🖼️ 画像パス: ${imagePath}`);
+        
+        // テキスト要素の位置を取得
+        const textBBox = targetTextElement.getBBox();
+        const textX = parseFloat(targetTextElement.getAttribute('x') || 0);
+        const textY = parseFloat(targetTextElement.getAttribute('y') || 0);
+          // 画像のサイズと位置を設定（大きくして見やすく）
+        const imageSize = 80; // 画像サイズ（ピクセル）を大幅に拡大
+        const imageX = textX - imageSize / 2;
+        const imageY = textY - textBBox.height - imageSize - 15; // テキストの上に配置、間隔も調整
+        
+        // clipPath を作成（円形）
+        const clipPathId = `clip-${characterName}-${Date.now()}`;
+        const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+        clipPath.setAttribute('id', clipPathId);
+        
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', imageX + imageSize / 2);
+        circle.setAttribute('cy', imageY + imageSize / 2);
+        circle.setAttribute('r', imageSize / 2);
+        clipPath.appendChild(circle);
+        defsElement.appendChild(clipPath);
+        
+        // 背景円を作成
+        const backgroundCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        backgroundCircle.setAttribute('cx', imageX + imageSize / 2);
+        backgroundCircle.setAttribute('cy', imageY + imageSize / 2);
+        backgroundCircle.setAttribute('r', imageSize / 2 + 2);
+        backgroundCircle.setAttribute('fill', '#ffffff');
+        backgroundCircle.setAttribute('stroke', '#e5e7eb');
+        backgroundCircle.setAttribute('stroke-width', '2');
+        backgroundCircle.setAttribute('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))');
+        
+        // 画像要素を作成
+        const imageElement = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        imageElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', imagePath);
+        imageElement.setAttribute('x', imageX);
+        imageElement.setAttribute('y', imageY);
+        imageElement.setAttribute('width', imageSize);
+        imageElement.setAttribute('height', imageSize);
+        imageElement.setAttribute('clip-path', `url(#${clipPathId})`);
+        imageElement.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+        
+        // フォールバック画像のエラーハンドリング
+        imageElement.addEventListener('error', function() {
+            console.warn(`⚠️ 画像読み込み失敗、フォールバック使用: ${fallbackPath}`);
+            this.setAttributeNS('http://www.w3.org/1999/xlink', 'href', fallbackPath);
+        });
+        
+        // 画像をSVGに追加（背景円→画像の順）
+        svgElement.appendChild(backgroundCircle);
+        svgElement.appendChild(imageElement);
+          // キャラクター名ラベルを追加（フォントサイズ拡大）
+        const labelElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        labelElement.setAttribute('x', imageX + imageSize / 2);
+        labelElement.setAttribute('y', imageY + imageSize + 20);
+        labelElement.setAttribute('text-anchor', 'middle');
+        labelElement.setAttribute('font-family', 'M PLUS Rounded 1c, sans-serif');
+        labelElement.setAttribute('font-size', '16');
+        labelElement.setAttribute('font-weight', 'bold');
+        labelElement.setAttribute('fill', '#374151');
+        labelElement.textContent = normalizedCharacter.displayName || characterName;
+        svgElement.appendChild(labelElement);
+        
+        console.log(`✅ ${characterName}@${expression} の画像を追加完了`);
+    } catch (error) {
+        console.error(`❌ ${characterName}の画像追加エラー:`, error);
     }
-    
-    // グローバル変数をリセット
-    window.__articlePanelInitialLawName = null;
-    window.__articlePanelInitialArticleNum = null;
 }
 
-// ★★★ 保存された回答のリアルタイム更新機能 ★★★
-function setupAnswerRefresh() {
-    // localStorage変更を監視
-    window.addEventListener('storage', function(e) {
-        if (e.key && e.key.startsWith('answers_')) {
-            console.log('📢 localStorage変更検出:', e.key);
-            refreshPastAnswers();
-        }
-    });
-
-    // ページ内でのlocalStorage変更も監視（同一タブ内）
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-        const result = originalSetItem.apply(this, arguments);
-        if (key.startsWith('answers_')) {
-            console.log('📝 回答保存検出:', key);
-            setTimeout(refreshPastAnswers, 100); // 少し遅延させて更新
-        }
-        return result;
+// ★★★ キャラクター名正規化関数 ★★★
+function normalizeCharacterName(characterName) {
+    // characters.jsのデータが利用可能な場合
+    if (typeof characters !== 'undefined') {
+        // 完全一致を探す
+        let character = characters.find(c => c.name === characterName);
+        if (character) return character;
+        
+        // エイリアス（別名）で探す
+        character = characters.find(c => c.aliases && c.aliases.includes(characterName));
+        if (character) return character;
+        
+        // 部分一致で探す
+        character = characters.find(c => 
+            c.name.includes(characterName) || characterName.includes(c.name)
+        );        if (character) return character;
+    }
+    
+    // フォールバック：基本的なマッピング（displayName追加）
+    const characterMap = {
+        'みかん': { baseName: 'mikan', displayName: 'みかん' },
+        'ユズヒコ': { baseName: 'yuzuhiko', displayName: 'ユズヒコ' },
+        'ユズ': { baseName: 'yuzuhiko', displayName: 'ユズヒコ' },
+        '母': { baseName: 'haha', displayName: '母' },
+        '父': { baseName: 'chichi', displayName: '父' },
+        'しみちゃん': { baseName: 'shimi', displayName: 'しみちゃん' },
+        '吉岡': { baseName: 'yoshioka', displayName: '吉岡' },
+        '岩城': { baseName: 'iwaki', displayName: '岩城' },
+        'ゆかりん': { baseName: 'yukarin', displayName: 'ゆかりん' },
+        '藤野': { baseName: 'fujino', displayName: '藤野' },
+        'ナスオ': { baseName: 'nasuo', displayName: 'ナスオ' },
+        '川島': { baseName: 'kawashima', displayName: '川島' },
+        '須藤': { baseName: 'sudo', displayName: '須藤' },
+        '石田': { baseName: 'ishida', displayName: '石田' },
+        '山下': { baseName: 'yamashita', displayName: '山下' },
+        '息子': { baseName: 'yuzuhiko', displayName: '息子' },
+        '娘': { baseName: 'mikan', displayName: '娘' },
+        '田中': { baseName: 'mikan', displayName: '田中' },
+        '佐藤': { baseName: 'yukarin', displayName: '佐藤' },
+        '鈴木': { baseName: 'sudo', displayName: '鈴木' },
+        '第三者': { baseName: 'nasuo', displayName: '第三者' }
     };
-}
-
-function refreshPastAnswers() {
-    if (!window.currentCaseData) return;
     
-    // 現在表示されている問題の過去回答エリアを更新
-    document.querySelectorAll('[data-problem-type][data-problem-index]').forEach(container => {
-        const problemType = container.dataset.problemType;
-        const problemIndex = container.dataset.problemIndex;
-        const answersContainer = container.querySelector('.past-answers-container');
-        
-        if (answersContainer) {
-            const newContent = displayPastAnswers(window.currentCaseData.id, problemType, problemIndex);
-            answersContainer.innerHTML = newContent;
-            console.log(`🔄 過去回答を更新: ${problemType}-${problemIndex}`);
-        }
-    });
+    return characterMap[characterName] || null;
 }
 
-// キャラクター対話の左右判定もrightSideCharactersを参照する
-function displayCharacterDialogue(response) {
-    const rightSideCharacters = window.currentCaseData?.rightSideCharacters || ['みかん', '母', '父'];
-    const container = document.getElementById('character-dialogue-container');
-    if (!container) return;
-    if (response.dialogues && response.dialogues.length > 0) {
-        container.innerHTML = response.dialogues.map(dialogue => {
-            const character = characters.find(c => c.name === dialogue.speaker);
-            if (!character) return '';
-            const requestedExpression = dialogue.expression ?? 'normal';
-            const finalExpression = character.availableExpressions.includes(requestedExpression) ? requestedExpression : 'normal';
-            const iconSrc = `/images/${character.baseName}_${finalExpression}.png`;
-            const fallbackSrc = `/images/${character.baseName}_normal.png`;
-            const onErrorAttribute = `this.src='${fallbackSrc}'; this.onerror=null;`;
-            const imageStyle = "width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);";
-            const isRightSide = rightSideCharacters.includes(dialogue.speaker);
-            const iconTransform = isRightSide ? 'transform: scaleX(-1);' : '';
-            const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;
-            const bubbleHtml = `<div class="chat-bubble ${isRightSide ? 'chat-bubble-right' : 'chat-bubble-left'} p-3 rounded-lg shadow"><p class="font-bold">${character.name}</p><p>${dialogue.dialogue}</p></div>`;
-            return `<div class="flex items-start gap-3 my-4 ${isRightSide ? 'justify-end' : ''}">${isRightSide ? bubbleHtml + iconHtml : iconHtml + bubbleHtml}</div>`;
-        }).join('');
-    } else {
-        container.innerHTML = '<p class="text-gray-500 text-center">対話内容がありません</p>';
-    }
-}
-
-// ページ読み込み時に設定
-document.addEventListener('DOMContentLoaded', setupAnswerRefresh);
-
-// ★★★ ログアウト機能の初期化 ★★★
-initializeCaseLogout();
-
-/**
- * ケースページでのログアウト機能の初期化
- */
-function initializeCaseLogout() {
-    // ユーザー情報の取得と表示
-    fetchCaseUserInfo();
+// ★★★ 表情正規化関数 ★★★
+function normalizeExpression(expression) {
+    const validExpressions = [
+        'normal', 'impressed', 'angry', 'surprised', 'happy', 'sad', 
+        'thinking', 'laughing', 'desperate', 'smug', 'annoyed', 'blush', 
+        'cool', 'serious', 'excited', 'passionate', 'drunk'
+    ];
     
-    // ログアウトボタンのイベントリスナー
-    const logoutBtn = document.getElementById('logout-btn-case');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleCaseLogout);
-    }
-}
-
-/**
- * ケースページでユーザー情報を取得してヘッダーに表示
- */
-async function fetchCaseUserInfo() {
-    try {
-        const response = await fetch('/api/auth/status');
-        const data = await response.json();
-        
-        const userInfoElement = document.getElementById('user-info-case');
-        if (data.authenticated && userInfoElement) {
-            userInfoElement.innerHTML = `
-                <div class="text-right">
-                    <div class="font-semibold text-gray-700 text-sm">👤 ${data.username}</div>
-                </div>
-            `;
-        }
-    } catch (error) {
-        console.error('ユーザー情報取得エラー:', error);
-    }
-}
-
-/**
- * ケースページでのログアウト処理
- */
-async function handleCaseLogout() {
-    if (!confirm('ログアウトしますか？')) {
-        return;
+    // 有効な表情かチェック
+    if (validExpressions.includes(expression)) {
+        return expression;
     }
     
-    const logoutBtn = document.getElementById('logout-btn-case');
-    const originalText = logoutBtn.innerHTML;
+    // 表情のエイリアス（別名）マッピング
+    const expressionAliases = {
+        'normal': 'normal',
+        'smile': 'happy',
+        'laugh': 'laughing',
+        'mad': 'angry',
+        'shock': 'surprised',
+        'think': 'thinking',
+        'cry': 'sad',
+        'confident': 'smug',
+        'embarrassed': 'blush',
+        'calm': 'cool'
+    };
     
-    try {
-        // ボタンを無効化
-        logoutBtn.disabled = true;
-        logoutBtn.innerHTML = `
-            <svg class="animate-spin w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            ログアウト中...
-        `;
-        
-        const response = await fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            // セッションクリア
-            sessionStorage.clear();
-            localStorage.clear();
-            
-            // ログインページへリダイレクト
-            window.location.href = '/login.html';
-        } else {
-            throw new Error('ログアウトに失敗しました');
-        }
-        
-    } catch (error) {
-        console.error('ログアウトエラー:', error);
-        alert('ログアウト処理中にエラーが発生しました。');
-        
-        // ボタンを復元
-        logoutBtn.disabled = false;
-        logoutBtn.innerHTML = originalText;
-    }
+    return expressionAliases[expression] || 'normal';
 }

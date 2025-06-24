@@ -63,9 +63,173 @@ export default {
     { type: 'dialogue', speaker: 'みかん', expression: 'desperate', dialogue: 'うーん、会社法って本当に複雑だよー。「特に有利な金額」って何？なんで安く株式を発行しちゃダメなの？【id:5】' },
     { type: 'dialogue', speaker: '吉岡', expression: 'passionate', dialogue: 'タチバナ、それは会社法の中でもすごく重要な論点だよ！会社が資金調達するには時価より安く発行する必要がある場合もあるけど、既存株主の保護も考えなきゃいけない。だから「特に有利な金額」っていうのは、公正価格と比較して特に低い金額のことで、公正価格っていうのは、資金調達の目的が達せられる限度で、旧株主にとって最も有利な価額、つまり通常は株式の時価のことなんだ。' },
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'cool', dialogue: 'でも非上場会社の場合は特殊なのよ。市場価格がないから、色々な評価手法があって、どれを使うべきかの明確な基準がない。だから平成27年の最高裁判例では、客観的資料に基づく一応合理的な算定方法で発行価額を決定していれば、特別の事情がない限り「特に有利な金額」に当たらないとしてるの。' },
+    
+    // 株式発行の流れを視覚化する図表を追加
+    { 
+      type: 'embed', 
+      format: 'svg',
+      title: '募集株式発行の手続きフロー',
+      description: '株式発行の各段階での判断基準と法的効果を整理した図表です。',
+      content: `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0;">
+          <svg width="100%" height="400" viewBox="0 0 800 400" style="background: white; border: 1px solid #ddd; border-radius: 4px;">
+            <!-- 発行前段階 -->
+            <rect x="50" y="50" width="150" height="60" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+            <text x="125" y="75" text-anchor="middle" font-size="12" font-weight="bold">取締役会決議</text>
+            <text x="125" y="90" text-anchor="middle" font-size="10">募集事項決定</text>
+            
+            <!-- 価格判定 -->
+            <rect x="250" y="30" width="140" height="50" fill="#fff3e0" stroke="#f57c00" stroke-width="2" rx="5"/>
+            <text x="320" y="50" text-anchor="middle" font-size="11" font-weight="bold">特に有利な金額？</text>
+            <text x="320" y="65" text-anchor="middle" font-size="9">時価との比較</text>
+            
+            <!-- YES分岐 -->
+            <rect x="250" y="120" width="140" height="40" fill="#ffebee" stroke="#d32f2f" stroke-width="2" rx="5"/>
+            <text x="320" y="140" text-anchor="middle" font-size="10" font-weight="bold">YES: 株主総会決議</text>
+            <text x="320" y="150" text-anchor="middle" font-size="8">特別決議必要</text>
+            
+            <!-- NO分岐 -->
+            <rect x="420" y="120" width="140" height="40" fill="#e8f5e8" stroke="#388e3c" stroke-width="2" rx="5"/>
+            <text x="490" y="140" text-anchor="middle" font-size="10" font-weight="bold">NO: 取締役会権限</text>
+            <text x="490" y="150" text-anchor="middle" font-size="8">そのまま発行可</text>
+            
+            <!-- 通知・公告 -->
+            <rect x="300" y="200" width="200" height="40" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="5"/>
+            <text x="400" y="220" text-anchor="middle" font-size="11" font-weight="bold">募集事項の通知・公告</text>
+            <text x="400" y="230" text-anchor="middle" font-size="8">【会社法201条3項・4項】</text>
+            
+            <!-- 差止請求 -->
+            <rect x="550" y="180" width="120" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="5"/>
+            <text x="610" y="205" text-anchor="middle" font-size="10" font-weight="bold">差止請求可能</text>
+            <text x="610" y="215" text-anchor="middle" font-size="8">【会社法210条】</text>
+            <text x="610" y="225" text-anchor="middle" font-size="8">・法令定款違反</text>
+            <text x="610" y="235" text-anchor="middle" font-size="8">・著しく不公正</text>
+            
+            <!-- 発行実行 -->
+            <rect x="300" y="280" width="200" height="40" fill="#e1f5fe" stroke="#0277bd" stroke-width="2" rx="5"/>
+            <text x="400" y="300" text-anchor="middle" font-size="11" font-weight="bold">株式発行実行</text>
+            <text x="400" y="310" text-anchor="middle" font-size="8">効力発生</text>
+            
+            <!-- 無効の訴え -->
+            <rect x="550" y="280" width="120" height="60" fill="#fff8e1" stroke="#ffa000" stroke-width="2" rx="5"/>
+            <text x="610" y="305" text-anchor="middle" font-size="10" font-weight="bold">発行無効の訴え</text>
+            <text x="610" y="315" text-anchor="middle" font-size="8">【会社法828条】</text>
+            <text x="610" y="325" text-anchor="middle" font-size="8">重大な法令違反</text>
+            <text x="610" y="335" text-anchor="middle" font-size="8">のみ無効</text>
+            
+            <!-- 矢印 -->
+            <path d="M 200 80 L 240 60" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 320 80 L 320 110" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 360 55 L 450 55 L 450 110" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 320 160 L 360 190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 490 160 L 440 190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 400 240 L 400 270" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 500 220 L 540 210" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <path d="M 500 300 L 540 310" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+            
+            <!-- ラベル -->
+            <text x="370" y="50" font-size="9" fill="#f57c00">判定</text>
+            <text x="280" y="100" font-size="9" fill="#d32f2f">YES</text>
+            <text x="430" y="100" font-size="9" fill="#388e3c">NO</text>
+            
+            <!-- 矢印マーカー定義 -->
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+              </marker>
+            </defs>
+          </svg>
+          <div style="margin-top: 12px; padding: 12px; background: #f5f5f5; border-radius: 4px; font-size: 11px;">
+            <strong>図表の説明：</strong><br>
+            • <span style="color: #f57c00;">オレンジ</span>：判定段階　• <span style="color: #d32f2f;">赤</span>：株主総会決議必要　• <span style="color: #388e3c;">緑</span>：取締役会権限<br>
+            • <span style="color: #7b1fa2;">紫</span>：必須手続　• <span style="color: #c2185b;">ピンク</span>：事前救済　• <span style="color: #ffa000;">黄</span>：事後救済
+          </div>
+        </div>
+      `
+    },
+    
     { type: 'dialogue', speaker: 'みかん', expression: 'thinking', dialogue: 'じゃあ、もし会社が違法な株式発行をしようとしたら、株主はどうすればいいの？' },
     { type: 'dialogue', speaker: '吉岡', expression: 'serious', dialogue: '株式発行差止請求ができるんだ！特に「著しく不公正な方法」【id:8】っていうのは、特定株主の持株比率を低下させる等の目的が資金調達等の他の目的に優越して、それが主要目的といえる場合のことだよ。最近は敵対的買収の場面で、買収者に対抗するために募集株式を発行することに必要性と合理性が認められる限りで、差止めを否定する裁判例も出てるんだ。' },
     { type: 'dialogue', speaker: 'みかん', expression: 'confused', dialogue: 'でも、もし違法な株式発行が実際に行われちゃったらどうするの？' },
+    
+    // 無効事由の判断基準を整理した比較表を追加
+    {
+      type: 'embed',
+      format: 'html',
+      title: '募集株式発行無効事由の判断基準一覧',
+      description: '各種手続違反について、判例が示した有効・無効の判断とその理由を整理した表です。',
+      content: `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0;">
+          <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <thead>
+              <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: bold;">手続違反の類型</th>
+                <th style="padding: 12px; text-align: center; font-size: 12px; font-weight: bold;">効力</th>
+                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: bold;">判断理由・判例</th>
+                <th style="padding: 12px; text-align: center; font-size: 12px; font-weight: bold;">会社の種類</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 10px; font-size: 11px; font-weight: 500;">差止仮処分を無視した発行</td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">無効</span>
+                </td>
+                <td style="padding: 10px; font-size: 10px;">差止請求権の実効性確保のため<br><span style="color: #666;">(最判平5.12.16)</span></td>
+                <td style="padding: 10px; text-align: center; font-size: 10px;">全て</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef; background: #fafafa;">
+                <td style="padding: 10px; font-size: 11px; font-weight: 500;">募集事項の通知・公告欠缺</td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="background: #fff3e0; color: #ef6c00; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">原則無効</span>
+                </td>
+                <td style="padding: 10px; font-size: 10px;">差止機会の剥奪、ただし差止原因なしは有効<br><span style="color: #666;">(最判平9.1.28)</span></td>
+                <td style="padding: 10px; text-align: center; font-size: 10px;">全て</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 10px; font-size: 11px; font-weight: 500;">著しく不公正な方法</td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="background: #e8f5e8; color: #2e7d32; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">有効</span>
+                </td>
+                <td style="padding: 10px; font-size: 10px;">事前差止機会あり、内部事情にすぎない<br><span style="color: #666;">(最判平6.7.14)</span></td>
+                <td style="padding: 10px; text-align: center; font-size: 10px;">全て</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef; background: #fafafa;">
+                <td style="padding: 10px; font-size: 11px; font-weight: 500;">株主総会特別決議欠缺（有利発行）</td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="background: #e8f5e8; color: #2e7d32; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">有効</span>
+                </td>
+                <td style="padding: 10px; font-size: 10px;">内部手続違反、利害関係人保護優先<br><span style="color: #666;">(最判昭46.7.16)</span></td>
+                <td style="padding: 10px; text-align: center; font-size: 10px;">公開会社</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e9ecef;">
+                <td style="padding: 10px; font-size: 11px; font-weight: 500;">株主総会特別決議欠缺（第三者割当）</td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">無効</span>
+                </td>
+                <td style="padding: 10px; font-size: 10px;">持株比率維持への既存株主利益保護<br><span style="color: #666;">(最判平24.4.24)</span></td>
+                <td style="padding: 10px; text-align: center; font-size: 10px;">非公開会社</td>
+              </tr>
+              <tr style="background: #fafafa;">
+                <td style="padding: 10px; font-size: 11px; font-weight: 500;">取締役会決議欠缺</td>
+                <td style="padding: 10px; text-align: center;">
+                  <span style="background: #e8f5e8; color: #2e7d32; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">有効</span>
+                </td>
+                <td style="padding: 10px; font-size: 10px;">内部手続違反、利害関係人保護優先<br><span style="color: #666;">(最判昭36.3.31)</span></td>
+                <td style="padding: 10px; text-align: center; font-size: 10px;">公開会社</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 6px; font-size: 11px;">
+            <strong>判断基準のポイント：</strong><br>
+            • <strong>取引安全vs株主保護</strong>：公開会社では取引安全重視、非公開会社では株主保護重視<br>
+            • <strong>内部手続vs外部効果</strong>：内部手続違反は原則有効、外部的効果に影響する違反は無効の可能性<br>
+            • <strong>事前救済の有無</strong>：差止請求の機会があるかが重要な判断要素
+          </div>
+        </div>
+      `
+    },
+    
     { type: 'dialogue', speaker: '吉岡', expression: 'passionate', dialogue: 'それが「募集株式発行無効の訴え」なんだ！本案勝訴要件としては、重大な法令・定款違反に限定される【id:10】。これは取引の安全と法的安定性を重視してるからなんだよ。' },
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'serious', dialogue: '具体的にどんな場合が無効になるかは、判例の積み重ねがあるの。例えば、差止仮処分を無視した発行は無効【id:11】、募集事項の通知・公告を欠く発行は原則無効だけど差止原因がない場合は有効【id:12】とかね。' },
     { type: 'dialogue', speaker: 'みかん', expression: 'surprised', dialogue: 'えー、でも著しく不公正な方法による発行はどうなの？' },
@@ -77,6 +241,108 @@ export default {
     { type: 'dialogue', speaker: 'みかん', expression: 'thinking', dialogue: 'ところで、新株予約権って何？' },
     { type: 'dialogue', speaker: '吉岡', expression: 'passionate', dialogue: '新株予約権は、将来一定の条件で株式を取得できる権利のことだよ！でも会社法下では、新株予約権の行使条件は「新株予約権の内容」に含まれるから、取締役会に委任することはできないんだ【id:16】。これは平成24年の最高裁判例で明確になった。明示の委任がない限り、事後的に行使条件を変更する取締役会決議も、細目的な変更にとどまるものを除いて無効なんだよ。' },
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'normal', dialogue: '新株予約権は敵対的買収の防衛策としても使われるのよ【id:20】。新株予約権の無償割当てが株主の地位に実質的変動を及ぼすときには、【会社法247条】が類推適用されて、差止請求ができることになる。株主平等原則違反が問題になるけど、会社の企業価値が毀損される場合には、衡平の理念に反し相当性を欠く事情がない限り、差別的取扱いも許容されるの。' },
+    
+    // 新株予約権による敵対的買収防衛の仕組みを図解
+    {
+      type: 'embed',
+      format: 'svg',
+      title: '新株予約権による敵対的買収防衛の仕組み',
+      description: 'ライツプランなどの敵対的買収防衛策で使われる新株予約権の仕組みを図解したものです。',
+      content: `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 16px 0;">
+          <svg width="100%" height="480" viewBox="0 0 900 480" style="background: white; border: 1px solid #ddd; border-radius: 4px;">
+            <!-- タイトル -->
+            <text x="450" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#333">新株予約権による敵対的買収防衛（ライツプラン）</text>
+            
+            <!-- ステップ1: 平常時 -->
+            <rect x="50" y="60" width="200" height="80" fill="#e8f5e8" stroke="#4caf50" stroke-width="2" rx="8"/>
+            <text x="150" y="85" text-anchor="middle" font-size="12" font-weight="bold">STEP 1: 平常時</text>
+            <text x="150" y="105" text-anchor="middle" font-size="10">全株主に新株予約権を</text>
+            <text x="150" y="120" text-anchor="middle" font-size="10">無償で割当て</text>
+            
+            <!-- ステップ2: 敵対的買収開始 -->
+            <rect x="350" y="60" width="200" height="80" fill="#fff3e0" stroke="#ff9800" stroke-width="2" rx="8"/>
+            <text x="450" y="85" text-anchor="middle" font-size="12" font-weight="bold">STEP 2: 買収開始</text>
+            <text x="450" y="105" text-anchor="middle" font-size="10">買収者が一定割合</text>
+            <text x="450" y="120" text-anchor="middle" font-size="10">（例：15%）以上取得</text>
+            
+            <!-- ステップ3: 発動 -->
+            <rect x="650" y="60" width="200" height="80" fill="#ffebee" stroke="#f44336" stroke-width="2" rx="8"/>
+            <text x="750" y="85" text-anchor="middle" font-size="12" font-weight="bold">STEP 3: 発動</text>
+            <text x="750" y="105" text-anchor="middle" font-size="10">買収者以外の株主のみ</text>
+            <text x="750" y="120" text-anchor="middle" font-size="10">新株予約権行使可能</text>
+            
+            <!-- 新株予約権の内容 -->
+            <rect x="50" y="180" width="300" height="120" fill="#f3e5f5" stroke="#9c27b0" stroke-width="2" rx="8"/>
+            <text x="200" y="205" text-anchor="middle" font-size="12" font-weight="bold">新株予約権の内容</text>
+            <text x="70" y="230" font-size="10">• 行使価格：市価の50%など</text>
+            <text x="70" y="250" font-size="10">• 行使条件：買収者以外の株主のみ</text>
+            <text x="70" y="270" font-size="10">• 発動要件：15%以上の買収など</text>
+            <text x="70" y="290" font-size="10">• 効果：買収者の持株比率希釈化</text>
+            
+            <!-- 法的問題 -->
+            <rect x="400" y="180" width="450" height="120" fill="#e1f5fe" stroke="#03a9f4" stroke-width="2" rx="8"/>
+            <text x="625" y="205" text-anchor="middle" font-size="12" font-weight="bold">法的検討事項</text>
+            <text x="420" y="230" font-size="10">1. <strong>株主平等原則</strong>（【会社法109条1項】）：</text>
+            <text x="440" y="245" font-size="9">買収者のみ行使できない ⇨ 差別的取扱い</text>
+            <text x="420" y="265" font-size="10">2. <strong>企業価値毀損の判断</strong>：</text>
+            <text x="440" y="280" font-size="9">衡平の理念に反し相当性を欠く事情がない限り適法</text>
+            <text x="420" y="295" font-size="10">3. <strong>必要性・相当性</strong>：当該目的実現のために必要か</text>
+            
+            <!-- 効果の図示 -->
+            <text x="450" y="340" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">買収防衛効果</text>
+            
+            <!-- 発動前の持株比率 -->
+            <g transform="translate(150, 360)">
+              <text x="0" y="-10" text-anchor="middle" font-size="11" font-weight="bold">発動前</text>
+              <circle cx="0" cy="0" r="40" fill="#ffcdd2" stroke="#f44336" stroke-width="2"/>
+              <text x="0" y="-5" text-anchor="middle" font-size="10">買収者</text>
+              <text x="0" y="8" text-anchor="middle" font-size="10" font-weight="bold">20%</text>
+              
+              <circle cx="80" cy="0" r="60" fill="#c8e6c9" stroke="#4caf50" stroke-width="2"/>
+              <text x="80" y="-5" text-anchor="middle" font-size="10">その他株主</text>
+              <text x="80" y="8" text-anchor="middle" font-size="10" font-weight="bold">80%</text>
+            </g>
+            
+            <!-- 矢印 -->
+            <path d="M 350 380 L 400 380" stroke="#333" stroke-width="3" marker-end="url(#arrowhead2)"/>
+            <text x="375" y="375" text-anchor="middle" font-size="10" font-weight="bold">権利行使</text>
+            
+            <!-- 発動後の持株比率 -->
+            <g transform="translate(550, 360)">
+              <text x="0" y="-10" text-anchor="middle" font-size="11" font-weight="bold">発動後</text>
+              <circle cx="0" cy="0" r="25" fill="#ffcdd2" stroke="#f44336" stroke-width="2"/>
+              <text x="0" y="-5" text-anchor="middle" font-size="9">買収者</text>
+              <text x="0" y="6" text-anchor="middle" font-size="9" font-weight="bold">10%</text>
+              
+              <circle cx="80" cy="0" r="70" fill="#c8e6c9" stroke="#4caf50" stroke-width="2"/>
+              <text x="80" y="-5" text-anchor="middle" font-size="10">その他株主</text>
+              <text x="80" y="8" text-anchor="middle" font-size="10" font-weight="bold">90%</text>
+            </g>
+            
+            <!-- 接続線 -->
+            <path d="M 250 100 L 340 100" stroke="#666" stroke-width="2" marker-end="url(#arrowhead2)"/>
+            <path d="M 550 100 L 640 100" stroke="#666" stroke-width="2" marker-end="url(#arrowhead2)"/>
+            
+            <!-- 吹き出し -->
+            <path d="M 750 160 L 750 180 L 740 170 Z" fill="#ffeb3b"/>
+            <rect x="680" y="140" width="140" height="25" fill="#ffeb3b" stroke="#fbc02d" rx="4"/>
+            <text x="750" y="155" text-anchor="middle" font-size="9" font-weight="bold">買収阻止効果！</text>
+            
+            <!-- 矢印マーカー定義 -->
+            <defs>
+              <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+              </marker>
+            </defs>
+          </svg>
+          <div style="margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%); color: white; border-radius: 6px; font-size: 11px;">
+            <strong>ポイント：</strong> 新株予約権による買収防衛は、株主平等原則との衝突が問題となるが、企業価値の毀損を防ぐために必要性・相当性が認められる場合には適法とされる。最決平19.8.7は、この判断基準を明確化した重要な判例である。
+          </div>
+        </div>
+      `
+    },
+    
     { type: 'dialogue', speaker: 'みかん', expression: 'confused', dialogue: 'ところで、支配株主が変わるような大きな株式発行の場合って、特別なルールがあるの？' },
     { type: 'dialogue', speaker: '吉岡', expression: 'serious', dialogue: 'いい質問だね！支配株主の異動を伴う募集株式の発行には特則があるんだ。まず通知・公告義務【id:18】があって、これに違反した場合の効力については学説が分かれてる。有効説は、通常の募集事項の通知・公告があれば差止めを検討する余地があるから有効だとするけど、無効説は、事前の差止めの機会を奪うし、会社の基礎の変更に当たるから無効だとするんだ。' },
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'serious', dialogue: 'さらに株主総会決議の欠缺【id:19】についても学説対立があるの。有効説は、普通決議で足りるし、通知・公告で情報が公示されてるから有効だとする。でも無効説は、支配株主の異動は会社の基礎の変更だし、株主が反対通知の状況を知る手段がないから事前の差止めが困難だとして無効だとするのよ。' },
@@ -155,7 +421,7 @@ export default {
     <p class="mb-4">**新株予約権**は、将来一定の条件で株式を取得できる権利です。会社法下では、新株予約権の行使条件は「新株予約権の内容」に含まれ、取締役会への委任はできないとされています【id:16】。</p>
     <p class="mb-4">**敵対的買収における新株予約権無償割当て**については、株主の地位に実質的変動を及ぼすときには、【会社法247条】が類推適用されます【id:20】。この場合の判断基準として、以下が重要です：</p>
     <ul class="list-disc list-inside mb-4 pl-4 space-y-2">
-      <li><span class="text-red-600 font-bold">株主平等原則</span>：会社の企業価値が毀損され、株主の共同の利益が害される場合には、衡平の理念に反し相当性を欠く事情がない限り、差別的取扱いも許容される</li>
+      <li><span class="text-red-600 font-bold">株主平等原則</span>：会社の企業価値が毀損され、株主の共同の利益が害される場合には、衡平の理念に反し相当性を欠く事情がない限り、差別的取扱いも株主平等原則(の趣旨) に反しない。(最決平19.8.7)</li>
       <li><span class="text-red-600 font-bold">著しく不公正な方法</span>：当該目的実現のために必要性・相当性が認められるかという基準で判断される</li>
     </ul>
     <div class="bg-yellow-100 p-4 rounded-lg mt-6">

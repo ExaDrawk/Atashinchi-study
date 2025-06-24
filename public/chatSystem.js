@@ -216,13 +216,16 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
         }
         
         // 混在したナレーション＋対話の処理
-        processedResponse = processedResponse.replace(/^(.+?。.+?。)\s+([^。]+@[^:]+:.*)$/gm, '$1---$2');
-
-        const dialogues = processedResponse.split('---').filter(d => d.trim() !== '');
+        processedResponse = processedResponse.replace(/^(.+?。.+?。)\s+([^。]+@[^:]+:.*)$/gm, '$1---$2');        const dialogues = processedResponse.split('---').filter(d => d.trim() !== '');
         for (const dialogue of dialogues) {
             await sleep(1500);
             displaySingleDialogue(dialogue, sessionId);
-        }// ★★★ 改良されたスコア抽出とデバッグ ★★★
+        }
+        
+        // ★★★ 全ての対話表示完了後にMermaid初期化 ★★★
+        setTimeout(() => {
+            initializeChatMermaid();
+        }, 500); // 最後の対話表示を待つ// ★★★ 改良されたスコア抽出とデバッグ ★★★
         console.log('🔍 AIレスポンス（スコア検索用）:', aiResponse.substring(0, 500));
         
         // より柔軟なスコア抽出パターン
@@ -455,6 +458,9 @@ function displaySingleDialogue(dialogue, sessionId) {
     const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;    // ★★★ キャラクターのセリフ内の条文・Q&A参照もボタン化＋太字デコレーション（強化版） ★★★
     let processedDialogueText = processCharacterDialogue(dialogueText, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || []);
     
+    // ★★★ Mermaidグラフの処理を追加 ★★★
+    processedDialogueText = processMermaidInDialogue(processedDialogueText);
+    
     // **で囲まれた部分をおしゃれな太字スタイルに変換
     processedDialogueText = processedDialogueText.replace(/\*\*(.*?)\*\*/g, '<span class="inline-block bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent font-extrabold text-lg shadow-sm px-1 py-0.5 rounded" style="text-shadow: 0 1px 2px rgba(0,0,0,0.1);">$1</span>');
     
@@ -479,12 +485,17 @@ function displaySingleDialogue(dialogue, sessionId) {
                 </div>
             </div>
         `;
-    }
-
-    dialogueArea.insertAdjacentHTML('beforeend', messageHtml);
+    }    dialogueArea.insertAdjacentHTML('beforeend', messageHtml);
     
     // 新しく追加された条文参照ボタンのイベントリスナーを設定
     setupArticleRefButtons(dialogueArea);
+    
+    // ★★★ Mermaidグラフが含まれている場合の初期化処理 ★★★
+    if (processedDialogueText.includes('mermaid-chat-container')) {
+        setTimeout(() => {
+            initializeChatMermaid();
+        }, 100); // DOM更新を待つため少し遅延
+    }
 
     if (isScrolledToBottom) {
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
@@ -1092,3 +1103,259 @@ function generateCharacterAwarePrompt(basePrompt, currentCaseData, sessionType =
     
     return enhancedPrompt;
 }
+
+// ★★★ Mermaidの処理を追加（chatSystem用） ★★★
+function processMermaidInDialogue(dialogueText) {
+    // ```mermaid で囲まれたMermaidコードを検出
+    const mermaidPattern = /```mermaid\s+(.*?)\s+```/gs;
+    
+    return dialogueText.replace(mermaidPattern, (match, mermaidCode) => {
+        const mermaidId = 'chat-mermaid-' + Math.random().toString(36).substr(2, 9);
+        console.log('🎨 チャット内でMermaid図表を作成:', mermaidId, mermaidCode.trim());
+        
+        return `
+            <div class="mermaid-chat-container my-4 p-4 bg-gray-50 rounded-lg border">
+                <div class="zoom-controls mb-2">
+                    <button class="zoom-btn zoom-in text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">拡大</button>
+                    <button class="zoom-btn zoom-out text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">縮小</button>
+                    <button class="zoom-btn zoom-reset text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">リセット</button>
+                </div>
+                <div id="${mermaidId}" class="mermaid">${mermaidCode.trim()}</div>
+            </div>
+        `;
+    });
+}
+
+// ★★★ Mermaid初期化関数（チャット用）★★★
+function initializeChatMermaid() {
+    console.log('🎨 チャット内Mermaid初期化開始');
+    
+    if (typeof mermaid === 'undefined') {
+        console.warn('⚠️ Mermaid.jsが読み込まれていません');
+        return;
+    }
+    
+    try {
+        // Mermaid設定
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: 'M PLUS Rounded 1c, sans-serif',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'linear'
+            },
+            themeVariables: {
+                primaryColor: '#f0f9ff',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#0284c7',
+                lineColor: '#475569',
+                fontSize: '14px'
+            }
+        });
+        
+        // 現在表示されているMermaid要素をレンダリング
+        const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed="true"])');
+        console.log(`🔍 チャット内Mermaid要素を${mermaidElements.length}個発見`);
+        
+        mermaidElements.forEach(async (element, index) => {
+            const graphDefinition = element.textContent || element.innerText;
+            console.log(`📝 チャット図表定義 #${index}:`, graphDefinition);
+            
+            try {
+                const graphId = `chat-graph-${Date.now()}-${index}`;
+                const { svg } = await mermaid.render(graphId, graphDefinition);
+                element.innerHTML = svg;
+                element.setAttribute('data-processed', 'true');
+                console.log(`✅ チャットMermaid図表 #${index} レンダリング完了`);
+            } catch (renderError) {
+                console.error(`❌ チャットMermaid レンダリングエラー #${index}:`, renderError);
+                element.innerHTML = `
+                    <div style="color: red; padding: 10px; border: 1px solid red; border-radius: 4px;">
+                        <h4>図表レンダリングエラー</h4>
+                        <p>${renderError.message}</p>
+                        <pre style="background: #f5f5f5; padding: 8px; border-radius: 4px; white-space: pre-wrap; font-size: 12px;">${graphDefinition}</pre>
+                    </div>
+                `;
+            }
+        });
+        
+        console.log('🎨 チャット内Mermaid初期化完了');
+        
+        // ズーム機能も初期化
+        initializeChatMermaidZoom();
+    } catch (error) {
+        console.error('❌ チャット内Mermaid初期化エラー:', error);
+    }
+}
+
+// ★★★ チャット内Mermaidズーム機能★★★
+function initializeChatMermaidZoom() {
+    console.log('🔍 チャット内Mermaidズーム機能を初期化開始');
+    
+    const mermaidContainers = document.querySelectorAll('.mermaid-chat-container:not([data-zoom-initialized])');
+    console.log(`🎯 ${mermaidContainers.length}個のチャット内Mermaidコンテナを発見`);
+    
+    mermaidContainers.forEach((container, index) => {
+        const mermaidElement = container.querySelector('.mermaid');
+        if (!mermaidElement) {
+            console.warn(`⚠️ チャットコンテナ #${index} にMermaid要素が見つかりません`);
+            return;
+        }
+        
+        // ズーム状態を初期化
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        
+        // ズームコントロールボタンのイベント設定
+        const zoomInBtn = container.querySelector('.zoom-in');
+        const zoomOutBtn = container.querySelector('.zoom-out');
+        const zoomResetBtn = container.querySelector('.zoom-reset');
+        
+        // 拡大ボタン
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                scale *= 1.2;
+                applyTransform();
+            });
+        }
+        
+        // 縮小ボタン
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                scale /= 1.2;
+                applyTransform();
+            });
+        }
+        
+        // リセットボタン
+        if (zoomResetBtn) {
+            zoomResetBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+            });
+        }
+        
+        // 変形適用関数
+        function applyTransform() {
+            mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            mermaidElement.style.transformOrigin = 'center center';
+            mermaidElement.style.transition = 'transform 0.3s ease';
+        }
+        
+        // マウスホイールでズーム
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            scale *= delta;
+            applyTransform();
+        });
+        
+        // ドラッグでパン
+        mermaidElement.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            mermaidElement.style.cursor = 'grabbing';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - lastMouseX;
+            const deltaY = e.clientY - lastMouseY;
+            translateX += deltaX;
+            translateY += deltaY;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            applyTransform();
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+            }
+        });
+        
+        container.setAttribute('data-zoom-initialized', 'true');
+    });
+}
+
+// ★★★ デバッグ用：Mermaidグラフテスト関数 ★★★
+window.testMermaidInChat = function(sessionId = 'test') {
+    const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
+    if (!dialogueArea) {
+        console.log('テスト用の対話エリアを作成します');
+        const testContainer = document.createElement('div');
+        testContainer.id = `dialogue-area-${sessionId}`;
+        testContainer.style.cssText = 'border: 2px dashed #ccc; padding: 20px; margin: 20px; min-height: 300px; background: #f9f9f9;';
+        document.body.appendChild(testContainer);
+    }
+
+    // テスト用のMermaidコードを含むAIレスポンスをシミュレート
+    const testDialogue = `理央@thinking: 都市発展段階説を図で示すとこんな感じになるね。
+
+\`\`\`mermaid
+graph TD
+    A[都市化<br/>Urbanization] --> B[郊外化<br/>Suburbanization]
+    B --> C[反都市化<br/>Disurbanization]
+    C --> D[再都市化<br/>Reurbanization]
+    D -.-> A
+    
+    A --> A1[中心部集中]
+    B --> B1[郊外拡散]
+    C --> C1[全体衰退]
+    D --> D1[中心回帰]
+\`\`\`
+
+これでクラッセンの理論がより分かりやすくなるはずよ。`;
+
+    console.log('🎯 Mermaidテスト実行中...');
+    displaySingleDialogue(testDialogue, sessionId);
+};
+
+// ★★★ デバッグ用：より複雑なMermaidテスト ★★★
+window.testComplexMermaidInChat = function(sessionId = 'test') {
+    const testDialogue = `みかん@excited: 都市の人口変化を表にしてみたよ！
+
+\`\`\`mermaid
+flowchart LR
+    subgraph "1970年代"
+        A1[東京圏<br/>急成長] --> A2[大阪圏<br/>成長鈍化]
+        A2 --> A3[地方都市<br/>人口減少]
+    end
+    
+    subgraph "1990年代"
+        B1[東京圏<br/>一極集中] --> B2[大阪圏<br/>停滞]
+        B2 --> B3[地方都市<br/>空洞化]
+    end
+    
+    subgraph "2020年代"
+        C1[東京圏<br/>都心回帰] --> C2[大阪圏<br/>回復兆候]
+        C2 --> C3[地方都市<br/>選択的成長]
+    end
+    
+    A1 --> B1
+    A2 --> B2
+    A3 --> B3
+    B1 --> C1
+    B2 --> C2
+    B3 --> C3
+\`\`\`
+
+どうかな？時代の流れがよく分かるでしょ？`;
+
+    console.log('🎯 複雑なMermaidテスト実行中...');
+    displaySingleDialogue(testDialogue, sessionId);
+};

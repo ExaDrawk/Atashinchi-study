@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ハイブリッド図表テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            background-color: #FFFBEB; 
+        }
+        
+        /* Mermaid用スタイル */
+        .mermaid-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .mermaid {
+            display: block;
+            margin: 20px auto;
+            min-height: 300px;
+            width: 100%;
+        }
+        
+        /* キャラクター図表用スタイル */
+        .character-diagram {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .character-node {
+            display: inline-block;
+            position: relative;
+            margin: 15px;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .character-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            margin: 0 auto 8px;
+            display: block;
+            object-fit: cover;
+            background: #f3f4f6;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .character-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .character-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1f2937;
+            max-width: 80px;
+            margin: 0 auto;
+            line-height: 1.2;
+        }
+        
+        .diagram-arrow {
+            display: inline-block;
+            font-size: 24px;
+            color: #6b7280;
+            margin: 0 10px;
+            vertical-align: middle;
+        }
+        
+        .diagram-row {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .diagram-subgraph {
+            border: 2px dashed #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #fffbeb;
+        }
+        
+        .diagram-subgraph-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .character-fallback-emoji {
+            font-size: 40px;
+            display: none;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-6 max-w-6xl">
+        <h1 class="text-3xl font-bold text-center mb-8">📊 ハイブリッド図表システム</h1>
+        
+        <!-- Mermaid図表 -->
+        <div class="embed-container my-6">
+            <h4 class="font-bold text-lg mb-2 text-gray-800">代理制度の基本フロー（Mermaid版）</h4>
+            <p class="text-sm text-gray-600 mb-3">代理制度の基本フローチャートです。有権代理から無権代理、表見代理まで全体の流れを把握できます。</p>
+            <div class="embed-content">
+                <div class="mermaid-container">
+                    <div class="mermaid">graph TD
+    A[代理権授与] --> B[代理行為]
+    B --> C[顕名]
+    C --> D[効果帰属]
+    
+    E[無権代理] --> F[追認権]
+    E --> G[催告権・取消権]
+    E --> H[表見代理]
+    H --> I[外観の信頼]
+    I --> D</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- キャラクター図表 -->
+        <div class="embed-container my-6">
+            <h4 class="font-bold text-lg mb-2 text-gray-800">無権代理から表見代理への展開（キャラクター版）</h4>
+            <p class="text-sm text-gray-600 mb-3">キャラクターとともに無権代理事案の法的検討プロセスを視覚的に理解できます。</p>
+            <div class="embed-content">
+                <div class="character-diagram">
+                    <div class="diagram-subgraph">
+                        <div class="diagram-subgraph-title">📋 事案の設定</div>
+                        <div class="diagram-row">
+                            <div class="character-node">
+                                <img class="character-avatar" src="/images/characters/father/serious.png" alt="父" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="character-fallback-emoji">👨‍💼</div>
+                                <div class="character-name">父（本人）</div>
+                            </div>
+                            <span class="diagram-arrow">代理権授与？</span>
+                            <div class="character-node">
+                                <img class="character-avatar" src="/images/characters/yuzuhiko/thinking.png" alt="ユズヒコ" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="character-fallback-emoji">🤔</div>
+                                <div class="character-name">ユズヒコ（無権代理人）</div>
+                            </div>
+                            <span class="diagram-arrow">契約</span>
+                            <div class="character-node">
+                                <img class="character-avatar" src="/images/characters/mikan/normal.png" alt="みかん" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="character-fallback-emoji">👧</div>
+                                <div class="character-name">みかん（相手方）</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-subgraph">
+                        <div class="diagram-subgraph-title">⚖️ 法的検討</div>
+                        <div class="diagram-row">
+                            <div class="character-node">
+                                <img class="character-avatar" src="/images/characters/sudo/serious.png" alt="須藤" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="character-fallback-emoji">👩‍⚖️</div>
+                                <div class="character-name">須藤<br>（109条検討）</div>
+                            </div>
+                            <div class="character-node">
+                                <img class="character-avatar" src="/images/characters/ishida/passionate.png" alt="石田" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="character-fallback-emoji">🔥</div>
+                                <div class="character-name">石田<br>（110条検討）</div>
+                            </div>
+                            <div class="character-node">
+                                <img class="character-avatar" src="/images/characters/kawashima/normal.png" alt="川島" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="character-fallback-emoji">👩‍💼</div>
+                                <div class="character-name">川島<br>（112条検討）</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="diagram-row">
+                        <div class="character-node">
+                            <img class="character-avatar" src="/images/characters/yukarin/cool.png" alt="ゆかりん" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <div class="character-fallback-emoji">😎</div>
+                            <div class="character-name">ゆかりん<br>（結論導出）</div>
+                        </div>
+                        <span class="diagram-arrow">→</span>
+                        <div style="padding: 20px; background: #dcfce7; border: 2px solid #16a34a; border-radius: 8px; max-width: 200px;">
+                            <strong>📄 法的効果</strong><br>
+                            表見代理成立<br>
+                            または<br>
+                            無権代理人責任
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Mermaid初期化
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(async () => {
+                const mermaidElements = document.querySelectorAll('.mermaid');
+                console.log(`🔍 Mermaid要素: ${mermaidElements.length}個`);
+                
+                for (let i = 0; i < mermaidElements.length; i++) {
+                    const element = mermaidElements[i];
+                    if (element.getAttribute('data-processed') !== 'true') {
+                        const graphDefinition = element.textContent;
+                        try {
+                            const { svg } = await mermaid.render(`graph-${i}`, graphDefinition);
+                            element.innerHTML = svg;
+                            element.setAttribute('data-processed', 'true');
+                            console.log(`✅ 図表 ${i} 完了`);
+                        } catch (error) {
+                            console.error(`❌ 図表 ${i} エラー:`, error);
+                        }
+                    }
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

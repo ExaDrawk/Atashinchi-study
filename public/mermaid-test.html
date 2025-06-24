@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaidテスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        .mermaid {
+            display: block;
+            margin: 20px auto;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mermaidテスト</h1>
+      <h2>基本テスト（@なし）</h2>
+    <div class="mermaid">
+graph TD
+    A[みかん] --> B[ユズヒコ]
+    B --> C[代理権確認]
+    C --> D[有効な契約]
+    </div>
+    
+    <h2>重畳適用パターン</h2>
+    <div class="mermaid">
+graph TD
+    subgraph "重畳適用"
+        A[吉岡] --> B[藤野]
+        C[岩城] --> B
+    end
+    
+    subgraph "表見代理の3類型"
+        D[父] --> E[みかん]
+        D --> F[ユズヒコ]
+        D --> G[ゆかりん]
+    end
+    
+    E --> H[須藤]
+    F --> I[石田]
+    G --> J[川島]
+    </div>
+    
+    <script>
+        console.log('Mermaid初期化開始');
+        
+        // 基本設定
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+        
+        // 手動レンダリング
+        document.querySelectorAll('.mermaid').forEach(async (element, index) => {
+            const graphDefinition = element.textContent;
+            console.log(`図表 ${index}:`, graphDefinition);
+            
+            try {
+                const { svg } = await mermaid.render(`graph-${index}`, graphDefinition);
+                element.innerHTML = svg;
+                console.log(`図表 ${index} レンダリング完了`);
+            } catch (error) {
+                console.error(`図表 ${index} エラー:`, error);
+                element.innerHTML = `<div style="color: red; padding: 20px;">エラー: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>
