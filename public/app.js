@@ -5,7 +5,6 @@ import { setupGlobalEventDelegation } from './eventHandler.js';
 import { createArticlePanel, updateLawSelectOptions } from './articlePanel.js';
 import { ApiService } from './apiService.js';
 import { testArticleDetection, forceProcessArticleButtons } from './articleProcessor.js';
-import { startChatSession } from './chatSystem.js'; // チャットシステムをインポート
 
 // --- グローバル変数の定義 ---
 let SUPPORTED_LAWS = [];
@@ -28,7 +27,6 @@ async function initializeApp() {
         
         // 4. グローバルに設定
         window.SUPPORTED_LAWS = SUPPORTED_LAWS;
-        window.startChatSession = startChatSession; // チャットセッション関数をグローバルに登録
         
         // 5. 法令selectを更新
         updateLawSelectOptions(SUPPORTED_LAWS);

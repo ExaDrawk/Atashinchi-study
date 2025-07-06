@@ -1,13 +1,8 @@
 // chatSystem.js - チャット・対話システムモジュール（キャラクター回答の条文処理対応）
 
 import { processArticleReferences, processAllReferences, setupArticleRefButtons } from './articleProcessor.js';
-import { characters, generateLocationNarration, getGlobalRulesAsText, getGlobalHonorificRulesAsText, getStoryContextRulesAsText, getOutputFormatRules, getLocationManagementRules, getSessionTypeInstructions, getBasicConversationRules, getArticleReferenceRules, getFollowUpLocationRules } from './data/characters.js';
+import { characters, generateLocationNarration, getGlobalRulesAsText, getGlobalHonorificRulesAsText, getStoryContextRulesAsText, getOutputFormatRules, getLocationManagementRules, getSessionTypeInstructions, getBasicConversationRules, getArticleReferenceRules, getFollowUpLocationRules, COMMON_EXPRESSIONS } from './data/characters.js';
 import { generateInitialPrompt, generateCharacterPersonaPrompt } from './data/prompts.js';
-
-// ★★★ ヘルパー関数 ★★★
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // ★★★ キャラクター回答の条文・Q&A参照処理（新機能） ★★★
 function processCharacterDialogue(dialogueText, supportedLaws = [], questionsAndAnswers = []) {
@@ -35,33 +30,8 @@ function processCharacterDialogue(dialogueText, supportedLaws = [], questionsAnd
 export async function startChatSession(button, currentCaseData) {
     console.log('=== startChatSession開始（story/explanation対応） ===');
     
-    // AI応答の重複防止チェック（即座に強制リセット）
-    if (window.isCharacterDialogueInProgress) {
-        console.warn('⚠️ チャットセッションが既に進行中です - 即座に強制リセット');
-        // 2秒経過していれば強制的にフラグをリセット（短縮）
-        if (!window.lastDialogueStartTime || (Date.now() - window.lastDialogueStartTime) > 2000) {
-            console.log('🔄 進行中フラグを強制リセット');
-            window.isCharacterDialogueInProgress = false;
-            window.lastDialogueStartTime = null;
-        } else {
-            console.log('🔄 フラグを即座に強制リセット（緊急処理）');
-            window.isCharacterDialogueInProgress = false;
-            window.lastDialogueStartTime = null;
-        }
-    }
-    
-    window.isCharacterDialogueInProgress = true;
-    window.lastDialogueStartTime = Date.now(); // 開始時間を記録
-    
-    try {
-        // buttonがDOM要素でない場合の処理
-        if (!button || typeof button.closest !== 'function') {
-            console.error('❌ button が有効なDOM要素ではありません:', button);
-            throw new Error('無効なbutton要素');
-        }
-        
-        const type = button.dataset?.type;
-        let container, inputForm, inputElement, chatArea;
+    const type = button.dataset.type;
+    let container, inputForm, inputElement, chatArea;
     
     // タイプに応じて適切な要素を取得
     if (type === 'story') {
@@ -77,86 +47,25 @@ export async function startChatSession(button, currentCaseData) {
     } else {
         // 従来のquiz/essay処理
         container = button.closest('.prose-bg');
-        
-        // mockButtonの場合はcontainerがnullになるので、特別処理
-        if (!container && button.dataset.type === 'quiz') {
-            const quizIndex = button.dataset.quizIndex;
-            const subIndex = button.dataset.subIndex || '0';
-            
-            // 司法試験用テキストエリアを複数の方法で検索
-            inputElement = document.getElementById('judicial-answer-textarea');
-            
-            if (!inputElement) {
-                // フォールバック: 他のIDで検索
-                inputElement = document.getElementById('initial-input-0-0') || 
-                              document.getElementById('initial-input-0-1') ||
-                              document.getElementById('initial-input-1-0') ||
-                              document.querySelector('textarea[id*="initial-input"]') ||
-                              document.querySelector('textarea');
-            }
-            
-            // 埋め込みチャットエリアを使用
-            chatArea = document.getElementById('embedded-chat-area');
-            
-            console.log('🔧 テキストエリア検索結果:', { 
-                inputElement: !!inputElement, 
-                inputElementId: inputElement?.id,
-                chatArea: !!chatArea 
-            });
-            
-            // input-formは動的に作成するか、既存の要素を探す
-            inputForm = document.querySelector('.input-form') || 
-                       document.querySelector('#judicial-answer-form') ||
-                       inputElement?.closest('form') ||
-                       inputElement?.parentElement;
-            
-            console.log('🔧 mockButton用の要素検索結果:', { inputElement, chatArea, inputForm });
-        } else if (container) {
-            inputForm = container.querySelector('.input-form');
-            inputElement = container.querySelector('textarea');
-            chatArea = container.querySelector('.chat-area');
-        } else {
-            // containerもない場合は要素が見つからない
-            inputForm = null;
-            inputElement = null;
-            chatArea = null;
-        }
+        inputForm = container.querySelector('.input-form');
+        inputElement = container.querySelector('textarea');
+        chatArea = container.querySelector('.chat-area');
     }
 
-    if (!inputElement || !chatArea) {
-        console.error('致命的エラー: 必要なUI要素が見つかりません', { 
-            type, 
-            inputForm: !!inputForm, 
-            inputElement: !!inputElement, 
-            chatArea: !!chatArea,
-            buttonType: button.dataset.type,
-            isMockButton: !button.closest('.prose-bg'),
-            allTextareas: Array.from(document.querySelectorAll('textarea')).map(t => t.id || t.className),
-            embeddedChatExists: !!document.getElementById('embedded-chat-area')
-        });
-        window.isCharacterDialogueInProgress = false;
+    if (!inputForm || !inputElement || !chatArea) {
+        console.error('致命的エラー: 必要なUI要素が見つかりません', { type, inputForm, inputElement, chatArea });
         return;
     }
 
     const userInput = inputElement.value.trim();
     if (userInput.length < 10) {
         alert('もう少し詳しく記述してください（10文字以上）。');
-        window.isCharacterDialogueInProgress = false;
         return;
-    }
-    
-    console.log('✅ チャットセッション要素確認完了:', {
-        userInputLength: userInput.length,
-        chatAreaElement: chatArea.tagName,
-        inputElementType: inputElement.type
-    });
-    
-    // 入力フォームを非表示にしてチャットエリアを表示
-    if (inputForm) {
+    }try {
         inputForm.style.display = 'none';
-    }
         chatArea.style.display = 'block';
 
+        const type = button.dataset.type;
         const quizIndex = button.dataset.quizIndex;
         const subIndex = button.dataset.subIndex || '0'; // 複数小問対応
         
@@ -206,30 +115,37 @@ export async function startChatSession(button, currentCaseData) {
             chatTitle = '✍️ 論文トレーニング';
         }
           chatArea.innerHTML = `
+            ${hintText ? `<div class="bg-blue-50 p-4 rounded-lg mb-4 border-2 border-blue-200 mt-4 animate-fade-in">
+                ${hintText}
+                <h5 class="font-bold mb-2">【あなたの答案】</h5>
+                <div class="bg-white p-3 rounded border text-sm">${userInput.replace(/\n/g, '<br>')}</div>
+            </div>` : `<div class="bg-gray-50 p-4 rounded-lg mb-4 border-2 border-gray-200 mt-4 animate-fade-in">
+                <h5 class="font-bold mb-2">【あなたの質問】</h5>
+                <div class="bg-white p-3 rounded border text-sm">${userInput.replace(/\n/g, '<br>')}</div>
+            </div>`}
             <div class="bg-gray-50 p-4 rounded-lg border animate-fade-in">
                 <h4 class="text-lg font-bold mb-3">${chatTitle}</h4>
-                <div id="dialogue-area-${sessionId}" class="space-y-4 h-[70vh] overflow-y-auto p-4 bg-white border rounded-lg custom-scrollbar">
+                <div id="dialogue-area-${sessionId}" class="space-y-4 max-h-[50vh] overflow-y-auto p-4 bg-white border rounded-lg custom-scrollbar">
                     <!-- 初期表示は空 -->
                 </div>
                 <div class="mt-4 flex gap-2">
                     <textarea id="chat-follow-up-input-${sessionId}" class="w-full p-4 border rounded-lg focus-ring" style="height: 120px; resize: none;" placeholder="さらに質問や反論をどうぞ…"></textarea>
                     <button id="send-follow-up-btn-${sessionId}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg btn-hover" data-session-id="${sessionId}">送信</button>
                 </div>
-            </div>        `;
-        
-        let initialPrompt;
+            </div>        `;        let initialPrompt;
         if (type === 'story' || type === 'explanation') {
-            // ストーリー・解説Q&A用のプロンプト（簡易版）
-            initialPrompt = generateInitialPrompt(userInput, problemText, modelAnswer, currentCaseData);
+            // ストーリー・解説Q&A用のプロンプト
+            const basePrompt = generateQAPrompt(userInput, problemText, modelAnswer, currentCaseData, type);
+            initialPrompt = generateCharacterAwarePrompt(basePrompt, currentCaseData, type);
         } else {
-            // 従来の添削用プロンプト
+            // 従来の添削用プロンプト（ナレーション付き）
             const characterNames = [...new Set(currentCaseData.story.filter(s => s.type === 'dialogue').map(s => s.speaker))];
             const locationNarration = generateLocationNarration(characterNames);
             
-            // 基本のプロンプトを取得
+            // 基本のプロンプトを取得してナレーションを統合
             const basePrompt = generateInitialPrompt(userInput, problemText, modelAnswer, currentCaseData);
-            // ナレーションを統合（簡易版）
-            initialPrompt = basePrompt + '\n\n' + locationNarration;
+            const narrativePrompt = integrateLocationNarration(basePrompt, locationNarration);
+            initialPrompt = generateCharacterAwarePrompt(narrativePrompt, currentCaseData);
         }
 
         if (!window.conversationHistories) window.conversationHistories = {};
@@ -247,44 +163,31 @@ export async function startChatSession(button, currentCaseData) {
 
     } catch (error) {
         console.error('❌ startChatSessionでエラーが発生:', error);
-        if (inputForm) {
-            inputForm.style.display = 'block';
-        }
-        if (chatArea) {
-            chatArea.style.display = 'none';
-            chatArea.innerHTML = '';
-        }
-    } finally {
-        // AI応答が完了したらフラグをリセット
-        window.isCharacterDialogueInProgress = false;
+        inputForm.style.display = 'block';
+        chatArea.style.display = 'none';
+        chatArea.innerHTML = '';
     }
 }
 
+
 // ★★★ AIとの通信を管理する中核関数 ★★★
 export async function sendMessageToAI(sessionId, promptText, problemText, userInput) {
-    let followUpLoaderId = null; // スコープを広げる
-    
+    const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
+    if (!dialogueArea) return;
+
+    // ローディング表示（追記用）
+    const followUpLoaderId = `follow-up-loader-${Date.now()}`;
+    dialogueArea.insertAdjacentHTML('beforeend', `<div id="${followUpLoaderId}" class="text-center p-2"><div class="loader-small mx-auto"></div></div>`);
+    dialogueArea.scrollTop = dialogueArea.scrollHeight;
+
     try {
-        const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
-        if (!dialogueArea) {
-            console.error('❌ dialogue-area が見つかりません:', sessionId);
-            return;
-        }
-
-        console.log('🚀 sendMessageToAI開始:', { sessionId, promptLength: promptText?.length });
-
-        // ローディング表示（追記用）
-        followUpLoaderId = `follow-up-loader-${Date.now()}`;
-        dialogueArea.insertAdjacentHTML('beforeend', `<div id="${followUpLoaderId}" class="text-center p-2"><div class="loader-small mx-auto"></div></div>`);
-        dialogueArea.scrollTop = dialogueArea.scrollHeight;
-
         const history = window.conversationHistories[sessionId] || [];
 
         const response = await fetch('/api/gemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
             body: JSON.stringify({
-                message: promptText,
+                prompt: promptText,
                 history: history,
             })
         });
@@ -295,140 +198,31 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
         }
         
         const result = await response.json();
-        const aiResponse = result.reply || result.text || result.message || '';
-        console.log('✅ AI応答取得:', { responseLength: aiResponse.length });
-
-        // 🔥 AI応答レベルでの完全な重複チェック（最強版）
-        if (dialogueArea) {
-            // 1. 履歴ベースの重複チェック
-            if (window.conversationHistories[sessionId]) {
-                const lastResponses = window.conversationHistories[sessionId]
-                    .filter(msg => msg.role === 'model')
-                    .slice(-5) // 直近5回の応答をチェック
-                    .map(msg => msg.parts[0].text.trim());
-                
-                if (lastResponses.includes(aiResponse.trim())) {
-                    console.warn('🚫 履歴ベースでAI応答の重複を検出、処理をスキップ:', aiResponse.substring(0, 100));
-                    return;
-                }
-            }
-            
-            // 2. 表示済み内容ベースの重複チェック
-            const existingMessages = Array.from(dialogueArea.querySelectorAll('.dialogue-message, .original-content'))
-                .map(el => el.textContent?.trim() || '')
-                .filter(text => text.length > 10);
-            
-            const responseToCheck = aiResponse.trim();
-            for (const existing of existingMessages) {
-                if (existing === responseToCheck) {
-                    console.warn('🚫 表示済み内容でAI応答の重複を検出、処理をスキップ:', responseToCheck.substring(0, 100));
-                    return;
-                }
-                
-                // 部分的な重複もチェック（80%以上一致）
-                if (existing.length > 50 && responseToCheck.length > 50) {
-                    const similarity = calculateSimilarity(existing, responseToCheck);
-                    if (similarity > 0.8) {
-                        console.warn('🚫 高い類似度でAI応答の重複を検出、処理をスキップ:', `類似度: ${(similarity * 100).toFixed(1)}%`);
-                        return;
-                    }
-                }
-            }
-            
-            // 3. 特定のキャラクター発言の重複チェック
-            const speakerMatches = responseToCheck.match(/([^@:：]+)[@:]([^:：]*?)[:：]/g);
-            if (speakerMatches) {
-                for (const match of speakerMatches) {
-                    const existingSpeakers = Array.from(dialogueArea.querySelectorAll('.dialogue-speaker'))
-                        .map(el => el.textContent?.trim() || '');
-                    
-                    const currentSpeaker = match.split(/[@:：]/)[0].trim();
-                    if (existingSpeakers.filter(s => s === currentSpeaker).length >= 2) {
-                        console.warn('🚫 同一キャラクターの過度な重複発言を検出:', currentSpeaker);
-                        return;
-                    }
-                }
-            }
-        }
-
-        // 文字列類似度計算関数
-        function calculateSimilarity(str1, str2) {
-            const len1 = str1.length;
-            const len2 = str2.length;
-            const matrix = Array(len2 + 1).fill(null).map(() => Array(len1 + 1).fill(null));
-            
-            for (let i = 0; i <= len1; i++) matrix[0][i] = i;
-            for (let j = 0; j <= len2; j++) matrix[j][0] = j;
-            
-            for (let j = 1; j <= len2; j++) {
-                for (let i = 1; i <= len1; i++) {
-                    const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-                    matrix[j][i] = Math.min(
-                        matrix[j][i - 1] + 1,
-                        matrix[j - 1][i] + 1,
-                        matrix[j - 1][i - 1] + indicator
-                    );
-                }
-            }
-            
-            return 1 - matrix[len2][len1] / Math.max(len1, len2);
-        }
+        const aiResponse = result.text.trim();
 
         // ローディング表示を削除
         const loaderToRemove = document.getElementById(followUpLoaderId) || document.getElementById(`loading-indicator-${sessionId}`);
-        if (loaderToRemove) loaderToRemove.remove();
-        
-        window.conversationHistories[sessionId].push({ role: 'model', parts: [{ text: aiResponse }] });
+        if (loaderToRemove) loaderToRemove.remove();        window.conversationHistories[sessionId].push({ role: 'model', parts: [{ text: aiResponse }] });
 
         // AIレスポンスの前処理：ナレーション部分を分離
         let processedResponse = aiResponse;
         
         // 【ナレーション】形式の処理
-        const narrationMatches = [];
-        let tempResponse = processedResponse;
-        
-        // 【ナレーション】〜〜 の部分を抽出
-        const narrationRegex = /【ナレーション】([^【]*?)(?=【|$)/g;
-        let match;
-        while ((match = narrationRegex.exec(processedResponse)) !== null) {
-            narrationMatches.push({
-                full: match[0],
-                text: match[1].trim(),
-                start: match.index
-            });
+        const narrationMatch = processedResponse.match(/^【ナレーション】(.+?)(?=\n|$)/);
+        if (narrationMatch) {
+            const narrationPart = narrationMatch[0];
+            const remainingPart = processedResponse.replace(narrationMatch[0], '').trim();
+            processedResponse = narrationPart + (remainingPart ? '---' + remainingPart : '');
         }
         
-        // ナレーション部分を個別に処理
-        for (const narration of narrationMatches) {
-            tempResponse = tempResponse.replace(narration.full, `---NARRATION:${narration.text}---`);
-        }
-        
-        // 混在したナレーション＋対話の処理（前処理で分割）
-        tempResponse = tempResponse.replace(/^(.+?。.+?。)\s+([^。]+@[^:]+:.*)$/gm, '$1---$2');
-        
-        const dialogues = tempResponse.split('---').filter(d => d.trim() !== '');
-        
+        // 混在したナレーション＋対話の処理
+        processedResponse = processedResponse.replace(/^(.+?。.+?。)\s+([^。]+@[^:]+:.*)$/gm, '$1---$2');
+
+        const dialogues = processedResponse.split('---').filter(d => d.trim() !== '');
         for (const dialogue of dialogues) {
             await sleep(1500);
-            
-            // ナレーション特別処理
-            if (dialogue.startsWith('NARRATION:')) {
-                const narrationText = dialogue.replace('NARRATION:', '').trim();
-                displayNarration(narrationText, sessionId);
-            } else {
-                // 通常の対話処理（ナレーション処理を迂回）
-                displaySingleDialogue(dialogue, sessionId, true); // skipNarrationフラグを追加
-            }
-        }
-        
-        // ★★★ 全ての対話表示完了後にMermaid初期化 ★★★
-        setTimeout(() => {
-            if (typeof initializeChatMermaid === 'function') {
-                initializeChatMermaid();
-            }
-        }, 500); // 最後の対話表示を待つ
-        
-        // ★★★ 改良されたスコア抽出とデバッグ ★★★
+            displaySingleDialogue(dialogue, sessionId);
+        }// ★★★ 改良されたスコア抽出とデバッグ ★★★
         console.log('🔍 AIレスポンス（スコア検索用）:', aiResponse.substring(0, 500));
         
         // より柔軟なスコア抽出パターン
@@ -467,22 +261,9 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
 
     } catch (error) {
         console.error('AI通信エラー:', error);
-        const loaderToRemove = document.getElementById(followUpLoaderId) || document.getElementById(`loading-indicator-${sessionId}`);
+        const loaderToRemove = document.getElementById(followUpLoaderId);
         if (loaderToRemove) loaderToRemove.remove();
-        
-        const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
-        if (dialogueArea) {
-            dialogueArea.insertAdjacentHTML('beforeend', `<p class="text-red-500 p-4">エラー: ${error.message}</p>`);
-        }
-    } finally {
-        // 最終的にローディングを確実に削除
-        setTimeout(() => {
-            const finalLoader = document.getElementById(followUpLoaderId) || document.getElementById(`loading-indicator-${sessionId}`);
-            if (finalLoader) finalLoader.remove();
-        }, 100);
-        
-        // AI応答が完了したらフラグをリセット
-        window.isCharacterDialogueInProgress = false;
+        dialogueArea.insertAdjacentHTML('beforeend', `<p class="text-red-500 p-4">エラー: ${error.message}</p>`);
     }
 }
 
@@ -508,7 +289,7 @@ export async function sendFollowUpMessage(sessionId) {
         getBasicConversationRules() + '\n\n' +
         '今すぐ、上記の全ルールを遵守し、会話の続きを生成してください。';
 
-    // キャラクター情報を統合したプロンプトを生成（簡易版）
+    // キャラクター情報を統合したプロンプトを生成
     const { problemText, userInput, currentCaseData } = getProblemInfoFromHistory(sessionId);
     
     // sessionIdからセッションタイプを判定
@@ -523,8 +304,7 @@ export async function sendFollowUpMessage(sessionId) {
         sessionType = 'essay';
     }
     
-    // 簡易版プロンプト統合
-    const followUpPrompt = baseFollowUpPrompt;
+    const followUpPrompt = generateCharacterAwarePrompt(baseFollowUpPrompt, currentCaseData, sessionType);
       await sendMessageToAI(sessionId, followUpPrompt, problemText, userInput);
 }
 
@@ -547,7 +327,7 @@ function processNarration(text, sessionId) {
             </div>
         `);
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
-        return { processed: true, remainingDialogue: null };
+        return true;
     }
     
     // より厳密なナレーション部分の検出
@@ -568,9 +348,9 @@ function processNarration(text, sessionId) {
             </div>
         `);
         
-        // 対話部分は後続で処理される（再帰呼び出しを削除）
-        // 修正された対話テキストを返す
-        return { processed: true, remainingDialogue: dialoguePart };
+        // 対話部分を再処理
+        displaySingleDialogue(dialoguePart, sessionId);
+        return true;
     }
     
     // パターン2: 純粋なナレーション（「。」で終わるが「@」「:」を含まない）
@@ -585,31 +365,14 @@ function processNarration(text, sessionId) {
             </div>
         `);
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
-        return { processed: true, remainingDialogue: null };
+        return true;
     }
     
-    return { processed: false, remainingDialogue: null };
+    return false;
 }
 
-// ★★★ ナレーション表示専用関数 ★★★
-function displayNarration(narrationText, sessionId) {
-    const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
-    if (!dialogueArea) return;
-    
-    dialogueArea.insertAdjacentHTML('beforeend', `
-        <div class="my-4 animate-fade-in">
-            <div class="text-center">
-                <p class="text-gray-600 italic bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 inline-block max-w-lg mx-auto text-sm">
-                    ${narrationText}
-                </p>
-            </div>
-        </div>
-    `);
-    dialogueArea.scrollTop = dialogueArea.scrollHeight;
-}
-
-// ★★★ 単一対話の表示（キャラクター回答の条文処理対応＋重複排除強化） ★★★
-function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
+// ★★★ 単一対話の表示（キャラクター回答の条文処理対応） ★★★
+function displaySingleDialogue(dialogue, sessionId) {
     const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
     if (!dialogueArea) {
         console.error(`displaySingleDialogueエラー: 対話エリア(dialogue-area-${sessionId})が見つかりません。`);
@@ -622,53 +385,16 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
         return;
     }
 
-    // 🔥 重複チェック強化: 複数の条件で重複を防止
-    const existingOriginals = dialogueArea.querySelectorAll('.original-content');
-    const existingVisibleText = dialogueArea.querySelectorAll('.dialogue-message, .dialogue-speaker, h5');
-    
-    // 1. 原文ベースの重複チェック
-    for (const existing of existingOriginals) {
-        if (existing.textContent.trim() === trimmedDialogue.trim()) {
-            console.warn('🚫 重複した対話をスキップ（原文一致）:', trimmedDialogue.substring(0, 50));
-            return;
-        }
-    }
-    
-    // 2. 表示テキストベースの重複チェック
-    for (const existing of existingVisibleText) {
-        const existingText = existing.textContent.trim();
-        if (existingText && existingText === trimmedDialogue.trim()) {
-            console.warn('🚫 重複した対話をスキップ（表示一致）:', trimmedDialogue.substring(0, 50));
-            return;
-        }
-    }
-    
-    // 3. 話者名の重複チェック（連続する同じ話者の発言）
-    const lastSpeaker = dialogueArea.querySelector('.dialogue-speaker:last-child');
-    const speakerMatch = trimmedDialogue.match(/^([^：\n]+)[:：]/);
-    if (lastSpeaker && speakerMatch) {
-        const currentSpeaker = speakerMatch[1].trim();
-        if (lastSpeaker.textContent.trim() === currentSpeaker) {
-            console.warn('🚫 連続する同じ話者の発言をスキップ:', currentSpeaker);
-            return;
-        }
-    }
-
-    // skipNarrationフラグがfalseの場合のみナレーション処理を実行
-    if (!skipNarration) {
-        // ナレーション処理を試行
-        const narrationResult = processNarration(trimmedDialogue, sessionId);
-        if (narrationResult && narrationResult.processed) {
-            // ナレーション処理が完了した場合
-            if (narrationResult.remainingDialogue) {
-                // 残りの対話部分があれば再帰処理
-                displaySingleDialogue(narrationResult.remainingDialogue, sessionId, true);
-            }
-            return;
-        }
+    // ナレーション処理を最初に実行
+    if (processNarration(trimmedDialogue, sessionId)) {
+        return; // ナレーションが処理された場合は終了
     }
 
     const isScrolledToBottom = dialogueArea.scrollHeight - dialogueArea.clientHeight <= dialogueArea.scrollTop + 1;
+
+    // ナレーションを処理
+    const narrationProcessed = processNarration(trimmedDialogue, sessionId);
+    if (narrationProcessed) return;
 
     const colonIndex = trimmedDialogue.indexOf(':');
     if (colonIndex <= 0) {
@@ -685,33 +411,12 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
     const speakerPart = trimmedDialogue.substring(0, colonIndex).trim();
     const dialogueText = trimmedDialogue.substring(colonIndex + 1).trim();
     
-    // 4. 具体的な発言内容の重複チェック
-    const existingDialogues = dialogueArea.querySelectorAll('.dialogue-message');
-    for (const existing of existingDialogues) {
-        if (existing.textContent.trim() === dialogueText.trim()) {
-            console.warn('🚫 同じ発言内容の重複をスキップ:', dialogueText.substring(0, 50));
-            return;
-        }
-    }
-    
-    // 5. 話者と発言の組み合わせ重複チェック
-    const lastDialogueGroup = dialogueArea.querySelector('.dialogue-group:last-child');
-    if (lastDialogueGroup) {
-        const lastSpeaker = lastDialogueGroup.querySelector('.dialogue-speaker')?.textContent?.trim();
-        const lastMessage = lastDialogueGroup.querySelector('.dialogue-message')?.textContent?.trim();
-        
-        if (lastSpeaker === speakerPart && lastMessage === dialogueText) {
-            console.warn('🚫 同一話者・同一発言の重複をスキップ:', speakerPart, dialogueText.substring(0, 30));
-            return;
-        }
-    }
-    
-    const atIndex = speakerPart.indexOf('@');
-    if (atIndex <= 0) {
+    const atIndex = speakerPart.indexOf('@');    if (atIndex <= 0) {
         dialogueArea.insertAdjacentHTML('beforeend', `
             <div class="my-3 animate-fade-in"><div class="bg-red-100 p-3 rounded-lg border border-red-300">
                 <p class="font-bold text-sm text-red-700">AIのフォーマットエラー</p>
                 <p class="text-sm text-red-600">キャラクター名または表情の指定が不正です（例: "みかん@thinking"）。</p>
+                <p class="text-xs text-blue-600 mt-1"><b>利用可能な表情:</b> ${COMMON_EXPRESSIONS.join(', ')}</p>
                 <p class="text-xs text-red-500 break-all mt-1">受信内容: "${trimmedDialogue}"</p>
             </div></div>`);
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
@@ -734,9 +439,14 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
             </div></div>`);
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
         return;
+    }    // ★★★ 表情指定の検証（COMMON_EXPRESSIONS使用） ★★★
+    const finalExpression = COMMON_EXPRESSIONS.includes(expression) ? expression : 'normal';
+    
+    // 表情が無効だった場合のデバッグログ
+    if (!COMMON_EXPRESSIONS.includes(expression)) {
+        console.warn(`⚠️ 無効な表情指定: "${expression}"。normalにフォールバック。利用可能な表情: ${COMMON_EXPRESSIONS.join(', ')}`);
     }
-
-    const finalExpression = character.availableExpressions && character.availableExpressions.includes(expression) ? expression : 'normal';
+    
     const iconSrc = `/images/${character.baseName}_${finalExpression}.png`;
     const fallbackSrc = `/images/${character.baseName}_normal.png`;
     const onErrorAttribute = `this.src='${fallbackSrc}'; this.onerror=null;`;
@@ -750,11 +460,6 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
     const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;    // ★★★ キャラクターのセリフ内の条文・Q&A参照もボタン化＋太字デコレーション（強化版） ★★★
     let processedDialogueText = processCharacterDialogue(dialogueText, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || []);
     
-    // ★★★ Mermaidグラフの処理を追加 ★★★
-    if (typeof processMermaidInDialogue === 'function') {
-        processedDialogueText = processMermaidInDialogue(processedDialogueText);
-    }
-    
     // **で囲まれた部分をおしゃれな太字スタイルに変換
     processedDialogueText = processedDialogueText.replace(/\*\*(.*?)\*\*/g, '<span class="inline-block bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent font-extrabold text-lg shadow-sm px-1 py-0.5 rounded" style="text-shadow: 0 1px 2px rgba(0,0,0,0.1);">$1</span>');
     
@@ -764,8 +469,7 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
             <div class="flex justify-end items-start gap-3 my-3 animate-fade-in">
                 <div class="bg-green-100 p-3 rounded-lg shadow max-w-[75%]">
                     <p class="font-bold text-sm text-green-800">${character.name}</p>
-                    <p class="text-sm dialogue-content">${processedDialogueText}</p>
-                    <div class="hidden original-content">${trimmedDialogue}</div>
+                    <p class="text-sm">${processedDialogueText}</p>
                 </div>
                 ${iconHtml}
             </div>
@@ -776,24 +480,16 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
                 ${iconHtml}
                 <div class="bg-white p-3 rounded-lg shadow border max-w-[75%]">
                     <p class="font-bold text-sm text-gray-800">${character.name}</p>
-                    <p class="text-sm dialogue-content">${processedDialogueText}</p>
-                    <div class="hidden original-content">${trimmedDialogue}</div>
+                    <p class="text-sm">${processedDialogueText}</p>
                 </div>
             </div>
         `;
-    }    dialogueArea.insertAdjacentHTML('beforeend', messageHtml);
+    }
+
+    dialogueArea.insertAdjacentHTML('beforeend', messageHtml);
     
     // 新しく追加された条文参照ボタンのイベントリスナーを設定
     setupArticleRefButtons(dialogueArea);
-    
-    // ★★★ Mermaidグラフが含まれている場合の初期化処理 ★★★
-    if (processedDialogueText.includes('mermaid-chat-container')) {
-        setTimeout(() => {
-            if (typeof initializeChatMermaid === 'function') {
-                initializeChatMermaid();
-            }
-        }, 100); // DOM更新を待つため少し遅延
-    }
 
     if (isScrolledToBottom) {
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
@@ -977,9 +673,7 @@ async function saveUserAnswer(sessionId, userAnswer, score, problemText) {
                 });
                 
                 // 過去回答表示エリアの自動更新
-                if (typeof updatePastAnswersDisplay === 'function') {
-                    updatePastAnswersDisplay(sessionId, storageKey);
-                }
+                updatePastAnswersDisplay(sessionId, storageKey);
                 
             } else {
                 console.error('❌ Step9失敗: 最終確認でデータが消失!');
@@ -1013,76 +707,393 @@ async function saveUserAnswer(sessionId, userAnswer, score, problemText) {
     console.log('🎯 =========================');
 }
 
-// ★★★ チャットセッション終了 ★★★
-export function endChatSession(sessionId) {
-    console.log('🔚 チャットセッション終了:', sessionId);
+// ★★★ デバッグ用：localStorage確認関数 ★★★
+window.debugLocalStorage = function() {
+    console.log('=== localStorage デバッグ情報 ===');
     
-    // 通常のチャットエリアを非表示
-    const chatArea = document.querySelector(`#chat-area-${sessionId}`);
-    if (chatArea) {
-        chatArea.style.display = 'none';
-        chatArea.innerHTML = '';
+    // localStorageが利用可能かチェック
+    try {
+        const testKey = '__test_storage__';
+        localStorage.setItem(testKey, 'test');
+        localStorage.removeItem(testKey);
+        console.log('✅ localStorage は利用可能です');
+    } catch (error) {
+        console.error('❌ localStorage が利用できません:', error);
+        console.log('📝 原因: プライベートモード、容量不足、またはブラウザ設定の問題の可能性があります');
     }
     
-    // 対話エリアを非表示
-    const dialogueArea = document.querySelector(`#dialogue-area-${sessionId}`);
-    if (dialogueArea) {
-        dialogueArea.innerHTML = '';
+    const keys = Object.keys(localStorage);
+    const answerKeys = keys.filter(key => key.startsWith('answers_'));
+    
+    console.log(`📊 総localStorage項目数: ${keys.length}`);
+    console.log(`📝 回答保存項目数: ${answerKeys.length}`);
+    
+    // localStorage使用量の計算
+    let totalSize = 0;
+    keys.forEach(key => {
+        const value = localStorage.getItem(key);
+        totalSize += key.length + (value ? value.length : 0);
+    });
+    console.log(`💾 localStorage使用量: ${(totalSize / 1024).toFixed(2)} KB`);
+    
+    if (answerKeys.length === 0) {
+        console.log('ℹ️ 保存された回答はありません');
+        return;
     }
     
-    // 埋め込みチャットエリアを非表示
-    const embeddedChatArea = document.getElementById('embedded-chat-area');
-    if (embeddedChatArea && sessionId === 'embedded-dialogue') {
-        embeddedChatArea.style.display = 'none';
-        embeddedChatArea.innerHTML = '';
+    answerKeys.forEach(key => {
+        try {
+            const data = JSON.parse(localStorage.getItem(key));
+            console.log(`📂 ${key}:`, data.length, '件の回答');
+            data.forEach((answer, index) => {
+                console.log(`  ${index + 1}. ${answer.score}点 (${new Date(answer.timestamp).toLocaleString()})`);
+            });
+        } catch (error) {
+            console.error(`❌ ${key} の読み込みエラー:`, error);
+        }
+    });
+    
+    console.log('=== デバッグ情報終了 ===');
+};
+
+// localStorageの監視機能
+window.watchLocalStorage = function() {
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+        console.log(`🔄 localStorage.setItem called: ${key}`, value.substring(0, 100) + '...');
+        const result = originalSetItem.apply(this, arguments);
+        console.log(`✅ localStorage.setItem completed for: ${key}`);
+        return result;
+    };
+    console.log('👀 localStorage監視を開始しました');
+};
+
+// 使用方法をコンソールに表示
+console.log('💡 デバッグ用コマンド:');
+console.log('  - window.debugLocalStorage() でlocalStorageの内容を確認');
+console.log('  - window.watchLocalStorage() でlocalStorageの操作を監視');
+console.log('  - window.verifyStoredAnswers() で現在のケースの保存データを詳細確認');
+console.log('  - window.watchCurrentCaseAnswers() で現在のケースの保存状況をリアルタイム監視');
+
+const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+// ★★★ ページ読み込み時の自動デバッグ ★★★
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 chatSystem.js 読み込み完了');
+    
+    // 初回デバッグ情報を表示
+    setTimeout(() => {
+        console.log('📋 初期localStorage状況:');
+        window.debugLocalStorage();
+    }, 1000);
+});
+
+// ★★★ 現在のケースIDを監視 ★★★
+let lastCaseId = null;
+setInterval(() => {
+    const currentId = window.currentCaseData?.id;
+    if (currentId && currentId !== lastCaseId) {
+        lastCaseId = currentId;
+        console.log(`📌 現在のケースID: ${currentId}`);
+        
+        // このケースの保存データを確認
+        const caseKeys = Object.keys(localStorage).filter(key => key.includes(currentId));
+        if (caseKeys.length > 0) {
+            console.log(`📂 このケースの保存データ (${caseKeys.length}件):`, caseKeys);
+        } else {
+            console.log('📭 このケースの保存データはまだありません');
+        }
+    }
+}, 2000);
+
+// ★★★ 保存データ詳細確認関数 ★★★
+window.verifyStoredAnswers = function(caseId) {
+    console.log('🔍 ===============================');
+    console.log('📊 保存データ詳細確認開始');
+    console.log('🔍 ===============================');
+    
+    const currentCaseId = caseId || window.currentCaseData?.id;
+    if (!currentCaseId) {
+        console.error('❌ ケースIDが指定されていません');
+        return;
     }
     
-    // 入力フォームを復元
-    const inputForm = document.querySelector(`#input-form-${sessionId}`);
-    if (inputForm) {
-        inputForm.style.display = 'block';
+    console.log('🎯 対象ケースID:', currentCaseId);
+    
+    // localStorageから該当するキーを検索
+    const allKeys = Object.keys(localStorage);
+    const answerKeys = allKeys.filter(key => 
+        key.startsWith('answers_') && key.includes(currentCaseId)
+    );
+    
+    console.log('📂 発見されたキー数:', answerKeys.length);
+    
+    if (answerKeys.length === 0) {
+        console.log('❌ このケースの保存データは見つかりませんでした');
+        console.log('💡 可能性:');
+        console.log('  - まだ保存していない');
+        console.log('  - 保存に失敗している');
+        console.log('  - ケースIDが変更された');
+        return;
     }
     
-    // 会話履歴をクリア
-    if (window.conversationHistories && window.conversationHistories[sessionId]) {
-        delete window.conversationHistories[sessionId];
+    // 各キーの詳細を確認
+    answerKeys.forEach((key, index) => {
+        console.log(`\n📝 データ ${index + 1}: ${key}`);
+        
+        try {
+            const data = localStorage.getItem(key);
+            if (!data) {
+                console.log('❌ データが空です');
+                return;
+            }
+            
+            const parsedData = JSON.parse(data);
+            console.log(`✅ 保存件数: ${parsedData.length}件`);
+            
+            // 各回答の詳細
+            parsedData.forEach((answer, answerIndex) => {
+                console.log(`  📄 回答 ${answerIndex + 1}:`);
+                console.log(`     スコア: ${answer.score}点`);
+                console.log(`     保存日時: ${new Date(answer.timestamp).toLocaleString()}`);
+                console.log(`     答案文字数: ${answer.userAnswer?.length || 0}文字`);
+                console.log(`     問題文: ${answer.problemText ? '保存済み' : '未保存'}`);
+                
+                // 最新の回答の一部を表示
+                if (answerIndex === parsedData.length - 1 && answer.userAnswer) {
+                    const preview = answer.userAnswer.substring(0, 100);
+                    console.log(`     答案プレビュー: "${preview}${answer.userAnswer.length > 100 ? '...' : ''}"`);
+                }
+            });
+            
+        } catch (error) {
+            console.error(`❌ データ解析エラー (${key}):`, error);
+        }
+    });
+    
+    console.log('\n🔍 ===============================');
+    console.log('📊 保存データ詳細確認完了');
+    console.log('🔍 ===============================');
+    
+    return {
+        caseId: currentCaseId,
+        totalKeys: answerKeys.length,
+        keys: answerKeys
+    };
+};
+
+// 現在のケースの保存データをリアルタイムで監視
+window.watchCurrentCaseAnswers = function() {
+    if (!window.currentCaseData?.id) {
+        console.error('❌ 現在のケースが不明です');
+        return;
     }
     
-    console.log('✅ チャットセッション終了完了:', sessionId);
+    const caseId = window.currentCaseData.id;
+    console.log('👀 現在のケース監視開始:', caseId);
+    
+    // 初期状態を表示
+    window.verifyStoredAnswers(caseId);
+    
+    // 3秒ごとに確認
+    const watchInterval = setInterval(() => {
+        const answerKeys = Object.keys(localStorage).filter(key => 
+            key.startsWith('answers_') && key.includes(caseId)
+        );
+        
+        let totalAnswers = 0;
+        answerKeys.forEach(key => {
+            try {
+                const data = JSON.parse(localStorage.getItem(key));
+                totalAnswers += data.length;
+            } catch (error) {
+                // エラーは無視
+            }
+        });
+        
+        console.log(`⏰ ${new Date().toLocaleTimeString()} - 総保存回答数: ${totalAnswers}件`);
+    }, 3000);
+    
+    // 30秒後に監視を停止
+    setTimeout(() => {
+        clearInterval(watchInterval);
+        console.log('🛑 監視終了');
+    }, 30000);
+    
+    return watchInterval;
+};
+
+// ★★★ 過去回答表示の自動更新 ★★★
+function updatePastAnswersDisplay(sessionId, storageKey) {
+    try {
+        console.log('🔄 過去回答表示の自動更新開始:', { sessionId, storageKey });
+        
+        // sessionIdから問題インデックスを抽出
+        let problemIndex = '';
+        if (sessionId.startsWith('quiz-')) {
+            problemIndex = sessionId.replace('quiz-', '');
+        } else if (sessionId.startsWith('essay')) {
+            problemIndex = '';
+        }
+        
+        // 対応する過去回答表示エリアを検索
+        const pastAnswersArea = document.getElementById(`past-answers-area-${problemIndex}`);
+        if (!pastAnswersArea) {
+            console.log('⚠️ 過去回答表示エリアが見つかりません:', `past-answers-area-${problemIndex}`);
+            return;
+        }
+        
+        // 表示エリアが非表示の場合は更新しない
+        if (pastAnswersArea.classList.contains('hidden')) {
+            console.log('ℹ️ 過去回答エリアが非表示のため、更新をスキップ');
+            return;
+        }
+        
+        // ストレージキーから情報を抽出
+        const keyParts = storageKey.split('_');
+        const caseId = keyParts[1];
+        const problemType = keyParts[2];
+        const extractedIndex = keyParts[3];
+        
+        console.log('🔄 過去回答再表示実行:', { caseId, problemType, extractedIndex });
+        
+        // 過去回答表示を更新
+        const newContent = window.displayPastAnswers ? 
+            window.displayPastAnswers(caseId, problemType, extractedIndex) :
+            '過去回答表示関数が見つかりません';
+        
+        pastAnswersArea.innerHTML = newContent;
+        console.log('✅ 過去回答表示更新完了');
+        
+    } catch (error) {
+        console.error('❌ 過去回答表示更新エラー:', error);
+    }
 }
 
-// ★★★ チャットセッションリセット ★★★
-export function resetChatSession(sessionId) {
-    console.log('🔄 チャットセッションリセット:', sessionId);
+// ★★★ ストーリー・解説Q&A用のプロンプト生成関数 ★★★
+function generateQAPrompt(userQuestion, contentText, knowledgeBox, caseData, type) {
+    const characterNames = [...new Set(caseData.story.filter(s => s.type === 'dialogue').map(s => s.speaker))];
+    const typeLabel = type === 'story' ? 'ストーリー' : '解説';
     
-    // 通常のチャットエリアを表示
-    const chatArea = document.querySelector(`#chat-area-${sessionId}`);
-    if (chatArea) {
-        chatArea.style.display = 'block';
+    // 場所ナレーションを生成
+    const locationNarration = generateLocationNarration(characterNames);
+    
+    return `# 指示：あなたは『あたしンち』の優秀な脚本家 兼 司法試験の指導講師です
+
+# 【事前知識（必ず参照すること）】
+${knowledgeBox || ''}
+
+# 【${typeLabel}内容】
+${contentText}
+
+# 【第一部：登場人物の完全理解】
+以下の登場人物たちのペルソナを**完全に理解し、なりきって**ください。
+${generateCharacterPersonaPrompt(characterNames)}
+
+# 【第二部：今回の脚本シナリオ】
+上記のペルソナを踏まえ、以下のシナリオで会話劇を生成してください。
+
+## シナリオ概要
+- これから生成するのは、ユーザーの質問に対する**${typeLabel}Q&Aの会話劇**です。
+- 目的は、一方的な解説ではなく、対話を通じて学習者に「気づき」を与えることです。
+- **重要**: 会話は必ず以下の場所ナレーションから始めてください：
+
+${locationNarration}
+
+## 材料
+- **ユーザーの質問**: ${userQuestion}
+- **${typeLabel}内容**: ${contentText}
+- **基礎知識**: ${knowledgeBox}
+
+## 今回の脚本構成（絶対厳守）
+1. **質問の理解と導入 (1〜2往復)**:
+   - 法律に詳しいキャラクター（ユズヒコ、しみちゃん等）が、質問を受けて「なるほど、それは良い質問だね」のように自然に応答を始める。
+
+2. **多角的な解説 (4〜8往復)**:
+   - 法律に詳しいキャラクター達が、質問に対して具体的で分かりやすい解説を行う。
+   - 専門家ではないキャラクター（みかん、母等）は、「それってどういうこと？」「もっと分かりやすく言うと？」のような質問で理解を深める役に徹する。
+
+3. **実用的なアドバイス**:
+   - 解説の後、「実際の試験ではこんな風に出題される」「覚えるコツは…」のような実用的なアドバイスを含める。
+
+# 【第三部：マスター・ルール】
+上記の執筆にあたり、以下のルールを厳守してください。
+
+## 1. 絶対禁止事項
+- **機械的な応答**: 「質問にお答えします」「解説を開始します」のような、システムやAIであることを感じさせる無機質なセリフは絶対に禁止です。
+- **カギ括弧\`「」\`の使用**: 全てのセリフにおいて、カギ括弧\`「」\`やその他の引用符は一切使用しないでください。
+- **キャラクターの役割崩壊**: 各キャラクターに設定された役割（専門性や性格）を無視した言動は絶対にさせないでください。
+
+## 2. 出力形式の厳守（ゼロ・トレランス・ポリシー）
+- **基本形式**: 必ず \`キャラクター名@表情: セリフ内容---\` の形式で出力してください。
+- **絶対禁止**: キャラクター名を省略し、\`@表情: セリフ内容---\` のように出力することは、いかなる理由があっても絶対に禁止します。
+
+## 3. 自然な対話の実現
+- 各キャラクターは自分の性格に応じた自然な言葉遣いと関心を示してください。
+- 法的な説明も、キャラクターの個性を通して行ってください。
+- **呼び方のルール**: 
+  - 山下、川島、須藤、石田ゆりは、ユズヒコを「ユズピ」と呼ぶ
+  - みかんはユズヒコを「ユズ」と呼ぶ
+  - 母はユズヒコを「ユズ」「ユーちゃん」と呼ぶ
+  - 吉岡はみかんを「タチバナ」と呼ぶ
+  - 岩城はみかんを「タチバナさん」と呼ぶ`;
+}
+
+// ★★★ 既存プロンプトにナレーション指示を統合する関数 ★★★
+function integrateLocationNarration(basePrompt, locationNarrationInstruction) {
+    if (!locationNarrationInstruction) return basePrompt;
+    
+    // "## 今回の脚本構成" の直前にナレーション指示を挿入
+    const targetText = '## 今回の脚本構成（絶対厳守）';
+    const insertText = `
+## 場所設定とナレーション指示（最重要）
+- **最重要**: ${locationNarrationInstruction}
+- **絶対的なフォーマット要件**: ナレーションは【ナレーション】形式で出力し、必ず改行してからキャラクターのセリフを開始してください
+- **ナレーション部分はキャラクター名として認識されません**: 【ナレーション】形式を厳守することで、適切に中央表示されます
+- **例**: 
+  【ナレーション】場所の説明文。
+  キャラクター名@表情: セリフ内容---
+
+${targetText}`;
+    
+    return basePrompt.replace(targetText, insertText);
+}
+
+// ★★★ 全AI対話でキャラクター情報を確実に適用するための統合関数 ★★★
+function generateCharacterAwarePrompt(basePrompt, currentCaseData, sessionType = null) {
+    // 登場キャラクターを抽出
+    let characterNames = [];
+    if (currentCaseData && currentCaseData.story) {
+        characterNames = [...new Set(currentCaseData.story.filter(s => s.type === 'dialogue').map(s => s.speaker))];
     }
     
-    // 対話エリアを表示
-    const dialogueArea = document.querySelector(`#dialogue-area-${sessionId}`);
-    if (dialogueArea) {
-        dialogueArea.style.display = 'block';
+    // キャラクター情報を統合
+    let enhancedPrompt = basePrompt;
+    
+    // グローバルルールを追加
+    enhancedPrompt += '\n\n' + getGlobalRulesAsText();
+    
+    // 敬語ルールを追加
+    enhancedPrompt += '\n\n' + getGlobalHonorificRulesAsText();
+    
+    // キャラクターペルソナを追加
+    if (characterNames.length > 0) {
+        enhancedPrompt += '\n\n' + generateCharacterPersonaPrompt(characterNames);
     }
     
-    // 埋め込みチャットエリアを表示
-    const embeddedChatArea = document.getElementById('embedded-chat-area');
-    if (embeddedChatArea && sessionId === 'embedded-dialogue') {
-        embeddedChatArea.style.display = 'block';
+    // ストーリー固有のルールを追加
+    if (currentCaseData) {
+        enhancedPrompt += '\n\n' + getStoryContextRulesAsText(currentCaseData);
+    }    // セッションタイプ別の補足指示
+    if (sessionType) {
+        enhancedPrompt += '\n\n' + getSessionTypeInstructions(sessionType);
     }
     
-    // 入力フォームを非表示
-    const inputForm = document.querySelector(`#input-form-${sessionId}`);
-    if (inputForm) {
-        inputForm.style.display = 'none';
-    }
+    // 場所設定の厳格な管理指示を追加
+    enhancedPrompt += '\n\n' + getLocationManagementRules();
+      // 出力フォーマットの厳格な指示を追加
+    enhancedPrompt += '\n\n## 【絶対厳守】出力フォーマット指示\n';
+    enhancedPrompt += getOutputFormatRules(sessionType);
     
-    // 会話履歴をクリア
-    if (window.conversationHistories && window.conversationHistories[sessionId]) {
-        delete window.conversationHistories[sessionId];
-    }
-    
-    console.log('✅ チャットセッションリセット完了:', sessionId);
+    return enhancedPrompt;
 }

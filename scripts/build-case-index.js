@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { pathToFileURL, fileURLToPath } from 'url';
+import { pathToFileURL } from 'url';
 
-// 指定ディレクトリを再帰的に探索し、.jsファイル（index.jsを除く）のリストを返す
+// 指定されたディレクトリを再帰的に探索し、.jsファイル（index.jsを除く）のリストを返す関数
 function findJsFiles(dir) {
     let results = [];
     const list = fs.readdirSync(dir);
@@ -18,74 +18,62 @@ function findJsFiles(dir) {
     return results;
 }
 
-// txtファイルの読み込み（存在しなければnull）
-function tryReadTxt(filePath) {
-    try {
-        if (fs.existsSync(filePath)) {
-            return fs.readFileSync(filePath, 'utf8');
-        }
-    } catch (e) {}
-    return null;
-}
-
 async function generateIndex() {
-    // __dirnameを正しく取得（Windows対応）
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const __dirname = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'));
     const casesRootDirectory = path.resolve(__dirname, '..', 'public', 'cases');
     const outputFilePath = path.join(casesRootDirectory, 'index.js');
-    const allCaseFiles = findJsFiles(casesRootDirectory);
-
-    const summaries = await Promise.all(allCaseFiles.map(async filePath => {
+    const allCaseFiles = findJsFiles(casesRootDirectory);    const summaries = await Promise.all(allCaseFiles.map(async filePath => {
         try {
             const fileUrl = pathToFileURL(filePath);
             const caseModule = await import(fileUrl.href);
             const caseData = caseModule.default;
-            const relativePath = path.relative(casesRootDirectory, filePath).replace(/\\/g, '/');
-            const id = relativePath.replace(/\.js$/, '');
+            const id = path.basename(filePath, '.js');
             const category = path.basename(path.dirname(filePath));
-
-            // txtファイル探索: 例 3.75-88_1-1_answer.txt
-            const baseName = path.basename(filePath, '.js');
-            const dirName = path.dirname(filePath);
-            // 例: _1-1_answer.txt, _1-1_correction.txt など
-            const txtTypes = ['answer', 'correction', 'grading'];
-            let txtData = {};
-            for (const type of txtTypes) {
-                // 例: 3.75-88_1-1_answer.txt
-                const txtFile = path.join(dirName, `${baseName}_${type}.txt`);
-                const content = tryReadTxt(txtFile);
-                if (content) {
-                    txtData[type] = content;
-                }
+            
+            // デバッグ情報を追加
+            console.log(`📂 処理中: ${category}/${id}.js`);
+            
+            if (!caseData) {
+                console.error(`❌ エラー: ${filePath} - caseData が undefined です`);
+                return null;
             }
-
-            // js側定義が優先
-            const modelAnswer = (caseData.modelAnswer !== undefined) ? caseData.modelAnswer : (txtData['answer'] || undefined);
-            const correctionInfo = (caseData.correctionInfo !== undefined) ? caseData.correctionInfo : (txtData['correction'] || undefined);
-            const gradingInfo = (caseData.gradingInfo !== undefined) ? caseData.gradingInfo : (txtData['grading'] || undefined);
-
-            return {
-                id,
-                category,
-                title: caseData.title || '無題',
-                citation: caseData.citation || '',
-                tags: caseData.tags || [],
-                filePath: relativePath,
-                // 追加情報
-                ...(modelAnswer !== undefined ? { modelAnswer } : {}),
-                ...(correctionInfo !== undefined ? { correctionInfo } : {}),
-                ...(gradingInfo !== undefined ? { gradingInfo } : {})
+            
+            if (!caseData.title) {
+                console.error(`❌ エラー: ${filePath} - title プロパティが見つかりません`);
+                console.error(`利用可能なプロパティ:`, Object.keys(caseData));
+                return null;
+            }
+            
+            return { 
+                id, 
+                category, 
+                title: caseData.title, 
+                citation: caseData.citation || '引用情報なし', 
+                tags: caseData.tags || []
             };
         } catch (error) {
-            console.error(`❌ エラー: ${filePath} の読み込みに失敗`, error.message);
+            console.error(`❌ ファイル読み込みエラー: ${filePath}`, error.message);
             return null;
-        }
-    }));
-    const validSummaries = summaries.filter(Boolean);
-    const loaders = validSummaries.map(s => `'${s.id}': () => import('./${s.filePath}')`).join(',\n    ');
-    const fileContent = `// このファイルは build-case-index.js によって自動生成されました。\n// 手動で編集しないでください。\nexport const caseSummaries = ${JSON.stringify(validSummaries, null, 4)};\nexport const caseLoaders = {\n    ${loaders}\n};\n`;
+        }    }));
+    
+    // null値を除外
+    const validSummaries = summaries.filter(summary => summary !== null);
+    console.log(`✅ 有効な事例ファイル: ${validSummaries.length}/${summaries.length}件`);
+
+    const loaders = validSummaries.map(summary => {
+        // public/casesからの相対パスを正しく生成
+        const relativePath = path.relative(casesRootDirectory, path.join(casesRootDirectory, summary.category, `${summary.id}.js`)).replace(/\\/g, '/');
+        return `'${summary.id}': () => import('./${relativePath}')`;
+    }).join(',\n    ');    const fileContent = `// このファイルは build-case-index.js によって自動生成されました。
+// 手動で編集しないでください。
+export const caseSummaries = ${JSON.stringify(validSummaries, null, 4)};
+export const caseLoaders = {
+    ${loaders}
+};
+`;
+
     fs.writeFileSync(outputFilePath, fileContent, 'utf8');
-    console.log(`✅ 相対パスID方式で目次ファイルを生成しました: ${outputFilePath}`);
+    console.log(`✅ 科目別フォルダ対応の目次ファイルが正常に生成されました: ${outputFilePath}`);
 }
 
-generateIndex().catch(error => console.error('目次ファイルの生成中にエラーが発生しました:', error));
+generateIndex().catch(error => console.error("目次ファイルの生成中にエラーが発生しました:", error));

@@ -369,22 +369,28 @@ function hideArticlePanel() {
 
 // ★★★ 条文表示パネルを開いて条文をプリセット ★★★
 function showArticlePanelWithPreset(lawName, articleRef) {
-    console.log(`🎯 条文プリセット実行: 法令="${lawName}" 条文="${articleRef}"`);
+    console.log(`🎯 条文プリセット実行開始: 法令="${lawName}" 条文="${articleRef}"`);
     
     if (!lawName || !articleRef) {
         console.error('❌ プリセット実行失敗: 無効なパラメータ', { lawName, articleRef });
         return;
     }
     
+    console.log(`📱 showArticlePanel呼び出し中...`);
     showArticlePanel();
+    console.log(`📱 showArticlePanel呼び出し完了`);
     
     setTimeout(() => {
+        console.log(`⏰ プリセット設定開始 (遅延実行)`);
+        
         // より具体的に条文パネル内の要素を取得
         const articlePanel = document.getElementById('article-panel');
         if (!articlePanel) {
             console.error('❌ article-panelが見つかりません');
             return;
         }
+        
+        console.log(`✅ article-panel発見`);
         
         const lawSelect = articlePanel.querySelector('#law-select');
         const articleInput = articlePanel.querySelector('#article-input');
@@ -488,5 +494,8 @@ export {
     updateLawSelectOptions,
     debugArticlePanel
 };
+
+// ★★★ グローバル関数として公開 ★★★
+window.showArticlePanelWithPreset = showArticlePanelWithPreset;
 
 console.log('📦 articlePanel.js モジュール読み込み完了');

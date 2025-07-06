@@ -74,6 +74,11 @@ export function getTextContent(node) {
         return node._;
     }
     
+    // explicitArray: trueの場合、配列として格納される
+    if (Array.isArray(node)) {
+        return node.map(n => getTextContent(n)).join('');
+    }
+    
     let content = '';
     
     // オブジェクトの場合、すべてのプロパティを再帰的に処理
@@ -134,6 +139,30 @@ function parseInputText(inputText, supportedLaws) {
         };
     }
 
+    // ★★★ パターン2-A: 「民法197条2号」形式（項なし号指定） ★★★
+    const pattern2A = new RegExp(`^(${lawPattern})(\\d+)条(\\d+)号$`);
+    const match2A = pattern2A.exec(trimmedInput);
+    if (match2A) {
+        return {
+            success: true,
+            lawName: match2A[1],
+            articleNumber: match2A[2],
+            itemNumber: match2A[3]
+        };
+    }
+
+    // ★★★ パターン2-B: 「民法548条の2第1号」形式（条の＋号指定） ★★★
+    const pattern2B = new RegExp(`^(${lawPattern})(\\d+)条の(\\d+)第(\\d+)号$`);
+    const match2B = pattern2B.exec(trimmedInput);
+    if (match2B) {
+        return {
+            success: true,
+            lawName: match2B[1],
+            articleNumber: `${match2B[2]}_${match2B[3]}`,
+            itemNumber: match2B[4]
+        };
+    }
+
     // ★★★ パターン3: 「民法548条の2第1項」形式 ★★★
     const pattern3 = new RegExp(`^(${lawPattern})(\\d+)条の(\\d+)第(\\d+)項$`);
     const match3 = pattern3.exec(trimmedInput);
@@ -184,8 +213,12 @@ function parseInputText(inputText, supportedLaws) {
             "民法2条",
             "民法548条の2",
             "民法548条の2第1項",
+            "民法548条の2第1項2号",
             "民法548の2第1項", 
             "民法109条1項",
+            "民法109条1項2号",
+            "民法109条2号",
+            "民法548条の2第1号",
             "民法110条",
             "民法第110条"
         ]
@@ -695,7 +728,7 @@ export function formatArticleNode(articleNode, paragraphNumber = null, itemNumbe
     }
 }
 
-// ★★★ 段落を整形（完全修正版・explicitArray: false対応） ★★★
+// ★★★ 段落を整形（完全修正版・explicitArray: true対応） ★★★
 function formatParagraphs(paragraphs, targetParagraph, targetItem) {
     let content = '';
     
@@ -705,8 +738,21 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
         paragraphArray.forEach((para, index) => {
             const paraNum = para.$ && para.$.Num ? para.$.Num : (index + 1).toString();
             
+            // ★★★ 項指定がある場合は、指定された項のみ表示 ★★★
             if (targetParagraph && paraNum !== targetParagraph) {
                 return;
+            }
+            
+            // ★★★ 項指定がなく号指定のみの場合、指定された号が含まれる項のみ表示 ★★★
+            if (!targetParagraph && targetItem && para.Item) {
+                const items = Array.isArray(para.Item) ? para.Item : [para.Item];
+                const hasTargetItem = items.some(item => {
+                    const itemNum = item.$ && item.$.Num ? item.$.Num : '';
+                    return itemNum === targetItem;
+                });
+                if (!hasTargetItem) {
+                    return; // 指定された号がこの項に含まれていない場合はスキップ
+                }
             }
             
             // ★★★ 項番号の表示（２項以降のみ・半角数字で表示） ★★★
@@ -742,27 +788,67 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
             
             // ★★★ Item要素を処理（号の表示・インデント対応） ★★★
             if (para.Item) {
+                console.log(`🔍 Item要素を発見しました。para.Item:`, para.Item);
                 const items = Array.isArray(para.Item) ? para.Item : [para.Item];
-                items.forEach(item => {
+                console.log(`🔍 処理するItem数: ${items.length}`);
+                
+                items.forEach((item, itemIndex) => {
+                    console.log(`🔍 Item[${itemIndex}]の構造:`, JSON.stringify(item, null, 2));
                     const itemNum = item.$ && item.$.Num ? item.$.Num : '';
                     
-                    if (targetItem && itemNum === targetItem) {
-                        content += `\n<span style="background-color: #fef08a; padding: 2px 4px; border-radius: 3px;">`;
+                    // ★★★ 号指定がある場合の強調表示制御 ★★★
+                    const isTargetItem = targetItem && itemNum === targetItem;
+                    console.log(`🎯 マーキング判定: targetItem="${targetItem}", itemNum="${itemNum}", isTargetItem=${isTargetItem}`);
+                    
+                    if (isTargetItem) {
+                        console.log(`✅ マーキング開始: Item ${itemNum}`);
+                        content += `\n<span style="background-color: #fef08a; padding: 2px 4px; border-radius: 3px; font-weight: bold;">`;
                     } else {
                         content += '\n';
                     }
                     
-                    // ★★★ 号番号を漢数字で表示（インデント対応） ★★★
-                    content += `${numToKanji(parseInt(itemNum))}　`;
+                    // ★★★ ItemTitleを直接取得して号書きを表示 ★★★
+                    let itemTitle = '';
+                    console.log(`🔍 item.ItemTitleの存在チェック:`, !!item.ItemTitle);
+                    if (item.ItemTitle && Array.isArray(item.ItemTitle) && item.ItemTitle.length > 0) {
+                        itemTitle = getTextContent(item.ItemTitle[0]);
+                        console.log(`🔢 ItemTitle発見: "${itemTitle}" (item.$.Num: ${itemNum})`);
+                    } else if (item.ItemTitle && !Array.isArray(item.ItemTitle)) {
+                        itemTitle = getTextContent(item.ItemTitle);
+                        console.log(`🔢 ItemTitle発見(非配列): "${itemTitle}" (item.$.Num: ${itemNum})`);
+                    } else {
+                        // ItemTitleがない場合のフォールバック（漢数字生成）
+                        itemTitle = numToKanji(parseInt(itemNum));
+                        console.log(`🔢 ItemTitleなし、フォールバック: "${itemTitle}" (item.$.Num: ${itemNum})`);
+                    }
+                    content += `${itemTitle}　`;
                     
                     if (item.ItemSentence) {
                         const itemSentences = Array.isArray(item.ItemSentence) ? item.ItemSentence : [item.ItemSentence];
                         itemSentences.forEach(itemSent => {
-                            if (itemSent.Sentence) {
+                            // ★★★ Column構造の場合（会社法828条等で使用） ★★★
+                            if (itemSent.Column) {
+                                const columns = Array.isArray(itemSent.Column) ? itemSent.Column : [itemSent.Column];
+                                columns.forEach((column, index) => {
+                                    if (index > 0) content += '　'; // 列間のスペース
+                                    if (column.Sentence) {
+                                        const sentenceArray = Array.isArray(column.Sentence) ? column.Sentence : [column.Sentence];
+                                        sentenceArray.forEach(sent => {
+                                            content += getTextContent(sent);
+                                        });
+                                    }
+                                });
+                            }
+                            // ★★★ 通常のSentence構造の場合 ★★★
+                            else if (itemSent.Sentence) {
                                 const sentenceArray = Array.isArray(itemSent.Sentence) ? itemSent.Sentence : [itemSent.Sentence];
                                 sentenceArray.forEach(sent => {
                                     content += getTextContent(sent);
                                 });
+                            }
+                            // ★★★ 直接テキストが入っている場合 ★★★
+                            else {
+                                content += getTextContent(itemSent);
                             }
                         });
                     }
@@ -772,7 +858,18 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
                         const subitems = Array.isArray(item.Subitem1) ? item.Subitem1 : [item.Subitem1];
                         subitems.forEach(subitem => {
                             const subitemNum = subitem.$.Num || '';
-                            content += `\n　　${numToKanji(parseInt(subitemNum))}　`;
+                            
+                            // ★★★ Subitem1TitleまたはSubitemTitleを直接取得 ★★★
+                            let subitemTitle = '';
+                            if (subitem.Subitem1Title) {
+                                subitemTitle = getTextContent(subitem.Subitem1Title);
+                            } else if (subitem.SubitemTitle) {
+                                subitemTitle = getTextContent(subitem.SubitemTitle);
+                            } else {
+                                // タイトルがない場合のフォールバック
+                                subitemTitle = numToKanji(parseInt(subitemNum));
+                            }
+                            content += `\n　　${subitemTitle}　`;
                             
                             if (subitem.Subitem1Sentence) {
                                 const subitemSentences = Array.isArray(subitem.Subitem1Sentence) ? subitem.Subitem1Sentence : [subitem.Subitem1Sentence];
@@ -788,7 +885,9 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
                         });
                     }
                     
-                    if (targetItem && itemNum === targetItem) {
+                    // ★★★ 号指定時の強調表示終了タグ ★★★
+                    if (isTargetItem) {
+                        console.log(`✅ マーキング終了: Item ${itemNum}`);
                         content += '</span>';
                     }
                 });
@@ -804,15 +903,15 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
 }
 
 // ★★★ 整形済み条文を取得（完全修正版） ★★★
-export async function getFormattedArticle(lawName, articleNumber, paragraphNumber = null, existingFiles = new Map()) {
+export async function getFormattedArticle(lawName, articleNumber, paragraphNumber = null, itemNumber = null, existingFiles = new Map()) {
     try {
-        console.log(`📖 条文取得開始: ${lawName} 第${articleNumber}条${paragraphNumber ? ` 第${paragraphNumber}項` : ''}`);
+        console.log(`📖 条文取得開始: ${lawName} 第${articleNumber}条${paragraphNumber ? ` 第${paragraphNumber}項` : ''}${itemNumber ? ` ${itemNumber}号` : ''}`);
         
         const xmlText = await ensureLawXMLByFileName(lawName, existingFiles);
         console.log(`📄 XML読み込み完了: ${xmlText.length}文字`);
         
         const parser = new xml2js.Parser({
-            explicitArray: false,
+            explicitArray: true,
             ignoreAttrs: false,
             trim: true,
             mergeAttrs: false,
@@ -828,7 +927,7 @@ export async function getFormattedArticle(lawName, articleNumber, paragraphNumbe
         }
         
         console.log(`🎯 条文ノード発見: ${lawName} 第${articleNumber}条`);
-        const formattedText = formatArticleNode(articleNode, paragraphNumber);
+        const formattedText = formatArticleNode(articleNode, paragraphNumber, itemNumber);
         console.log(`✅ 条文取得成功: ${lawName} 第${articleNumber}条`);
         console.log(`📋 最終結果: "${formattedText}"`);
         
@@ -852,7 +951,7 @@ export async function parseAndGetArticle(inputText, supportedLaws = null, existi
     const { lawName, articleNumber, paragraphNumber, itemNumber } = parseResult;
     
     try {
-        const articleText = await getFormattedArticle(lawName, articleNumber, paragraphNumber, existingFiles);
+        const articleText = await getFormattedArticle(lawName, articleNumber, paragraphNumber, itemNumber, existingFiles);
         return articleText;
     } catch (error) {
         return `❌ 条文の取得中にエラーが発生しました: ${error.message}`;
