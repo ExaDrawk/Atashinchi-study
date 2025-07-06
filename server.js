@@ -444,9 +444,12 @@ app.post('/api/regenerate-case-index', async (req, res) => {
             });
             return results;
         }
-        
-        const allCaseFiles = findJsFiles(casesRootDirectory);
+          const allCaseFiles = findJsFiles(casesRootDirectory);
         console.log(`🔍 発見されたケースファイル: ${allCaseFiles.length}件`);
+        
+        // ★★★ 競合防止機能を追加 ★★★
+        // 同名ファイルの競合を検出するためのマップ
+        const fileNameMap = new Map();
         
         // 各ケースファイルからメタデータを読み込み
         const summaries = await Promise.all(allCaseFiles.map(async filePath => {
@@ -455,15 +458,48 @@ app.post('/api/regenerate-case-index', async (req, res) => {
                 const fileUrl = `file://${filePath}?timestamp=${Date.now()}`;
                 const caseModule = await import(fileUrl);
                 const caseData = caseModule.default;
-                const id = path.basename(filePath, '.js');
+                const originalId = path.basename(filePath, '.js');
                 const category = path.basename(path.dirname(filePath));
                 
+                // 競合防止のための一意ID生成
+                let uniqueId;
+                const fileNameKey = originalId;
+                if (fileNameMap.has(fileNameKey)) {
+                    // 既に同名ファイルが存在する場合、カテゴリ名を含めたIDを使用
+                    uniqueId = `${category}-${originalId}`;
+                    // 既存のエントリも更新
+                    const existingEntry = fileNameMap.get(fileNameKey);
+                    existingEntry.needsCategoryPrefix = true;
+                    console.log(`⚠️  同名ファイル検出: ${originalId} (${category}と${existingEntry.category})`);
+                } else {
+                    uniqueId = originalId;
+                    fileNameMap.set(fileNameKey, { 
+                        category, 
+                        uniqueId, 
+                        needsCategoryPrefix: false 
+                    });
+                }
+                
+                console.log(`📂 処理中: ${category}/${originalId}.js → ID: ${uniqueId}`);
+                
+                if (!caseData) {
+                    console.error(`❌ エラー: ${filePath} - caseData が undefined です`);
+                    return null;
+                }
+                
+                if (!caseData.title) {
+                    console.error(`❌ エラー: ${filePath} - title プロパティが見つかりません`);
+                    return null;
+                }
+                
                 return { 
-                    id, 
+                    id: uniqueId,
+                    originalId,
                     category, 
                     title: caseData.title, 
-                    citation: caseData.citation, 
-                    tags: caseData.tags 
+                    citation: caseData.citation || '引用情報なし', 
+                    tags: caseData.tags || [],
+                    filePath: path.relative(casesRootDirectory, filePath).replace(/\\/g, '/')
                 };
             } catch (error) {
                 console.error(`⚠️ ケースファイル読み込みエラー ${filePath}:`, error.message);
@@ -474,16 +510,50 @@ app.post('/api/regenerate-case-index', async (req, res) => {
         // エラーのあるファイルを除外
         const validSummaries = summaries.filter(summary => summary !== null);
         
+        // 競合ファイルのIDを再設定
+        const finalSummaries = validSummaries.map(summary => {
+            const fileNameKey = summary.originalId;
+            const mapEntry = fileNameMap.get(fileNameKey);
+            
+            if (mapEntry && mapEntry.needsCategoryPrefix) {
+                // 同名ファイルが複数存在する場合、カテゴリプレフィックスを付与
+                return {
+                    ...summary,
+                    id: `${summary.category}-${summary.originalId}`
+                };
+            }
+            return summary;
+        });
+        
+        console.log(`✅ 有効な事例ファイル: ${finalSummaries.length}/${summaries.length}件`);
+        
+        // 競合ファイルのレポート
+        const conflicts = Array.from(fileNameMap.entries())
+            .filter(([, entry]) => entry.needsCategoryPrefix);
+        if (conflicts.length > 0) {
+            console.log(`⚠️  ファイル名競合を検出し、カテゴリプレフィックスを適用しました:`);
+            conflicts.forEach(([fileName]) => {
+                const conflictingFiles = finalSummaries.filter(s => s.originalId === fileName);
+                conflictingFiles.forEach(file => {
+                    console.log(`   - ${fileName} → ${file.id} (${file.category}カテゴリ)`);
+                });
+            });
+        }
+        
+        // 競合統計レポート
+        console.log(`\n📊 ファイル名競合レポート:`);
+        console.log(`   - 総ファイル数: ${finalSummaries.length}`);
+        console.log(`   - 競合ファイル数: ${conflicts.length}`);
+        console.log(`   - 一意ID生成率: ${((finalSummaries.length - conflicts.length) / finalSummaries.length * 100).toFixed(1)}%`);
+        
         // ローダー定義を生成
-        const loaders = validSummaries.map(summary => {
-            const relativePath = path.relative(casesRootDirectory, path.join(casesRootDirectory, summary.category, `${summary.id}.js`)).replace(/\\/g, '/');
-            return `'${summary.id}': () => import('./${relativePath}')`;
-        }).join(',\n    ');
-
-        // ファイル内容を生成
+        const loaders = finalSummaries.map(summary => {
+            // 実際のファイルパスを使用してloaderを生成
+            return `'${summary.id}': () => import('./${summary.filePath}')`;
+        }).join(',\n    ');        // ファイル内容を生成
         const fileContent = `// このファイルは build-case-index.js によって自動生成されました。
 // 手動で編集しないでください。
-export const caseSummaries = ${JSON.stringify(validSummaries, null, 4)};
+export const caseSummaries = ${JSON.stringify(finalSummaries, null, 4)};
 export const caseLoaders = {
     ${loaders}
 };
@@ -493,13 +563,15 @@ export const caseLoaders = {
         await fs.writeFile(outputFilePath, fileContent, 'utf8');
         
         console.log(`✅ 目次ファイル再生成完了: ${outputFilePath}`);
-        console.log(`📊 処理されたケース: ${validSummaries.length}件`);
+        console.log(`📊 処理されたケース: ${finalSummaries.length}件`);
         
         res.json({
             success: true,
-            message: '目次ファイルの再生成が完了しました',
-            casesCount: validSummaries.length,
-            categories: [...new Set(validSummaries.map(s => s.category))],
+            message: '目次ファイルの再生成が完了しました（競合防止機能適用済み）',
+            casesCount: finalSummaries.length,
+            conflictsCount: conflicts.length,
+            uniqueIdRate: `${((finalSummaries.length - conflicts.length) / finalSummaries.length * 100).toFixed(1)}%`,
+            categories: [...new Set(finalSummaries.map(s => s.category))],
             outputFile: outputFilePath
         });
         
@@ -518,9 +590,22 @@ app.post('/api/gemini', async (req, res) => {
     try {
         console.log('=== Gemini APIリクエスト開始 ===');
         
-        const { prompt, history, learningContext } = req.body;
+        const { prompt, history, learningContext, message, systemRole } = req.body;
 
-        if (!prompt || typeof prompt !== 'string') {
+        // 新しいAPIフォーマット（添削機能用）のサポート
+        const actualPrompt = message || prompt;
+        
+        console.log('🔍 リクエストパラメータ:', {
+            hasPrompt: !!prompt,
+            hasMessage: !!message,
+            actualPromptLength: actualPrompt?.length || 0,
+            actualPromptPreview: actualPrompt?.substring(0, 100) || 'なし',
+            systemRole: systemRole,
+            historyLength: history?.length || 0
+        });
+
+        if (!actualPrompt || typeof actualPrompt !== 'string') {
+            console.error('❌ プロンプトが無効:', { actualPrompt, type: typeof actualPrompt });
             return res.status(400).json({ error: 'プロンプトが無効です' });
         }
 
@@ -536,9 +621,18 @@ app.post('/api/gemini', async (req, res) => {
             validatedHistory = [];
         }
 
+        // システムロールに基づくプロンプト調整
+        let systemInstruction = '';
+        if (systemRole === 'legal_essay_corrector') {
+            systemInstruction = `あなたは経験豊富な法学教授で、司法試験の論文式試験の添削を専門としています。
+学生の答案を客観的かつ建設的に評価し、具体的な改善点を指摘してください。
+採点は厳格に行い、論点の理解度、論理構成、条文適用の正確性を重視してください。
+回答は必ずJSON形式で返し、文字位置は正確に指定してください。`;
+        }
+
         // ★★★ 法令全文をプロンプトに追加（lawLoader.js委任） ★★★
-        let finalPrompt = prompt;
-        const mentionedLaws = SUPPORTED_LAWS.filter(law => prompt.includes(law));
+        let finalPrompt = actualPrompt;
+        const mentionedLaws = SUPPORTED_LAWS.filter(law => actualPrompt.includes(law));
         
         if (mentionedLaws.length > 0) {
             console.log(`💡 プロンプトに法令コンテキストを追加: ${mentionedLaws.join(', ')}`);
@@ -558,9 +652,16 @@ app.post('/api/gemini', async (req, res) => {
             }
             
             if (lawContext) {
-                finalPrompt = `以下の法令条文を参考に、ユーザーのプロンプトに回答してください。${lawContext}\n\n---\n\n# ユーザーのプロンプト\n${prompt}`;
+                finalPrompt = `以下の法令条文を参考に、ユーザーのプロンプトに回答してください。${lawContext}\n\n---\n\n# ユーザーのプロンプト\n${actualPrompt}`;
             }
         }
+        
+        console.log('🚀 AI送信前の最終プロンプト確認:', {
+            finalPromptLength: finalPrompt.length,
+            finalPromptPreview: finalPrompt.substring(0, 200) + '...',
+            hasLawContext: mentionedLaws.length > 0,
+            mentionedLaws: mentionedLaws
+        });
         
         const chat = model.startChat({ history: validatedHistory });
         const result = await chat.sendMessage(finalPrompt);
@@ -568,11 +669,18 @@ app.post('/api/gemini', async (req, res) => {
         const responseText = response.text();
 
         console.log('✅ Gemini API成功', { responseLength: responseText.length });
-        res.json({ text: responseText });
+        res.json({ 
+            reply: responseText,     // 添削機能用のreplyフィールド
+            response: responseText,  // responseフィールドとして返す
+            text: responseText      // 既存の互換性のためtextも残す
+        });
     } catch (error) {
         console.error('❌ Gemini APIエラー:', error.message);
+        const fallbackResponse = '申し訳ございません。現在、AIサーバーが高負荷のため、一時的にサービスを利用できません。';
         res.status(500).json({ 
-            text: '申し訳ございません。現在、AIサーバーが高負荷のため、一時的にサービスを利用できません。',
+            reply: fallbackResponse,   // 添削機能用のreplyフィールド
+            response: fallbackResponse,  // responseフィールドとして返す
+            text: fallbackResponse,     // 既存の互換性のため
             isFallback: true,
             originalError: 'AIとの通信中にエラーが発生しました'
         });

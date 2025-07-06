@@ -6,12 +6,53 @@ import { processArticleReferences, processAllReferences, setupArticleRefButtons,
 import { showArticlePanel } from '../articlePanel.js';
 import { ApiService } from '../apiService.js';
 import { startChatSession } from '../chatSystem.js';
+import { renderFilteredQAs } from './homePage.js';
+
+// 答案入力ボタンのシンプルスタイル
+const answerButtonCSS = document.createElement('style');
+answerButtonCSS.innerHTML = `
+.answer-entry-section {
+    background: linear-gradient(135deg, #f0f8ff 0%, #f8f0ff 100%);
+    border: 2px dashed #93c5fd;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.answer-entry-section:hover {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #f3e8ff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.enter-answer-mode-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #9333ea 100%);
+    color: white;
+    font-weight: bold;
+    padding: 12px 32px;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.enter-answer-mode-btn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+`;
+document.head.appendChild(answerButtonCSS);
 
 // グローバル関数として showArticlePanel を利用可能にする
 window.showArticlePanel = showArticlePanel;
 
 // ★★★ ランク設定 ★★★
-const RANK_CONFIG = {
+export const RANK_CONFIG = {
     'S': { color: 'text-cyan-600', bgColor: 'bg-cyan-100', borderColor: 'border-cyan-300', label: 'Sランク' },
     'A': { color: 'text-red-600', bgColor: 'bg-red-100', borderColor: 'border-red-300', label: 'Aランク' },
     'B': { color: 'text-blue-600', bgColor: 'bg-blue-100', borderColor: 'border-blue-300', label: 'Bランク' },
@@ -29,6 +70,7 @@ export async function loadAndRenderCase(caseId, updateHistory = true) {
     
     const loader = caseLoaders[caseId];
     if (!loader) {
+        console.error('ローダーが見つかりません:', caseId, Object.keys(caseLoaders));
         const { renderHome } = await import('./homePage.js');
         renderHome();
         return;
@@ -77,27 +119,28 @@ function renderCaseDetail() {
                 <h2 class="text-3xl md:text-4xl font-extrabold text-yellow-700">${caseInfo.title}</h2>
             </header>            <div class="flex flex-wrap justify-center border-b mb-6">                <button class="tab-button p-4 flex-grow text-center text-gray-600 active" data-tab="story">📖 ストーリー</button>
                 <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="explanation">🤔 解説</button>
-                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="quiz">✏️ ミニ論文</button>
                 <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="speed-quiz">⚡ スピード条文</button>
                 <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="essay">✍️ 論文トレーニング</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="qa-list">📝 Q&A</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="quiz">✏️ ミニ論文</button>
             </div>
             <div id="tab-content"></div>
         </div>    `;    renderTabContent('story');
-      // ★★★ Mermaid初期化（複数回実行で確実にレンダリング） ★★★
+      // ★★★ Mermaid初期化（エラー対策強化版） ★★★
     setTimeout(() => {
-        console.log('🎨 第1回Mermaid初期化開始');
+        console.log('🎨 第1回Mermaid初期化開始（遅延実行）');
         initializeMermaidDiagrams();
-    }, 300);
+    }, 500);
     
     setTimeout(() => {
-        console.log('🎨 第2回Mermaid初期化開始');
+        console.log('🎨 第2回Mermaid初期化開始（DOM安定化後）');
         initializeMermaidDiagrams();
-    }, 800);
+    }, 2000);
     
     setTimeout(() => {
         console.log('🎨 第3回Mermaid初期化開始（最終確認）');
         initializeMermaidDiagrams();
-    }, 1500);
+    }, 5000);
     
       // ★★★ スピード条文用データを事前読み込み ★★★
     if (window.currentCaseData) {
@@ -224,16 +267,14 @@ function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex }) {
 
 export function renderTabContent(tabName) {
     console.log(`🔄 タブ表示: ${tabName}`);
-    
     const contentDiv = document.getElementById('tab-content');
-    
     // 既存のタブコンテンツがあるかチェック
     let storyTab = document.getElementById('tab-story-content');
-    
+    // lawsの有無で毎回判定（初回以外も含む）
+    const hasSpeedQuiz = Array.isArray(window.currentCaseData.laws) && window.currentCaseData.laws.length > 0;
     // 初回の場合、全てのタブコンテンツを作成
     if (!storyTab) {
         console.log('📝 タブコンテンツ初期作成');
-        
         // グローバルQ&Aポップアップコンテナを作成（初回のみ）
         if (!document.getElementById('qa-ref-popup-global-container')) {
             const globalContainer = document.createElement('div');
@@ -241,17 +282,30 @@ export function renderTabContent(tabName) {
             globalContainer.className = 'qa-ref-popup-global-container';
             document.body.appendChild(globalContainer);
         }
-        
         const storyHtml = buildStoryHtml(window.currentCaseData.story);
         const processedStoryHtml = processAllReferences(storyHtml, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []);
-        
         const processedExplanationHtml = processAllReferences(window.currentCaseData.explanation, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []);
-
         // ★★★ 論文トレーニングが無い場合はタブ自体を省略 ★★★
         const hasEssay = window.currentCaseData.essay && window.currentCaseData.essay.question;
         let essayTabButton = hasEssay ? `<button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="essay">✍️ 論文トレーニング</button>` : '';
         let essayTabContent = hasEssay ? `<div id="tab-essay-content" class="tab-content-panel hidden"></div>` : '';
-          contentDiv.innerHTML = `
+        // ★★★ スピード条文タブは常に表示（中身は初期化関数で制御）★★★
+        const speedQuizTabButton = `<button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="speed-quiz">⚡ スピード条文</button>`;
+        const speedQuizTabContent = `<div id="tab-speed-quiz-content" class="tab-content-panel hidden"></div>`;
+        // Q&Aタブ
+        const qaTabButton = `<button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="qa-list">📝 Q&A</button>`;
+        let qaTabContent = `<div id="tab-qa-list-content" class="tab-content-panel hidden"></div>`;
+        // タブボタン
+        const tabButtons = `
+            <button class="tab-button p-4 flex-grow text-center text-gray-600 active" data-tab="story">📖 ストーリー</button>
+            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="explanation">🤔 解説</button>
+            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="quiz">✏️ ミニ論文</button>
+            ${speedQuizTabButton}
+            ${qaTabButton}
+            ${essayTabButton}
+        `;
+        // タブ本体
+        contentDiv.innerHTML = `
             <div id="tab-story-content" class="tab-content-panel hidden">
                 <div class="p-4">
                     <div class="mb-4 text-right">
@@ -282,49 +336,15 @@ export function renderTabContent(tabName) {
                 </div>
             </div>
             <div id="tab-explanation-content" class="tab-content-panel hidden">
-                <div class="p-4">
-                    <div class="mb-4 text-right">
-                        <button class="show-article-btn bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded">📖 条文表示</button>
-                    </div>
-                    ${processedExplanationHtml}
-                    
-                    <!-- 解説Q&A対話セクション -->
-                    <div class="mt-8 border-t pt-6">
-                        <h4 class="text-lg font-bold mb-4 text-center text-green-700">🤔 解説について詳しく聞いてみよう</h4>
-                        <div class="mb-4 bg-green-50 p-4 rounded-lg">
-                            <p class="text-sm text-green-800 mb-2">📝 <strong>質問例：</strong></p>
-                            <ul class="text-sm text-green-700 list-disc list-inside space-y-1">
-                                <li>この論点について、判例の立場をもう少し詳しく教えてください。</li>
-                                <li>学説の対立がある場合、どちらが有力ですか？</li>
-                                <li>司法試験でこの論点はどのように出題されますか？</li>
-                                <li>理解が曖昧な部分について具体例で説明してください。</li>
-                            </ul>
-                        </div>
-                        <div class="input-form">
-                            <textarea id="explanation-question-input" class="w-full h-32 p-4 border rounded-lg focus-ring" placeholder="解説について質問してください...（例：判例の理由付けがよく分からないので詳しく教えてください）"></textarea>
-                            <div class="text-right mt-4">
-                                <button class="start-chat-btn bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg btn-hover" data-type="explanation">質問して対話を始める</button>
-                            </div>
-                        </div>
-                        <div class="chat-area" id="chat-area-explanation"></div>
-                    </div>
-                </div>
-            </div>            <div id="tab-quiz-content" class="tab-content-panel hidden">
-                <!-- ミニ論文コンテンツはここに動的に追加 -->
+                <div class="p-4">${processedExplanationHtml}</div>
             </div>
-            <div id="tab-speed-quiz-content" class="tab-content-panel hidden">
-                <!-- スピード条文ゲームコンテンツはここに動的に追加 -->
-            </div>
+            <div id="tab-quiz-content" class="tab-content-panel hidden"></div>
+            ${speedQuizTabContent}
+            ${qaTabContent}
             ${essayTabContent}
-        `;        // タブボタンも論文トレーニングが無い場合は省略
-        const tabButtons = `
-            <button class="tab-button p-4 flex-grow text-center text-gray-600 active" data-tab="story">📖 ストーリー</button>
-            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="explanation">🤔 解説</button>
-            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="quiz">✏️ ミニ論文</button>
-            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="speed-quiz">⚡ スピード条文</button>
-            ${essayTabButton}
+            <div class="flex justify-center gap-2 mt-6 mb-2">${tabButtons}</div>
         `;
-        // タブボタン部分を書き換え
+        // タブボタンも論文トレーニングが無い場合は省略
         const parent = contentDiv.parentElement;
         if (parent) {
             const tabBar = parent.querySelector('.flex.flex-wrap.border-b');
@@ -333,10 +353,21 @@ export function renderTabContent(tabName) {
           // 条文参照ボタンのイベントリスナーを設定
         setupArticleRefButtons(contentDiv);
         
-        // 非同期でクイズとエッセイのコンテンツを初期化
-        initializeQuizContent();
-        initializeSpeedQuizContent();
-        if (hasEssay) initializeEssayContent();
+        // Q&Aタブの初期描画
+        (async () => {
+            const qaTabDiv = document.getElementById('tab-qa-list-content');
+            if (qaTabDiv && window.currentCaseData.questionsAndAnswers) {
+                await renderFilteredQAs({
+                    container: qaTabDiv,
+                    qaList: window.currentCaseData.questionsAndAnswers,
+                    showFilter: false
+                });
+            }
+        })();
+        // スピード条文タブの初期描画
+        if (hasSpeedQuiz) {
+            initializeSpeedQuizContent();
+        }
     }
       // 全てのタブを非表示にする
     document.querySelectorAll('.tab-content-panel').forEach(panel => {
@@ -352,7 +383,28 @@ export function renderTabContent(tabName) {
     const targetTab = document.getElementById(`tab-${tabName}-content`);
     if (targetTab) {
         targetTab.classList.remove('hidden');
-        console.log(`✅ タブ表示完了: ${tabName}`);        // ★★★ 条文・Q&Aボタンのイベントリスナーを再設定 ★★★
+        // Q&Aタブなら再描画（async IIFEでawaitを許可）
+        if (tabName === 'qa-list' && window.currentCaseData.questionsAndAnswers) {
+            (async () => {
+                await renderFilteredQAs({
+                    container: targetTab,
+                    qaList: window.currentCaseData.questionsAndAnswers,
+                    showFilter: false
+                });
+            })();
+        }
+        // スピード条文タブなら再描画
+        if (tabName === 'speed-quiz') {
+            // data-initialized属性を毎回リセットして必ず再描画
+            const speedQuizContainer = document.getElementById('tab-speed-quiz-content');
+            if (speedQuizContainer) speedQuizContainer.removeAttribute('data-initialized');
+            initializeSpeedQuizContent();
+        }
+        // ★★★ ミニ論文タブなら初期化 ★★★
+        if (tabName === 'quiz') {
+            initializeQuizContent();
+        }
+        // ★★★ 条文・Q&Aボタンのイベントリスナーを再設定 ★★★
         console.log(`🔧 タブ切り替え時のボタン再設定開始: ${tabName}`);
         const qaButtons = targetTab.querySelectorAll('.qa-ref-btn');
         console.log(`📋 タブ ${tabName} 内のQ&Aボタン: ${qaButtons.length}個`);
@@ -391,7 +443,7 @@ async function initializeQuizContent() {
     // 条文表示ボタンを追加
     html += `
         <div class="text-right mb-4">
-            <button class="show-article-btn bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded">📖 条文表示</button>
+            <button class="show-article-btn bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded">📖 条文</button>
         </div>
     `;
     
@@ -443,6 +495,9 @@ async function initializeQuizContent() {
     
     // ヒント・ポイントボタンのイベントリスナーを設定
     setupToggleButtons(quizContainer);
+    
+    // 新システムの「答案を入力する」ボタンのイベントハンドラを設定
+    setupNewAnswerModeButtons(quizContainer);
 }
 
 // ★★★ 小問生成関数（ランク付け表示対応） ★★★
@@ -506,9 +561,19 @@ function generateSubProblems(quizGroup, quizIndex) {
                 <div id="past-answers-area-${quizIndex}-0" class="mb-4 hidden"></div>
                 
                 <div class="input-form">
-                    <textarea id="initial-input-${quizIndex}-0" class="w-full h-48 p-4 border rounded-lg focus-ring" placeholder="ここに論述してみよう…"></textarea>
-                    <div class="text-right mt-4">
-                        <button class="start-chat-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg btn-hover" data-quiz-index="${quizIndex}" data-sub-index="0" data-type="quiz">対話型添削を始める</button>
+                    <div class="answer-entry-section bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border-2 border-dashed border-blue-300">
+                        <div class="text-center">
+                            <div class="mb-4">
+                                <svg class="w-16 h-16 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                <h4 class="text-lg font-bold text-gray-700 mb-2">答案を作成しましょう</h4>
+                                <p class="text-sm text-gray-600 mb-4">専用の答案入力画面で、集中して論述に取り組めます</p>
+                            </div>
+                            <button class="enter-answer-mode-btn bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200" data-quiz-index="${quizIndex}" data-sub-index="0">
+                                ✏️ 答案を入力する
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -585,9 +650,19 @@ function generateSubProblems(quizGroup, quizIndex) {
                 <!-- 過去の回答表示エリア -->
                 <div id="past-answers-area-${quizIndex}-${subIndex}" class="mb-4 hidden"></div>
                 <div class="input-form">
-                    <textarea id="initial-input-${quizIndex}-${subIndex}" class="w-full h-48 p-4 border rounded-lg focus-ring" placeholder="ここに論述してみよう…"></textarea>
-                    <div class="text-right mt-4">
-                        <button class="start-chat-btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg btn-hover" data-quiz-index="${quizIndex}" data-sub-index="${subIndex}" data-type="quiz">対話型添削を始める</button>
+                    <div class="answer-entry-section bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border-2 border-dashed border-blue-300">
+                        <div class="text-center">
+                            <div class="mb-4">
+                                <svg class="w-16 h-16 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                <h4 class="text-lg font-bold text-gray-700 mb-2">答案を作成しましょう</h4>
+                                <p class="text-sm text-gray-600 mb-4">専用の答案入力画面で、集中して論述に取り組めます</p>
+                            </div>
+                            <button class="enter-answer-mode-btn bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200" data-quiz-index="${quizIndex}" data-sub-index="${subIndex}">
+                                ✏️ 答案を入力する
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="chat-area" id="chat-area-quiz-${quizIndex}-${subIndex}"></div>
@@ -700,16 +775,27 @@ async function initializeEssayContent() {
                 <h4 class="text-xl font-bold">【論文問題】</h4>                <div class="flex gap-2">
                     <button class="show-article-btn bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1 px-2 rounded">📖 条文</button>
                     <button class="view-past-answers-btn bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-2 rounded" data-case-id="${window.currentCaseData.id}" data-problem-type="essay" data-problem-index="">📝 過去の回答</button>
-                    ${pastLogs.length > 0 ? `<button class="view-history-btn bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold py-1 px-3 rounded" data-problem-type="essay" data-problem-index="">📚 学習記録 (${pastLogs.length}件)</button>` : ''}
-                </div>
+                    ${pastLogs.length > 0 ? `<button class="view-history-btn bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold py-1 px-3 rounded" data-problem-type="essay" data-problem-index="">📚 学習記録 (${pastLogs.length}件)</button>` : ''}                </div>
             </div>
             <div class="mb-4 bg-gray-100 p-4 rounded-lg">${processAllReferences(window.currentCaseData.essay.question, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || [])}</div>
             ${hintHtml}
             ${pointsHtml}
             <!-- 過去回答表示エリア -->
             <div id="past-answers-area-" class="mb-4 hidden"></div>
-            <textarea id="initial-input-essay" class="w-full h-96 p-4 border rounded-lg" placeholder="ここに答案を記述…"></textarea>
-            <button class="start-chat-btn mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg" data-type="essay">対話型論文添削を始める</button>
+            <div class="answer-entry-section bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border-2 border-dashed border-blue-300">
+                <div class="text-center">
+                    <div class="mb-4">
+                        <svg class="w-16 h-16 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        <h4 class="text-lg font-bold text-gray-700 mb-2">答案を作成しましょう</h4>
+                        <p class="text-sm text-gray-600 mb-4">専用の答案入力画面で、集中して論述に取り組めます</p>
+                    </div>
+                    <button class="enter-answer-mode-btn bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200" data-quiz-index="essay" data-sub-index="0">
+                        ✏️ 答案を入力する
+                    </button>
+                </div>
+            </div>
             <div id="chat-area-essay" class="chat-area"></div>
         </div>
     `;
@@ -724,6 +810,9 @@ async function initializeEssayContent() {
     // ヒント・ポイントボタンのイベントリスナーを設定
     setupToggleButtons(essayContainer);
     
+    // 新システムの「答案を入力する」ボタンのイベントハンドラを設定
+    setupNewAnswerModeButtons(essayContainer);
+    
     const startChatButton = essayContainer.querySelector('.start-chat-btn');
     if (startChatButton) {
         startChatButton.addEventListener('click', function(event) {
@@ -737,14 +826,23 @@ async function initializeEssayContent() {
 // ★★★ スピード条文ゲームコンテンツ初期化 ★★★
 async function initializeSpeedQuizContent() {
     const speedQuizContainer = document.getElementById('tab-speed-quiz-content');
-    if (!speedQuizContainer || speedQuizContainer.hasAttribute('data-initialized')) return;
+    if (!speedQuizContainer) return;
+    // data-initialized属性は毎回リセット（安定化のため）
+    speedQuizContainer.removeAttribute('data-initialized');
+
+    // ★★★ laws/speedQuizArticlesの再生成・初期化を徹底 ★★★
+    if (!Array.isArray(window.currentCaseData.laws) || window.currentCaseData.laws.length === 0) {
+        // lawsが未定義・空の場合、必要なら再取得・初期化（ここでは空配列で初期化）
+        window.currentCaseData.laws = [];
+    }
+    // speedQuizArticlesも毎回初期化
+    window.speedQuizArticles = [];
 
     try {
         // speedQuiz.jsモジュールを動的インポート
-        const { initializeSpeedQuizGame } = await import('../speedQuiz.js');
-          // 一意のコンテナIDを先に生成
+        const { initializeSpeedQuizGame, extractAllArticles } = await import('../speedQuiz.js');
+        // 一意のコンテナIDを先に生成
         const gameContainerId = `speed-quiz-container-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
         // ゲームのHTMLを設定（一意のIDを使用）
         speedQuizContainer.innerHTML = `
             <div class="p-4">
@@ -756,15 +854,11 @@ async function initializeSpeedQuizContent() {
                 </div>
             </div>
         `;
-        
-        // ゲームを初期化（現在のケースデータを渡す）
+        // ★★★ 毎回最新の条文を抽出し直す ★★★
+        window.speedQuizArticles = await extractAllArticles(window.currentCaseData);
+        console.log('📚 抽出された条文数:', window.speedQuizArticles.length);
         const gameContainer = document.getElementById(gameContainerId);
         if (gameContainer) {
-            // 条文を抽出（非同期）
-            const { extractAllArticles } = await import('../speedQuiz.js');
-            window.speedQuizArticles = await extractAllArticles(window.currentCaseData);
-            console.log('📚 抽出された条文数:', window.speedQuizArticles.length);
-            
             if (window.speedQuizArticles.length === 0) {
                 gameContainer.innerHTML = `
                     <div class="text-center p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -777,12 +871,9 @@ async function initializeSpeedQuizContent() {
                 await initializeSpeedQuizGame(gameContainerId, window.currentCaseData);
             }
         }
-        
         speedQuizContainer.setAttribute('data-initialized', 'true');
-        
         // 条文参照ボタンのイベントリスナーを設定
         setupArticleRefButtons(speedQuizContainer);
-        
         console.log('✅ スピード条文ゲーム初期化完了');
     } catch (error) {
         console.error('❌ スピード条文ゲーム初期化エラー:', error);
@@ -797,16 +888,89 @@ async function initializeSpeedQuizContent() {
     }
 }
 
+// 答案添削ビューのロード状態管理
+let answerCorrectionLoaded = false;
+
+/**
+ * 答案添削ビューシステムを動的ロード
+ */
+async function loadAnswerCorrectionSystem() {
+    if (answerCorrectionLoaded) return true;
+    
+    try {
+        console.log('🚀 答案添削ビューシステムをロード中...');
+        
+        // 答案添削ビューをロード
+        await loadScript('./pages/answerCorrectionView.js');
+        
+        answerCorrectionLoaded = true;
+        console.log('✅ 答案添削ビューシステムロード完了');
+        return true;
+    } catch (error) {
+        console.error('❌ 答案添削ビューシステムロード失敗:', error);
+        return false;
+    }
+}
+
+/**
+ * スクリプトファイルの動的ロード
+ */
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        // 既に読み込み済みかチェック
+        const existingScript = document.querySelector(`script[src="${src}"]`);
+        if (existingScript) {
+            resolve();
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+            console.log(`✅ ${src} ロード完了`);
+            resolve();
+        };
+        script.onerror = (error) => {
+            console.error(`❌ ${src} ロード失敗:`, error);
+            reject(error);
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// ...existing code...
+
+// ★★★ Mermaid初期化状態管理
+let mermaidInitialized = false;
+let mermaidInitializing = false;
+
 // ★★★ Mermaid図表初期化関数 ★★★
 function initializeMermaidDiagrams() {
     console.log('🎨 Mermaid初期化開始');
+    
+    // ✨ 初期化済みまたは初期化中の場合はスキップ
+    if (mermaidInitializing) {
+        console.log('⏳ Mermaid初期化中のためスキップ');
+        return;
+    }
     
     if (typeof mermaid === 'undefined') {
         console.warn('⚠️ Mermaid.jsが読み込まれていません');
         return;
     }
-      try {
-        // 最も基本的なMermaid設定
+    
+    mermaidInitializing = true;
+    
+    // すでに初期化中または初期化済みの場合はスキップ
+    if (mermaidInitializing || mermaidInitialized) {
+        console.log('⏭️ Mermaidはすでに初期化中または初期化済みです');
+        return;
+    }
+    
+    mermaidInitializing = true; // 初期化中フラグを立てる
+    
+    try {
+        // ✨ より安全なMermaid設定
         mermaid.initialize({
             startOnLoad: false,
             theme: 'default',
@@ -815,7 +979,11 @@ function initializeMermaidDiagrams() {
             flowchart: {
                 useMaxWidth: true,
                 htmlLabels: true,
-                curve: 'linear'
+                curve: 'linear',
+                // ✨ 座標エラー対策
+                rankdir: 'TD',
+                nodeSpacing: 50,
+                rankSpacing: 50
             },
             themeVariables: {
                 primaryColor: '#f0f9ff',
@@ -823,7 +991,13 @@ function initializeMermaidDiagrams() {
                 primaryBorderColor: '#0284c7',
                 lineColor: '#475569',
                 fontSize: '14px'
-            }
+            },
+            // ✨ エラー対策の追加設定
+            maxTextSize: 50000,
+            maxEdges: 500,
+            // ✨ レンダリング設定
+            deterministicIds: true,
+            deterministicIDSeed: 'mermaid-seed'
         });
         
         // 現在表示されているMermaid要素をレンダリング
@@ -832,34 +1006,83 @@ function initializeMermaidDiagrams() {
         
         mermaidElements.forEach(async (element, index) => {
             if (element.getAttribute('data-processed') !== 'true') {
-                const graphDefinition = element.textContent || element.innerText;
+                let graphDefinition = element.textContent || element.innerText;
                 console.log(`📝 図表定義 #${index}:`, graphDefinition);
+                
+                // ✨ グラフ定義の前処理とバリデーション
+                if (!graphDefinition || graphDefinition.trim() === '') {
+                    console.warn(`⚠️ 空のグラフ定義 #${index}`);
+                    return;
+                }
+                
+                // ✨ 基本的な構文チェック
+                graphDefinition = graphDefinition.trim();
+                if (!graphDefinition.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|pie|gantt|erDiagram|journey)/)) {
+                    console.warn(`⚠️ 不正なMermaid構文 #${index}:`, graphDefinition.substring(0, 50));
+                    element.innerHTML = `
+                        <div style="color: orange; padding: 15px; border: 2px solid orange; border-radius: 8px; background: #fff7ed;">
+                            <h4>⚠️ 図表構文エラー</h4>
+                            <p>Mermaid図表の構文が正しくありません。</p>
+                        </div>
+                    `;
+                    return;
+                }
                 
                 // 新しいAPIでレンダリング
                 try {
-                    const graphId = `graph-${Date.now()}-${index}`;
-                    const { svg } = await mermaid.render(graphId, graphDefinition);
+                    const graphId = `graph-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}`;
+                    console.log(`🎨 レンダリング開始 #${index}, ID: ${graphId}`);
+                    
+                    // ✨ タイムアウト付きレンダリング
+                    const renderPromise = mermaid.render(graphId, graphDefinition);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('レンダリングタイムアウト')), 10000)
+                    );
+                    
+                    const { svg } = await Promise.race([renderPromise, timeoutPromise]);
+                    
+                    // ✨ SVGの検証
+                    if (!svg || svg.trim() === '') {
+                        throw new Error('空のSVGが生成されました');
+                    }
+                    
                     element.innerHTML = svg;
                     element.setAttribute('data-processed', 'true');
                     console.log(`✅ Mermaid図表 #${index} レンダリング完了`);
                 } catch (renderError) {
                     console.error(`❌ Mermaid レンダリングエラー #${index}:`, renderError);
                     element.innerHTML = `
-                        <div style="color: red; padding: 20px; border: 2px solid red; border-radius: 8px;">
-                            <h3>図表レンダリングエラー</h3>
-                            <p>${renderError.message}</p>
-                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap;">${graphDefinition}</pre>
+                        <div style="color: red; padding: 20px; border: 2px solid red; border-radius: 8px; background: #fef2f2;">
+                            <h3>❌ 図表レンダリングエラー</h3>
+                            <p><strong>エラー:</strong> ${renderError.message}</p>
+                            <details style="margin-top: 10px;">
+                                <summary style="cursor: pointer; color: #dc2626; font-weight: bold;">図表定義を表示</summary>
+                                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap; margin-top: 8px;">${graphDefinition}</pre>
+                            </details>
                         </div>
                     `;
+                    element.setAttribute('data-processed', 'error');
                 }
             }
         });
           console.log('🎨 Mermaid初期化完了');
         
-        // ズーム機能を初期化
-        initializeMermaidZoom();
+        // ✨ 初期化フラグをリセット
+        mermaidInitializing = false;
+        mermaidInitialized = true;
+        
+        // Mermaid描画後にズーム機能を必ず再初期化（DOM再構築時も対応）
+        setTimeout(() => {
+            initializeMermaidZoom();
+        }, 100);
+        
+        mermaidInitialized = true; // 初期化済みフラグを立てる
     } catch (error) {
         console.error('❌ Mermaid初期化エラー:', error);
+        // ✨ エラー時もフラグをリセット
+        mermaidInitializing = false;
+    } finally {
+        mermaidInitializing = false; // 初期化中フラグを解除
     }
 }
 
@@ -969,18 +1192,16 @@ function initializeMermaidZoom() {
             if (e.target.closest('.zoom-controls')) {
                 return;
             }
-            
             isDragging = true;
             lastMouseX = e.clientX;
             lastMouseY = e.clientY;
-            
             // ドラッグ開始時のスタイル
-            container.style.cursor = 'grabbing !important';
+            container.style.cursor = 'grabbing';
             mermaidElement.style.transition = 'none';
-            
+            // ズームコントロールのpointer-eventsを常にautoに維持
+            if (zoomControls) zoomControls.style.pointerEvents = 'auto';
             e.preventDefault();
             e.stopPropagation();
-            
             console.log('🖱️ ドラッグ開始');
         });
         
@@ -1006,6 +1227,8 @@ function initializeMermaidZoom() {
                 isDragging = false;
                 container.style.cursor = 'grab';
                 mermaidElement.style.transition = 'transform 0.2s ease';
+                // ズームコントロールのpointer-eventsを常にautoに維持
+                if (zoomControls) zoomControls.style.pointerEvents = 'auto';
                 console.log('🖱️ ドラッグ終了');
             }
         });
@@ -1100,7 +1323,7 @@ function processBlankFillText(text, uniqueId = '') {
     
     // {{}}の内容を一時的にプレースホルダーに置換
     while ((match = blankPattern.exec(text)) !== null) {
-        blankMatches.push(match[1]);
+               blankMatches.push(match[1]);
         const placeholder = `__BLANK_${blankMatches.length - 1}__`;
         outsideBlankText = outsideBlankText.replace(match[0], placeholder);
     }
@@ -1158,7 +1381,6 @@ function processBlankFillText(text, uniqueId = '') {
 window.toggleBlankReveal = function(element) {
     const answer = element.dataset.answer;
     const displayContent = element.dataset.displayContent;
-    const blankId = element.dataset.blankId;
     const isRevealed = element.dataset.revealed === 'true';
     
     if (isRevealed) {
@@ -1188,11 +1410,7 @@ window.toggleBlankReveal = function(element) {
             element.textContent = answer;
         }
         element.dataset.revealed = 'true';
-        element.title = 'クリックして隠す';
-        
-        // 表示時の色
-        element.className = element.className.replace(/bg-\w+-\d+|border-\w+-\d+|text-\w+-\d+/g, '');
-        element.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+        element.title = 'クリックして答えを隠す';
         
         // 条文参照ボタンがある場合は、そのイベントリスナーを有効化
         const articleButtons = element.querySelectorAll('.article-ref-btn');
@@ -1203,7 +1421,7 @@ window.toggleBlankReveal = function(element) {
                     event.stopPropagation();
                     if (window.showArticlePanel) {
                         window.showArticlePanel(btn.dataset.lawText);
-                    }
+                                       }
                 };
             }
         });
@@ -1303,7 +1521,7 @@ function buildStoryHtml(storyData) {
         const fallbackSrc = `/images/${character.baseName}_normal.png`;
         const onErrorAttribute = `this.src='${fallbackSrc}'; this.onerror=null;`;
         
-        const imageStyle = "width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);";
+        const imageStyle = "width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,  0, 0.1);";
         const isRightSide = rightSideCharacters.includes(item.speaker);
         const iconTransform = isRightSide ? 'transform: scaleX(-1);' : '';
         const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;
@@ -1322,6 +1540,7 @@ function addCharacterImagesToMermaid(mermaidElement, graphDefinition) {
         const characterMap = window.currentMermaidCharacterMap;
         
         if (!characterMap || characterMap.size === 0) {
+
             console.log('⚠️ キャラクターマップが見つかりません');
             return;
         }
@@ -1331,7 +1550,7 @@ function addCharacterImagesToMermaid(mermaidElement, graphDefinition) {
         // SVG要素を取得
         const svgElement = mermaidElement.querySelector('svg');
         if (!svgElement) {
-            console.warn('⚠️ SVG要素が見つかりません');
+            console.warn('⚠️ SVG要素が見つつかりません');
             return;
         }
         
@@ -1542,3 +1761,48 @@ function normalizeExpression(expression) {
     
     return expressionAliases[expression] || 'normal';
 }
+
+/**
+ * 新システムの「答案を入力する」ボタンのイベントハンドラを設定
+ * @param {HTMLElement} container - コンテナ要素
+ */
+function setupNewAnswerModeButtons(container) {
+    container.querySelectorAll('.enter-answer-mode-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const quizIndex = this.dataset.quizIndex;
+            const subIndex = this.dataset.subIndex;
+            console.log(`✅ 答案入力モード開始: 問題${quizIndex}-${subIndex}`);
+            
+            // 答案添削画面に遷移
+            if (window.startAnswerCorrectionMode) {
+                window.startAnswerCorrectionMode(quizIndex, subIndex);
+            } else {
+                console.error('❌ window.startAnswerCorrectionMode関数が見つかりません');
+            }
+        });
+    });
+}
+
+/**
+ * 答案添削ビューを起動する（グローバル関数）
+ */
+window.startAnswerCorrectionMode = async function(quizIndex, subIndex) {
+    console.log(`✍️ 答案添削モード開始: quiz=${quizIndex}, sub=${subIndex}`);
+    
+    if (!answerCorrectionLoaded) {
+        const loaded = await loadAnswerCorrectionSystem();
+        if (!loaded) {
+            alert('答案添削ビューの読み込みに失敗しました。ページを再読み込みしてください。');
+            return;
+        }
+    }
+    
+    if (window.showAnswerCorrectionView) {
+        window.showAnswerCorrectionView(quizIndex, subIndex);
+    } else {
+        console.error('❌ 答案添削ビューの起動関数が見つかりません');
+        alert('答案添削ビューの起動に失敗しました。');
+    }
+};
+
+console.log('✅ casePage.js 答案添削システム統合完了');

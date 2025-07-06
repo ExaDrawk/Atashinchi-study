@@ -439,7 +439,7 @@ function toggleAllBlanks(container, reveal) {
 }
 
 // ★★★ 空欄化処理関数（casePage.jsから移動） ★★★
-function processBlankFillText(text, uniqueId = '') {
+export function processBlankFillText(text, uniqueId = '') {
     if (!text) return text;
     
     // {{}}で囲まれた部分を検出する正規表現

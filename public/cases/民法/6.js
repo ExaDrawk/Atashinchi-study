@@ -1,6 +1,6 @@
 // テスト用の競合ファイル - 民法カテゴリの6.js
 export default {
-    id: "6",
+    id: "民法-6",
     title: "【民法】契約の成立と効力",
     category: "民法",
     citation: "民法522条、526条",

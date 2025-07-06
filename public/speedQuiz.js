@@ -6,6 +6,12 @@
  * @returns {Array} 条文リスト
  */
 export async function extractAllArticles(caseData) {
+    // caseDataのnullチェック
+    if (!caseData) {
+        console.warn('⚠️ caseDataがnullまたはundefinedです');
+        return [];
+    }
+    
     const articles = new Set();
     const texts = [];
     
@@ -1194,8 +1200,16 @@ function handleArticleInput(event) {
     const input = event.target;
     let inputValue = input.value;
     
+    // 全角数字を半角に変換
+    inputValue = inputValue.replace(/[０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+    
     // 数字と「の」のみを許可
     inputValue = inputValue.replace(/[^0-9の]/g, '');
+    
+    // 入力フィールドを即座に更新（変換された値を反映）
+    input.value = inputValue;
     
     const currentArticle = gameState.articles[gameState.currentIndex];
     if (!currentArticle) return;
@@ -1293,8 +1307,16 @@ function handleParagraphInput(event) {
     const input = event.target;
     let inputValue = input.value;
     
+    // 全角数字を半角に変換
+    inputValue = inputValue.replace(/[０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+    
     // 数字のみを許可
     inputValue = inputValue.replace(/[^0-9]/g, '');
+    
+    // 入力フィールドを即座に更新（変換された値を反映）
+    input.value = inputValue;
     
     const currentArticle = gameState.articles[gameState.currentIndex];
     if (!currentArticle || !currentArticle.paragraph) return;
@@ -1487,6 +1509,12 @@ async function initializeSpeedQuizData(caseData) {
     try {
         console.log('📚 ケースデータからスピード条文用データを抽出中...');
         
+        // caseDataのnullチェック
+        if (!caseData) {
+            console.warn('⚠️ caseDataがnullまたはundefinedのため、スピード条文データの読み込みをスキップします');
+            return;
+        }
+        
         // 既にデータが読み込まれている場合はスキップ
         if (window.speedQuizArticles && window.speedQuizArticles.length > 0) {
             console.log('✅ スピード条文データは既に読み込み済み');
@@ -1509,14 +1537,14 @@ async function initializeSpeedQuizData(caseData) {
             console.log(`✅ ${articles.length}件の条文データを事前読み込み完了`);
         } else {
             console.log('⚠️ 条文データの読み込みに失敗しました');
-        }
-        
+        }        
     } catch (error) {
         console.error('❌ スピード条文データの事前読み込みでエラー:', error);
     }
 }
 
 // ★★★ グローバル関数として公開 ★★★
+window.initializeSpeedQuizData = initializeSpeedQuizData;
 window.initializeSpeedQuizData = initializeSpeedQuizData;
 window.initializeSpeedQuizGame = initializeSpeedQuizGame;
 window.extractAllArticles = extractAllArticles;

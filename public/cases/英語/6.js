@@ -2,9 +2,9 @@ export default {
   // =============================================
   // === 1. モジュール基本情報（必須） ============
   // =============================================
-  id: "gender-studies-butler-performativity-1",
+  id: "英語-6",
   title: "【ジェンダー研究】ジュディス・バトラーのパフォーマティヴィティ理論",
-  category: "gender-studies",
+  category: "英語",
   citation: "Judith Butler, Gender Trouble (1990), Bodies That Matter (1993)",
   rank: "S",
   tags: ["ジェンダー研究", "パフォーマティヴィティ", "身体", "セックス", "ジェンダー", "トランスジェンダー"],

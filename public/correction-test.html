@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>完全刷新：添削システムテスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        textarea {
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-card">
+            <!-- ヘッダー -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <h1 class="text-3xl font-bold mb-2">🚀 完全刷新：添削システムテスト</h1>
+                <p class="text-blue-100">文字重なりゼロ・おしゃれ表示・確実右パネル表示</p>
+            </div>
+            
+            <!-- メインコンテンツ -->
+            <div class="p-6">
+                <!-- テスト用テキストエリア -->
+                <div class="mb-6">
+                    <label for="test-textarea" class="block text-lg font-bold text-gray-700 mb-3">📝 司法試験答案（テスト用）</label>
+                    <textarea 
+                        id="test-textarea" 
+                        class="w-full h-64 p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        placeholder="ここに司法試験の答案を入力してください。テスト用のサンプル答案を自動で設定することもできます。">みかんは司法試験の勉強において、契約法の重要性を理解している。特に債権者と債務者の関係性について、民法第415条の履行遅滞に関する規定を正確に理解することが必要である。しかし、彼女の答案には論理構成に問題があり、事実の法的評価が不十分である。また、判例の引用も適切でなく、結論に至る論証過程が不明確である。これらの点を改善することで、より高い評価を得ることができるであろう。</textarea>
+                </div>
+                
+                <!-- コントロールボタン -->
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button 
+                        onclick="loadSampleText()" 
+                        class="btn bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold">
+                        📝 サンプル答案を設定
+                    </button>
+                    <button 
+                        onclick="testCorrection()" 
+                        class="btn bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">
+                        🚀 添削テスト実行
+                    </button>
+                    <button 
+                        onclick="emergencyTest()" 
+                        class="btn bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-bold">
+                        🚨 緊急テスト
+                    </button>
+                    <button 
+                        onclick="clearCorrections()" 
+                        class="btn bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-bold">
+                        🗑️ 添削削除
+                    </button>
+                    <button 
+                        onclick="toggleDisplay()" 
+                        class="btn bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">
+                        👁️ 表示切替
+                    </button>
+                </div>
+                
+                <!-- ステータス表示 -->
+                <div id="status-area" class="bg-gray-100 p-4 rounded-lg mb-6">
+                    <h3 class="font-bold text-gray-700 mb-2">📊 システムステータス</h3>
+                    <div id="status-content" class="text-gray-600">システム待機中...</div>
+                </div>
+                
+                <!-- 説明 -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-blue-800 mb-2">💡 使用方法</h3>
+                    <ul class="text-blue-700 space-y-1">
+                        <li>• <strong>サンプル答案を設定</strong>: テスト用の司法試験答案を自動入力</li>
+                        <li>• <strong>添削テスト実行</strong>: 完全刷新されたリッチテキストエディタ方式で添削実行</li>
+                        <li>• <strong>緊急テスト</strong>: 強制的にハイライト表示をテスト</li>
+                        <li>• <strong>添削削除</strong>: 全ての添削マーカーを削除</li>
+                        <li>• <strong>表示切替</strong>: 添削の表示/非表示を切り替え</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添削システムの読み込み -->
+    <script type="module">
+        import { 
+            performAICorrection, 
+            applyCorrectionMarkupForJudicialSheet, 
+            emergencyTestHighlight,
+            clearAllCorrections,
+            toggleCorrectionDisplay,
+            forceResetCorrection
+        } from './pages/correction_mega.js';
+
+        // グローバル関数として登録
+        window.correctionMegaSystem = {
+            performAICorrection,
+            applyCorrectionMarkupForJudicialSheet,
+            emergencyTestHighlight,
+            clearAllCorrections,
+            toggleCorrectionDisplay,
+            forceResetCorrection
+        };
+
+        console.log('🚀 添削システム読み込み完了');
+        updateStatus('✅ 添削システム読み込み完了 - テスト可能');
+    </script>
+
+    <script>
+        // ステータス更新関数
+        function updateStatus(message) {
+            const statusContent = document.getElementById('status-content');
+            const timestamp = new Date().toLocaleTimeString();
+            statusContent.innerHTML = `[${timestamp}] ${message}`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        // サンプルテキスト設定
+        function loadSampleText() {
+            const textarea = document.getElementById('test-textarea');
+            textarea.value = `みかんは司法試験の論文式試験において、契約法の重要論点である債務不履行について論述している。
+
+民法第415条第1項に基づく損害賠償請求の要件として、①債務の存在、②履行期の到来、③履行の不能又は履行遅滞、④債務者の帰責事由、⑤損害の発生及び因果関係が必要である。
+
+本件においては、甲と乙の間に売買契約が成立しており、乙は甲に対して目的物を引き渡す債務を負っている。履行期は平成30年4月1日と定められており、既に到来している。しかし、乙は履行期を過ぎても目的物を引き渡さず、履行遅滞の状態にある。
+
+乙の履行遅滞について帰責事由が認められるかが問題となる。民法第415条第1項ただし書きは「債務者の責めに帰することができない事由」による場合を除くとしている。本件では、乙が資金繰りの悪化により目的物の調達が困難になったという事情があるが、これは債務者の事業運営上のリスクに属する事由であり、債務者の帰責事由に該当すると考えられる。
+
+したがって、甲は乙に対し、民法第415条第1項に基づく損害賠償請求権を行使することができる。`;
+            updateStatus('📝 サンプル答案を設定しました');
+        }
+
+        // 添削テスト実行
+        async function testCorrection() {
+            const textarea = document.getElementById('test-textarea');
+            if (!textarea.value.trim()) {
+                alert('❌ テキストを入力してください');
+                return;
+            }
+
+            updateStatus('🔄 添削処理開始中...');
+
+            try {
+                // テスト用の添削データを生成
+                const testCorrectionData = {
+                    score: 78,
+                    maxScore: 100,
+                    overallComment: '民法の基本的な理解は十分ですが、論理構成と事実の法的評価に改善の余地があります。',
+                    corrections: [
+                        {
+                            start: 0,
+                            end: 6,
+                            type: 'improve',
+                            severity: 'medium',
+                            category: '導入部',
+                            comment: '問題提起がより明確である必要があります。',
+                            suggestion: '「本件では～について検討する。」等の問題提起を明示してください。'
+                        },
+                        {
+                            start: 50,
+                            end: 65,
+                            type: 'essential',
+                            severity: 'high',
+                            category: '要件整理',
+                            comment: '損害賠償請求の要件整理が不十分です。',
+                            suggestion: '415条の要件を明確に列挙し、それぞれについて検討してください。'
+                        },
+                        {
+                            start: 100,
+                            end: 120,
+                            type: 'good',
+                            severity: 'low',
+                            category: '条文引用',
+                            comment: '条文の引用が適切です。',
+                            suggestion: 'この調子で正確な条文引用を続けてください。'
+                        },
+                        {
+                            start: 200,
+                            end: 230,
+                            type: 'structure',
+                            severity: 'medium',
+                            category: '論理構成',
+                            comment: '論理の展開順序を見直してください。',
+                            suggestion: 'まず要件を示してから、各要件の検討に入ってください。'
+                        },
+                        {
+                            start: 300,
+                            end: 350,
+                            type: 'citation',
+                            severity: 'medium',
+                            category: '判例引用',
+                            comment: '関連判例の引用があると良いでしょう。',
+                            suggestion: '最高裁昭和57年判決等の関連判例を引用してください。'
+                        }
+                    ]
+                };
+
+                // 添削システムを実行
+                if (window.correctionMegaSystem && window.correctionMegaSystem.applyCorrectionMarkupForJudicialSheet) {
+                    await window.correctionMegaSystem.applyCorrectionMarkupForJudicialSheet(testCorrectionData, 'test-textarea');
+                    updateStatus('✅ 添削テスト実行完了 - リッチテキストエディタ表示中');
+                } else {
+                    throw new Error('添削システムが読み込まれていません');
+                }
+
+            } catch (error) {
+                console.error('❌ 添削テストエラー:', error);
+                updateStatus(`❌ 添削テストエラー: ${error.message}`);
+            }
+        }
+
+        // 緊急テスト
+        function emergencyTest() {
+            updateStatus('🚨 緊急テスト実行中...');
+            try {
+                if (window.correctionMegaSystem && window.correctionMegaSystem.emergencyTestHighlight) {
+                    window.correctionMegaSystem.emergencyTestHighlight();
+                    updateStatus('✅ 緊急テスト実行完了');
+                } else if (window.emergencyTestHighlight) {
+                    window.emergencyTestHighlight();
+                    updateStatus('✅ 緊急テスト実行完了（グローバル関数使用）');
+                } else {
+                    throw new Error('緊急テスト関数が見つかりません');
+                }
+            } catch (error) {
+                console.error('❌ 緊急テストエラー:', error);
+                updateStatus(`❌ 緊急テストエラー: ${error.message}`);
+            }
+        }
+
+        // 添削削除
+        function clearCorrections() {
+            updateStatus('🗑️ 添削削除中...');
+            try {
+                if (window.correctionMegaSystem && window.correctionMegaSystem.clearAllCorrections) {
+                    window.correctionMegaSystem.clearAllCorrections();
+                    updateStatus('✅ 添削削除完了');
+                } else if (window.clearAllCorrections) {
+                    window.clearAllCorrections();
+                    updateStatus('✅ 添削削除完了（グローバル関数使用）');
+                } else {
+                    throw new Error('添削削除関数が見つかりません');
+                }
+            } catch (error) {
+                console.error('❌ 添削削除エラー:', error);
+                updateStatus(`❌ 添削削除エラー: ${error.message}`);
+            }
+        }
+
+        // 表示切替
+        function toggleDisplay() {
+            updateStatus('👁️ 表示切替中...');
+            try {
+                if (window.correctionMegaSystem && window.correctionMegaSystem.toggleCorrectionDisplay) {
+                    const isVisible = window.correctionMegaSystem.toggleCorrectionDisplay();
+                    updateStatus(`✅ 表示切替完了 - ${isVisible ? '表示' : '非表示'}`);
+                } else if (window.toggleCorrectionDisplay) {
+                    const isVisible = window.toggleCorrectionDisplay();
+                    updateStatus(`✅ 表示切替完了 - ${isVisible ? '表示' : '非表示'}（グローバル関数使用）`);
+                } else {
+                    throw new Error('表示切替関数が見つかりません');
+                }
+            } catch (error) {
+                console.error('❌ 表示切替エラー:', error);
+                updateStatus(`❌ 表示切替エラー: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

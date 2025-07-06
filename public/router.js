@@ -16,7 +16,7 @@ export function router() {
     console.log("ルーター起動:", hash);
     
     if (hash.startsWith('#/case/')) {
-        const caseId = hash.substring('#/case/'.length);
+        const caseId = decodeURIComponent(hash.substring('#/case/'.length));
         loadAndRenderCase(caseId, false);
     } else {
         renderHome(false);

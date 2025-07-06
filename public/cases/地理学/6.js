@@ -2,13 +2,13 @@ export default {
   // =============================================
   // === 1. モジュール基本情報（必須） ============
   // =============================================
-  id: 'toshichirigaku-rank-size-rule',
+  id: '地理学-6',
   title: '【都市地理学】都市システムと順位・規模の法則',
-  category: 'toshichirigaku',
+  category: '地理学',
   citation: '長田進『総合科目 地理学Ⅰ(6)都市の階層性(1)』',
   rank: 'A',
   tags: ['都市地理学', '都市システム', '順位規模の法則', 'プライメイトシティ', '階層性', '都市雇用圏'],
-  rightSideCharacters: ['みかん', '浅田', '梶井', '理央'],
+  rightSideCharacters: ['みかん'],
 
   // =============================================
   // === 2. 知識箱（必須） =======================
@@ -88,7 +88,8 @@ export default {
     { type: 'dialogue', speaker: 'みかん', expression: 'surprised', dialogue: 'なるほど！順位で割るだけなんだ！分かりやすい！' },
     { type: 'dialogue', speaker: '浅田', expression: 'serious', dialogue: 'でも、これはあくまで理論上の話。実際には、国によってパターンが違うんだ。それを見るために「両対数グラフ」というものを使うよ。【id:4】' },
     { type: 'narration', text: '浅田はパソコンを操作し、モニターに3つのパターンを示したグラフを映し出した。' },
-    { type: 'embed', format: 'mermaid', title: '都市の人口分布 3つのパターン', description: '両対数グラフ上での都市分布の典型例。', content: 'graph TD\n    A{都市の分布パターン} --> B[理論型(順位・規模の法則)]\n    A --> C[上位都市集中型(プライメイト型)]\n    A --> D[均等分布型(ポリーナリー型)]\n    B --- |例：アメリカ| E(多くの先進国)\n    C --- |例：タイ・韓国| F(一極集中型の国)\n    D --- |例：オーストラリア| G(多極分散型の国)' },
+    { type: 'embed', format: 'mermaid', title: '都市分布パターンの分類', description: '都市分布の3パターンをシンプルに分類。', content: 'graph TD\n    A[都市分布パターン] --> B[理論型]\n    A --> C[プライメイト型]\n    A --> D[ポリーナリー型]' },
+    { type: 'embed', format: 'mermaid', title: '各パターンの例', description: '各分布パターンの代表的な国の例。', content: 'graph TD\n    B[理論型] --> E[米国など]\n    C[プライメイト型] --> F[タイ・韓国]\n    D[ポリーナリー型] --> G[豪州]' },
     { type: 'dialogue', speaker: '理央', expression: 'normal', dialogue: '私の父の会社が取引してるタイは、まさにプライメイト型ね。首都のバンコクに人口も経済も文化も、何もかもが集中してるって言ってた。' },
     { type: 'dialogue', speaker: 'みかん', expression: 'thinking', dialogue: 'じゃあ、日本はどれに当てはまるの？東京がすごく大きいから、プライメイト型かな？' },
     { type: 'dialogue', speaker: '梶井', expression: 'cool', dialogue: 'それが、そう単純じゃないんだよ、タチバナ。前回の勉強会でやった「都市の定義」がここで効いてくる。どの定義を使うかで、グラフの形が全然違ってくるからね。【id:8】' },
@@ -123,7 +124,7 @@ export default {
 <ul class="list-disc list-inside mb-4 pl-4 space-y-2">
   <li><span class="text-blue-600 font-bold">理論型（順位・規模の法則型）</span>: グラフ上で直線状になるパターン。多様な規模の都市がバランス良く発達し、国全体として統合された都市システムを持つ先進国（例：アメリカ）に多く見られます。</li>
   <li><span class="text-blue-600 font-bold">プライメイト型（首位都市型）</span>: 第1位の都市（プライメートシティ）の人口が、2位以下を圧倒して突出しているパターン。政治・経済機能の一極集中が著しい国（例：タイ、韓国）で見られます。</li>
-  <li><span class="text-blue-600 font-bold">ポリーナリー型（均等分布型）</span>: 上位の複数の都市の規模が拮抗しているパターン。国土が広く、複数の中心都市が独立して発展した国（例：オーストラリア）で見られます。</li>
+  <li><span class="text-blue-600 font-bold">ポリーナリー型（均等分布型）</span>: 上位の複数の都市の規模が拮抗しているパターン。国土が広く、複数の拠点が独立して発展した国（例：オーストラリア）で見られます。</li>
 </ul>
 
 <h4 class="text-lg font-bold mt-6 mb-2">3. 分析における注意点：都市の定義</h4>

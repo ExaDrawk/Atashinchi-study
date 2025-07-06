@@ -66,11 +66,11 @@ function generateDialogueExample(char) {
     switch (char.name) {
         case 'みかん': return '「へえー、そうなんだ！でも、それってどういうこと？」';
         case 'ユズヒコ': return '「はぁ…。姉ちゃん、それは基本だよ。」';
-        case '母': return '「まあ、お母さんには難しいことは分からないけどさ！」';
+        case '母': return '「まあ、お母さんには難しいことは分からないけどね！」';
         case '父': return '「はっはっは、なるほどな。」';
         case '吉岡': return '「甘いな、タチバナ。会社法の基本だぜ。」';
         case '岩城くん': return '「…なるほど。そういう考え方もあるんだな、タチバナさん。」';
-        case 'しみちゃん': return '「みかん、落ち着いて。条文をもう一度よく読んでみましょう。」';
+        case 'しみちゃん': return '「みかん、落ち着いて。条文をもう一度よく読んでみて。」';
         default: return '「なるほど。」';
     }
 }

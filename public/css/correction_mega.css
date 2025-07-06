@@ -1,0 +1,235 @@
+/* correction_mega.css */
+/* 超高機能 司法試験答案添削システム 新デザイン */
+
+:root {
+    --color-bg: #f0f2f5; /* 全体の背景色 */
+    --color-paper: #ffffff; /* 答案用紙の背景色 */
+    --color-text: #333333; /* 基本テキスト色 */
+    --color-border: #d9d9d9; /* 罫線の色 */
+    --color-line-number: #8c8c8c; /* 行番号の色 */
+    --color-primary: #1890ff; /* プライマリカラー（ボタン、ハイライト） */
+    --color-primary-bg: #e6f7ff; /* プライマリカラーの背景 */
+    --font-main: 'Hiragino Kaku Gothic ProN', 'メイリオ', Meiryo, sans-serif;
+    --font-gothic: 'Hiragino Kaku Gothic ProN', 'メイリオ', Meiryo, sans-serif;
+    --font-mincho: 'Hiragino Mincho ProN', 'MS Mincho', serif;
+}
+
+/* --- ラッパー --- */
+.judicial-sheet-wrapper-new {
+    position: relative;
+    background-color: var(--color-paper);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 20px;
+    padding-left: 60px; /* 行番号のスペース */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+    font-family: var(--font-mincho);
+    line-height: 1.8;
+    letter-spacing: 1.5px;
+    margin-bottom: 20px;
+}
+
+/* --- 行番号 --- */
+.judicial-sheet-linenumbers-new {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 50px;
+    height: calc(100% - 40px);
+    text-align: center;
+    color: var(--color-line-number);
+    font-family: var(--font-gothic);
+    font-size: 12px;
+    padding-top: 2px; /* 微調整 */
+    border-right: 1px solid var(--color-border);
+    user-select: none;
+}
+
+/* --- コンテンツエリア --- */
+.judicial-sheet-content-new {
+    outline: none;
+}
+
+.judicial-sheet-content-new > div {
+    height: 32px; /* 1行の高さ */
+    border-bottom: 1px solid #f0f0f0; /* 薄い罫線 */
+    display: flex;
+    align-items: center;
+}
+
+/* --- 添削マーカー --- */
+.correction-marker-new {
+    background-color: var(--color-primary-bg);
+    border-bottom: 2px solid var(--color-primary);
+    padding: 2px 0;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+.correction-marker-new:hover {
+    background-color: #d9f7be; /* ホバー時の色 */
+}
+
+/* --- ツールチップ --- */
+.correction-tooltip-new {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #262626;
+    color: #fff;
+    font-family: var(--font-gothic);
+    padding: 10px 15px;
+    border-radius: 6px;
+    z-index: 100;
+    width: 300px;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+}
+
+.correction-marker-new:hover .correction-tooltip-new {
+    visibility: visible;
+    opacity: 1;
+}
+
+.correction-tooltip-new strong {
+    color: var(--color-primary);
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* --- 添削パネル --- */
+#correction-panel-new {
+    position: fixed;
+    top: 0;
+    right: -400px; /* 初期状態は画面外 */
+    width: 380px;
+    height: 100%;
+    background-color: var(--color-bg);
+    border-left: 1px solid var(--color-border);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    font-family: var(--font-gothic);
+}
+
+#correction-panel-new.visible {
+    right: 0;
+}
+
+.panel-header-new {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-paper);
+}
+
+.panel-header-new h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+#panel-close-btn-new {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #8c8c8c;
+    transition: color 0.3s;
+}
+
+#panel-close-btn-new:hover {
+    color: #333;
+}
+
+.panel-content-new {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding: 10px;
+}
+
+.panel-item-new {
+    background-color: var(--color-paper);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.panel-item-new:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.item-header-new {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item-type-new {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.item-header-new strong {
+    font-weight: 600;
+}
+
+.item-body-new p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.item-body-new p strong {
+    color: #595959;
+}
+
+/* --- コントロールボタン --- */
+.judicial-sheet-controls {
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+.toggle-correction-btn-new {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-family: var(--font-gothic);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.toggle-correction-btn-new:hover {
+    background-color: #40a9ff;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+/* --- ハイライトアニメーション --- */
+.highlight-marker-new {
+    animation: highlight-anim 2s ease;
+}
+
+@keyframes highlight-anim {
+    0% { background-color: #ffec3d; }
+    100% { background-color: var(--color-primary-bg); }
+}
