@@ -17,7 +17,7 @@ function createArticlePanel(supportedLaws = []) {
     if (existingPanel) {
         existingPanel.remove();
     }      const panelHtml = `
-        <div id="article-panel" class="fixed top-4 left-4 w-96 max-w-[90vw] bg-white rounded-lg shadow-2xl border-2 border-blue-200 z-50 hidden transform transition-all duration-300 flex flex-col max-h-[90vh]">
+        <div id="article-panel" class="fixed top-4 left-4 w-96 max-w-[90vw] bg-white rounded-lg shadow-2xl border-2 border-blue-200 hidden transform transition-all duration-300 flex flex-col max-h-[90vh]" style="z-index:1100000;">
             <div class="bg-blue-500 text-white p-3 rounded-t-lg flex justify-between items-center flex-shrink-0 sticky top-0 z-10">
                 <h3 class="font-bold text-lg">📖 条文表示</h3>
                 <button id="close-article-panel" class="text-white hover:text-gray-200 text-xl font-bold">×</button>

@@ -149,16 +149,6 @@ export function processQAReferences(htmlContent, questionsAndAnswers = []) {
     return result;
 }
 
-// ★★★ **囲み文字処理関数 ★★★
-export function processBoldText(htmlContent) {
-    if (!htmlContent || typeof htmlContent !== 'string') {
-        return htmlContent;
-    }
-    
-    // **text**パターンを<strong>text</strong>に変換
-    return htmlContent.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-red-600">$1</strong>');
-}
-
 // ★★★ 条文参照、Q&A参照、**囲み文字の統合処理関数 ★★★
 export function processAllReferences(htmlContent, supportedLaws = [], questionsAndAnswers = []) {
     // まず**囲み文字を処理
@@ -180,18 +170,16 @@ export function setupArticleRefButtons(container) {
         return;
     }
     
+    console.log('🔧 条文ボタンのイベントリスナー設定開始');
+    
+    // ★★★ 条文参照ボタンの設定 ★★★
     const articleRefButtons = container.querySelectorAll('.article-ref-btn');
-    const qaRefButtons = container.querySelectorAll('.qa-ref-btn');
-    
-    // 条文ボタンが存在しない場合は静かに終了
-    if (articleRefButtons.length === 0 && qaRefButtons.length === 0) {
-        console.log(`📋 条文ボタン: 0個 (対象外コンテナ)`);
-        return;
-    }
-    
-    console.log('� 条文ボタンのイベントリスナー設定開始');
     console.log(`📋 発見された条文ボタン: ${articleRefButtons.length}個`);
-    console.log(`📋 発見されたQ&Aボタン: ${qaRefButtons.length}個`);
+    
+    if (articleRefButtons.length === 0) {
+        console.warn('⚠️ 条文ボタンが見つかりません。HTMLを確認してください。');
+        console.log('🔍 コンテナHTML:', container.innerHTML.substring(0, 500) + '...');
+    }
     
     articleRefButtons.forEach((button, index) => {
         console.log(`🔧 ボタン ${index + 1} 設定中:`, button.id, button.dataset);
@@ -204,9 +192,14 @@ export function setupArticleRefButtons(container) {
         
         console.log(`✅ ボタン ${index + 1} イベントリスナー設定完了`);
     });
+      // ★★★ Q&A参照ボタンの設定 ★★★
+    const qaRefButtons = container.querySelectorAll('.qa-ref-btn');
+    console.log(`📋 発見されたQ&Aボタン: ${qaRefButtons.length}個`);
     
     qaRefButtons.forEach((button, index) => {
         console.log(`🔧 Q&Aボタン ${index + 1} 設定中:`, button.id, button.dataset);
+        console.log(`🔧 Q&Aボタン ${index + 1} の要素:`, button);
+        console.log(`🔧 Q&Aボタン ${index + 1} のクラス:`, button.className);
         
         // 既存のイベントリスナーを削除
         button.removeEventListener('click', handleQAButtonClick);
@@ -217,21 +210,18 @@ export function setupArticleRefButtons(container) {
         console.log(`✅ Q&Aボタン ${index + 1} イベントリスナー設定完了`);
     });
     
-    console.log('✅ 条文ボタンのイベントリスナー設定完了');
+    console.log('✅ 条文ボタンとQ&Aボタンのイベントリスナー設定完了');
 }
 
 // ★★★ 条文ボタンクリックハンドラー ★★★
 function handleArticleButtonClick(e) {
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation(); // 確実にイベント伝播を停止
-    
-    // ポップアップを閉じないようにフラグを設定
-    window.__preventPopupClose = true;
     
     const lawName = this.dataset.lawName;
     const articleRef = this.dataset.articleRef;
-      console.log(`🖱️ 条文ボタンクリック: ${lawName}${articleRef}`);
+    
+    console.log(`🖱️ 条文ボタンクリック: ${lawName}${articleRef}`);
     console.log(`🔍 ボタンデータ:`, this.dataset);
     
     // データ属性が正しく設定されているかチェック
@@ -241,107 +231,132 @@ function handleArticleButtonClick(e) {
             articleRef,
             allData: this.dataset
         });
-        // フラグをリセット
-        window.__preventPopupClose = false;
         return;
     }
-    
-    console.log(`🚀 showArticlePanelWithPreset呼び出し開始: ${lawName} + ${articleRef}`);
-    
-    // 条文表示パネルを開いて、該当する条文をセット
-    try {
-        showArticlePanelWithPreset(lawName, articleRef);
-        console.log(`✅ showArticlePanelWithPreset呼び出し完了`);
-        
-        // パネルが実際に表示されているかチェック
-        setTimeout(() => {
-            const panel = document.getElementById('article-panel');
-            if (panel && !panel.classList.contains('hidden')) {
-                console.log(`✅ 条文パネルが正常に表示されました`);
-            } else {
-                console.error(`❌ 条文パネルの表示に問題があります`, panel);
-            }
-        }, 100);
-        
-    } catch (error) {
-        console.error('❌ showArticlePanelWithPreset呼び出しでエラー:', error);
-    }
-    
-    // フラグをリセット（少し遅延させる）
-    setTimeout(() => {
-        window.__preventPopupClose = false;
-    }, 200);
+      // 条文表示パネルを開いて、該当する条文をセット
+    showArticlePanelWithPreset(lawName, articleRef);
 }
 
 // ★★★ Q&Aボタンクリックハンドラー ★★★
 function handleQAButtonClick(e) {
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
     
-    // ポップアップを閉じないようにフラグを設定
-    window.__preventPopupClose = true;
+    console.log('🔥 Q&Aボタンがクリックされました！', e.target);
+    console.log('🔥 ボタンの全データ:', e.target.dataset);
+    console.log('🔥 ボタンのクラス:', e.target.className);
     
-    const qaIndex = parseInt(this.dataset.qaIndex, 10);
+    const qaIndex = parseInt(this.dataset.qaIndex);
     const qNumber = this.dataset.qNumber;
+    const quizIndex = this.dataset.quizIndex || 'global';
+    const subIndex = this.dataset.subIndex || '0';
     
     console.log(`🖱️ Q&Aボタンクリック: Q${qNumber} (Index: ${qaIndex})`);
     console.log(`🔍 ボタンデータ:`, this.dataset);
     
     // データ属性が正しく設定されているかチェック
-    if (isNaN(qaIndex)) {
+    if (isNaN(qaIndex) || !qNumber) {
         console.error('❌ Q&Aボタンのデータ属性が不完全です', {
             qaIndex,
             qNumber,
             allData: this.dataset
         });
-        window.__preventPopupClose = false;
         return;
     }
+    
+    // ★★★ 重複クリック防止 ★★★
+    if (this.dataset.clicking === 'true') {
+        console.log('⚠️ 重複クリックを防止しました');
+        return;
+    }
+    this.dataset.clicking = 'true';
     
     // Q&Aポップアップを表示
     try {
-        showQAPopup(qaIndex, qNumber);
-        console.log(`✅ Q&Aポップアップ表示完了: Q${qNumber}`);
-    } catch (error) {
-        console.error('❌ Q&Aポップアップ表示でエラー:', error);
+        showQAPopup(qaIndex, qNumber, quizIndex, subIndex);
+    } finally {
+        // 処理完了後にクリック防止フラグを解除
+        setTimeout(() => {
+            this.dataset.clicking = 'false';
+        }, 300);
     }
-    
-    // フラグをリセット（少し遅延させる）
-    setTimeout(() => {
-        window.__preventPopupClose = false;
-    }, 200);
 }
 
 // ★★★ Q&Aポップアップ表示関数 ★★★
-function showQAPopup(qaIndex, qNumber) {
-    const qaData = window.currentCaseData?.questionsAndAnswers?.[qaIndex];
-    if (!qaData) {
-        console.error(`❌ Q&A データが見つかりません: Index ${qaIndex}`);
+function showQAPopup(qaIndex, qNumber, quizIndex, subIndex) {
+    console.log(`🔥 showQAPopup開始: qaIndex=${qaIndex}, qNumber=${qNumber}`);
+    
+    if (!window.currentCaseData || !window.currentCaseData.questionsAndAnswers) {
+        console.error('❌ Q&Aデータが利用できません');
+        console.error('currentCaseData:', window.currentCaseData);
         return;
     }
     
-    // 既存のポップアップを削除
-    document.querySelectorAll('.qa-ref-popup').forEach(el => el.remove());
+    console.log(`🔥 Q&Aデータ配列長: ${window.currentCaseData.questionsAndAnswers.length}`);
     
-    // 一意のポップアップIDを生成
-    const popupId = `qa-popup-${qaIndex}-${Date.now()}`;
-    
-    // ポップアップ状態を保存
-    if (window.qaPopupState) {
-        window.qaPopupState.savePopup(popupId, qaIndex, qNumber);
+    const qa = window.currentCaseData.questionsAndAnswers[qaIndex];
+    if (!qa) {
+        console.error(`❌ インデックス ${qaIndex} のQ&Aが見つかりません`);
+        console.error('利用可能なQ&A:', window.currentCaseData.questionsAndAnswers);
+        return;
     }
     
-    // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
-    let qaQuestionWithArticleRefs = processArticleReferences(qaData.question, window.currentCaseData.supportedLaws || []);
-    let qaQuestion = processBlankFillText(qaQuestionWithArticleRefs, `qa-q-${qaIndex}`);
+    console.log(`🔥 Q&Aデータ取得成功:`, qa);
+    
+    const popupId = `qa-popup-${quizIndex}-${subIndex}-${qNumber}`;
+    console.log(`🔥 ポップアップID: ${popupId}`);
+    
+    // ★★★ 既存の同じポップアップがあれば削除（トグル動作） ★★★
+    const existing = document.getElementById(popupId);
+    if (existing) {
+        console.log(`🔥 既存ポップアップを削除（トグル）: ${popupId}`);
+        existing.remove();
+        window.qaPopupState.removePopup(popupId);
+        return; // トグル動作で終了
+    }
+    
+    // ★★★ 他の全てのQ&Aポップアップを閉じる ★★★
+    console.log(`🔥 既存の全Q&Aポップアップを閉じます`);
+    closeAllQAPopups();
+    
+    // ポップアップHTMLを生成
+    console.log(`🔥 ポップアップHTML生成開始`);
+    const popupHtml = createQAPopupHTML(popupId, qa, qNumber, qaIndex);
+    console.log(`🔥 生成されたHTML (最初の200文字):`, popupHtml.substring(0, 200));
+    
+    // グローバルポップアップコンテナに追加
+    const globalContainer = document.getElementById('qa-ref-popup-global-container');
+    if (globalContainer) {
+        console.log(`🔥 グローバルコンテナに追加中`);
+        globalContainer.insertAdjacentHTML('beforeend', popupHtml);
+    } else {
+        console.log(`🔥 グローバルコンテナが見つからないため、bodyに追加`);
+        document.body.insertAdjacentHTML('beforeend', popupHtml);
+    }
+    
+    // ポップアップの状態を保存
+    window.qaPopupState.savePopup(popupId, qaIndex, qNumber, quizIndex, subIndex);
+    
+    // ポップアップ内のイベントリスナーを設定
+    setupQAPopupEvents(popupId);
+    
+    console.log(`✅ Q&Aポップアップ表示完了: ${popupId}`);
+}
+
+// ★★★ Q&AポップアップHTML生成 ★★★
+function createQAPopupHTML(popupId, qa, qNumber, qaIndex) {
+    // 条文参照ボタン化処理
+    let qaQuestion = qa.question.replace(/(【[^】]+】)/g, match => {
+        const lawText = match.replace(/[【】]/g, '');
+        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}'>${lawText}</button>`;
+    });
     
     // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
-    let qaAnswerWithArticleRefs = processArticleReferences(qaData.answer, window.currentCaseData.supportedLaws || []);
-    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-${qaIndex}`);
-    
-    const popupHtml = `
-        <div id="${popupId}" class="qa-ref-popup">
+    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer);
+    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-popup-${qaIndex}`);
+
+    return `
+        <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
             <div class="flex justify-between items-center mb-2">
                 <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
                 <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
@@ -351,7 +366,7 @@ function showQAPopup(qaIndex, qNumber) {
                 <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
                 <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
                     <div class="flex gap-2 mb-2">
-                        <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">� 全て表示</button>
+                        <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">🔍 全て表示</button>
                         <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
                     </div>
                     <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
@@ -359,84 +374,78 @@ function showQAPopup(qaIndex, qNumber) {
             </div>
         </div>
     `;
+}
 
-    // グローバルポップアップコンテナに追加
-    const globalContainer = document.getElementById('qa-ref-popup-global-container');
-    if (globalContainer) {
-        globalContainer.insertAdjacentHTML('beforeend', popupHtml);
-    } else {
-        document.body.insertAdjacentHTML('beforeend', popupHtml);
+// ★★★ Q&Aポップアップ内のイベントリスナー設定 ★★★
+function setupQAPopupEvents(popupId) {
+    const popup = document.getElementById(popupId);
+    if (!popup) return;
+      // 閉じるボタン
+    const closeBtn = popup.querySelector('.qa-ref-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            console.log(`🗑️ 閉じるボタンクリック: ${popupId}`);
+            popup.remove();
+            window.qaPopupState.removePopup(popupId);
+        });
     }
-
-    // ポップアップ内のイベントリスナーを設定
-    const createdPopup = document.getElementById(popupId);
-    if (createdPopup) {
-        // 問題文と解答内の条文参照ボタンのイベントリスナーを設定
-        setupArticleRefButtons(createdPopup);
-        console.log('✅ ポップアップ内の条文ボタン設定完了:', popupId);
+    
+    // 解答表示ボタン
+    const answerToggleBtn = popup.querySelector('.toggle-qa-answer-btn');
+    const answerContent = popup.querySelector('.qa-answer-content');
+    if (answerToggleBtn && answerContent) {
+        // デフォルトで解答が表示されているので、条文参照ボタンを有効にする
+        setupArticleRefButtons(answerContent);
         
-        // 解答表示ボタンのイベントリスナーを設定
-        const answerToggleBtn = createdPopup.querySelector('.toggle-qa-answer-btn');
-        const answerContent = createdPopup.querySelector('.qa-answer-content');
-        if (answerToggleBtn && answerContent) {
-            answerToggleBtn.addEventListener('click', function() {
-                const isHidden = answerContent.classList.toggle('hidden');
-                this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
-                
-                // 解答内の条文参照ボタンも再度有効にする
-                if (!isHidden) {
-                    setupArticleRefButtons(answerContent);
-                }
-            });
-        }
-          // 空欄一括操作ボタンのイベントリスナーを設定
-        const showAllBlanksBtn = createdPopup.querySelector('.show-all-blanks-btn');
-        const hideAllBlanksBtn = createdPopup.querySelector('.hide-all-blanks-btn');
-        
-        if (showAllBlanksBtn && answerContent) {
-            showAllBlanksBtn.addEventListener('click', function() {
-                // 空欄一括表示機能（暫定実装）
-                const blanks = answerContent.querySelectorAll('.blank-text');
-                blanks.forEach(blank => {
-                    if (blank.dataset.answer && blank.dataset.revealed !== 'true') {
-                        blank.click(); // toggleBlankReveal関数を呼び出し
-                    }
-                });
-            });
-        }
-        
-        if (hideAllBlanksBtn && answerContent) {
-            hideAllBlanksBtn.addEventListener('click', function() {
-                // 空欄一括非表示機能（暫定実装）
-                const blanks = answerContent.querySelectorAll('.blank-text');
-                blanks.forEach(blank => {
-                    if (blank.dataset.answer && blank.dataset.revealed === 'true') {
-                        blank.click(); // toggleBlankReveal関数を呼び出し
-                    }
-                });
-            });
-        }
-        
-        // 閉じるボタンのイベントリスナーを設定
-        const closeBtn = createdPopup.querySelector('.qa-ref-close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                createdPopup.remove();                // ポップアップ状態からも削除
-                if (window.qaPopupState) {
-                    window.qaPopupState.removePopup(popupId);
-                }
-            });
-        }
+        answerToggleBtn.addEventListener('click', function() {
+            const isHidden = answerContent.classList.toggle('hidden');
+            this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
+            
+            // 解答内の条文参照ボタンも有効にする
+            if (!isHidden) {
+                setupArticleRefButtons(answerContent);
+            }
+        });
+    }
+    
+    // 空欄一括操作ボタン
+    const showAllBlanksBtn = popup.querySelector('.show-all-blanks-btn');
+    const hideAllBlanksBtn = popup.querySelector('.hide-all-blanks-btn');
+    
+    if (showAllBlanksBtn && answerContent) {
+        showAllBlanksBtn.addEventListener('click', function() {
+            toggleAllBlanks(answerContent, true);
+        });
+    }
+    
+    if (hideAllBlanksBtn && answerContent) {
+        hideAllBlanksBtn.addEventListener('click', function() {
+            toggleAllBlanks(answerContent, false);
+        });
     }
 }
 
-// ★★★ 空欄処理関数 ★★★
-function processBlankFillText(text, uniqueId = '') {
+// ★★★ 空欄一括操作関数（casePage.jsから移動） ★★★
+function toggleAllBlanks(container, reveal) {
+    const blanks = container.querySelectorAll('.blank-text');
+    blanks.forEach(blank => {
+        const currentRevealed = blank.dataset.revealed === 'true';
+        if (reveal && !currentRevealed) {
+            window.toggleBlankReveal(blank);
+        } else if (!reveal && currentRevealed) {
+            window.toggleBlankReveal(blank);
+        }
+    });
+}
+
+// ★★★ 空欄化処理関数（casePage.jsから移動） ★★★
+export function processBlankFillText(text, uniqueId = '') {
     if (!text) return text;
     
     // {{}}で囲まれた部分を検出する正規表現
     const blankPattern = /\{\{([^}]+)\}\}/g;
     let blankCounter = 0;
+    let processedText = text;
     
     // まず、{{}}の外側にある【】を条文参照ボタン化
     let outsideBlankText = text;
@@ -449,6 +458,11 @@ function processBlankFillText(text, uniqueId = '') {
         const placeholder = `__BLANK_${blankMatches.length - 1}__`;
         outsideBlankText = outsideBlankText.replace(match[0], placeholder);
     }
+    
+    // {{}}の外側の【】を条文参照ボタン化
+    outsideBlankText = outsideBlankText.replace(/【([^】]+)】/g, (match, lawText) => {
+        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
+    });
     
     // プレースホルダーを空欄に戻す
     for (let i = 0; i < blankMatches.length; i++) {
@@ -463,9 +477,7 @@ function processBlankFillText(text, uniqueId = '') {
         if (hasArticleRef) {
             // 条文参照がある場合：ボタン化して色を変える
             displayContent = content.replace(/【([^】]+)】/g, (match, lawText) => {
-                // 法令名と条文番号を分離
-                const lawRef = parseLawReference(lawText);
-                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-name='${lawRef.lawName}' data-article-ref='${lawRef.articleRef}'>${lawText}</button>`;
+                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
             });
             dataAnswer = content.replace(/【([^】]+)】/g, '$1'); // data-answerはプレーンテキスト
         } else {
@@ -493,67 +505,108 @@ function processBlankFillText(text, uniqueId = '') {
     return outsideBlankText;
 }
 
-/**
- * 法令参照文字列をパースして法令名と条文番号に分離
- * @param {string} lawText - 法令参照文字列（例: "民事訴訟法228条4項"）
- * @returns {{lawName: string, articleRef: string}} 分離された法令名と条文番号
- */
-function parseLawReference(lawText) {
-    // 正規表現で法令名と条文番号を分離
-    const match = lawText.match(/^(.+?)(\d+条.*)$/);
-    if (match) {
-        return {
-            lawName: match[1],
-            articleRef: match[2]
-        };
-    }
-    // パースできない場合は全体を法令名として扱う
-    return {
-        lawName: lawText,
-        articleRef: ''
-    };
-}
-
-// ★★★ ランク設定取得関数 ★★★
-function getRankConfig(rank) {
-    const configs = {
-        'S': { bgColor: 'bg-purple-100', textColor: 'text-purple-800', borderColor: 'border-purple-400' },
-        'A': { bgColor: 'bg-red-100', textColor: 'text-red-800', borderColor: 'border-red-400' },
-        'B': { bgColor: 'bg-orange-100', textColor: 'text-orange-800', borderColor: 'border-orange-400' },
-        'C': { bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', borderColor: 'border-yellow-400' }    };
-    return configs[rank] || configs['C'];
+// ★★★ デバッグ用：条文検出テスト関数（強化版） ★★★
+export function testArticleDetection() {
+    console.log('🧪 条文検出テスト開始');
+    
+    const testTexts = [
+        '【憲法21条】の精神に照らし',
+        '【日本国憲法21条】の表現の自由',
+        '【民事訴訟法197条1項2号】の職業の秘密',
+        '【刑法199条】の殺人罪',
+        '【麻薬及び向精神薬取締法】違反'
+    ];
+    
+    testTexts.forEach((text, index) => {
+        console.log(`\nテスト ${index + 1}: "${text}"`);
+        const result = processArticleReferences(text);
+        console.log(`結果: "${result}"`);
+        
+        // ボタンが生成されたかチェック
+        const hasButton = result.includes('article-ref-btn');
+        console.log(`ボタン生成: ${hasButton ? '✅' : '❌'}`);
+    });
+    
+    console.log('🧪 条文検出テスト完了');
 }
 
 // ★★★ 強制的に条文ボタンを再処理する関数 ★★★
 export function forceProcessArticleButtons() {
-    console.log('🔄 条文ボタンを強制再処理中...');
+    console.log('🔄 条文ボタン強制再処理開始');
     
-    // 全ての条文ボタンを再処理
-    const containers = document.querySelectorAll('.case-content, .article-content, .qa-content');
-    containers.forEach(container => {
-        setupArticleRefButtons(container);
+    // 全てのタブコンテンツを取得
+    const tabContents = document.querySelectorAll('.tab-content-panel');
+    
+    tabContents.forEach((tab, index) => {
+        console.log(`🔄 タブ ${index + 1} 処理中`);
+        
+        // 既存のボタンを削除
+        const existingButtons = tab.querySelectorAll('.article-ref-btn');
+        existingButtons.forEach(btn => {
+            const parent = btn.parentNode;
+            parent.replaceChild(document.createTextNode(btn.textContent), btn);
+        });
+        
+        // HTMLを再処理
+        const originalHTML = tab.innerHTML;
+        const processedHTML = processArticleReferences(originalHTML);
+        
+        if (originalHTML !== processedHTML) {
+            tab.innerHTML = processedHTML;
+            setupArticleRefButtons(tab);
+            console.log(`✅ タブ ${index + 1} 再処理完了`);
+        }
     });
     
-    console.log('✅ 条文ボタンの強制再処理が完了しました');
+    console.log('✅ 条文ボタン強制再処理完了');
 }
 
-// ★★★ テスト用の条文検出関数 ★★★
-export function testArticleDetection() {
-    console.log('🧪 条文検出テストを実行中...');
+// ★★★ **で囲まれた文字を装飾する関数 ★★★
+export function processBoldText(htmlContent) {
+    if (!htmlContent || typeof htmlContent !== 'string') {
+        console.warn('⚠️ processBoldText: 無効な入力', htmlContent);
+        return htmlContent;
+    }
     
-    const testCases = [
-        '民法110条',
-        '会社法828条2項1号',
-        '憲法14条',
-        '【id:1】',
-        '**重要なポイント**'
-    ];
+    console.log('🎨 **囲み文字の装飾処理開始');
     
-    testCases.forEach(testCase => {
-        console.log(`テスト: ${testCase}`);
-        const processed = processAllReferences(testCase, ['民法', '会社法', '憲法'], []);
-        console.log(`結果: ${processed}`);
+    // **で囲まれた文字を検出する正規表現
+    // 例: **特別損害**, **履行利益**, **信頼利益**
+    const boldPattern = /\*\*([^*]+)\*\*/g;
+    
+    let matchCount = 0;
+    const result = htmlContent.replace(boldPattern, (match, content) => {
+        matchCount++;
+        console.log(`✅ **囲み文字検出 ${matchCount}: "${content}"`);
+        
+        // 装飾されたspanタグに変換
+        const decoratedHtml = `<span class="inline-block bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-md text-sm font-bold shadow-sm border border-yellow-300">${content}</span>`;
+        
+        console.log(`🎨 装飾変換: "${content}" → decoratedスパン`);
+        return decoratedHtml;
     });
     
-    console.log('✅ 条文検出テストが完了しました');
+    console.log(`📊 **囲み文字装飾結果: ${matchCount}件を装飾`);
+    
+    return result;
+}
+
+// ★★★ 全てのQ&Aポップアップを閉じる関数 ★★★
+function closeAllQAPopups() {
+    console.log(`🧹 全Q&Aポップアップを閉じる処理開始`);
+    
+    // DOMから全てのQ&Aポップアップを削除
+    const allQAPopups = document.querySelectorAll('.qa-ref-popup');
+    allQAPopups.forEach(popup => {
+        console.log(`🗑️ ポップアップを削除: ${popup.id}`);
+        popup.remove();
+    });
+    
+    // 状態管理をクリア
+    if (window.qaPopupState) {
+        console.log(`🧹 ポップアップ状態をクリア (${window.qaPopupState.openPopups.length}個)`);
+        window.qaPopupState.clearAll();
+    }
+    
+    console.log(`✅ 全Q&Aポップアップ閉じる処理完了`);
 }

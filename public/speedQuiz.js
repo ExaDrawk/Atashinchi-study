@@ -6,6 +6,12 @@
  * @returns {Array} 条文リスト
  */
 export async function extractAllArticles(caseData) {
+    // caseDataのnullチェック
+    if (!caseData) {
+        console.warn('⚠️ caseDataがnullまたはundefinedです');
+        return [];
+    }
+    
     const articles = new Set();
     const texts = [];
     
@@ -245,16 +251,12 @@ function hideAnswersInContentForQuiz(content, article) {
         new RegExp(`第${articleNumber}条`, 'g'),
         new RegExp(`${articleNumber}条(?:の[0-9]+)?`, 'g'),
         new RegExp(`${articleNumber}条`, 'g')
-    ];    let hiddenContent = content;
-      // ★★★ 条文番号の表示削除：「第○○条　」の部分を削除 ★★★
+    ];
+      let hiddenContent = content;
+    
+    // ★★★ 条文番号の表示削除：「第○○条　」の部分を削除 ★★★
     // 「第」から始まって次の空白までを削除
     hiddenContent = hiddenContent.replace(/^第[^　\s]+[　\s]+/gm, '');
-    
-    // ★★★ 項番号の表示削除：項がある場合のみ「3　第一項の規定は...」→「第一項の規定は...」 ★★★
-    // 項がある場合のみ、行の先頭の「数字　」を削除（2項以降の場合）
-    if (paragraph) {
-        hiddenContent = hiddenContent.replace(/^[0-9]+[　\s]+/gm, '');
-    }
     
     articlePatterns.forEach(pattern => {
         hiddenContent = hiddenContent.replace(pattern, '第○条');
@@ -350,41 +352,12 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
     container.innerHTML = `
         <div id="speed-quiz-rules" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg mb-6">
             <h2 class="text-2xl font-bold mb-4 text-center">⚡ スピード条文ゲーム</h2>
-            
-            <!-- ★★★ ペナルティアニメーション用CSS ★★★ -->
-            <style>
-                @keyframes penaltyPulse {
-                    0% { transform: scale(1); opacity: 0; }
-                    50% { transform: scale(1.1); opacity: 1; }
-                    100% { transform: scale(1); opacity: 1; }
-                }
-                
-                .typing-penalty-feedback {
-                    animation: penaltyPulse 0.5s ease-out;
-                }
-                
-                .law-name-gradient {
-                    background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
-                    background-size: 300% 300%;
-                    animation: gradientShift 3s ease infinite;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                }
-                
-                @keyframes gradientShift {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-            </style>
-            
-            <div class="bg-white bg-opacity-20 rounded-lg p-4 mb-4">                <h3 class="font-bold mb-2">🎯 ゲームルール：</h3>
+            <div class="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
+                <h3 class="font-bold mb-2">🎯 ゲームルール：</h3>
                 <ul class="text-sm space-y-1">
                     <li>• 条文の内容が表示され、だんだん拡大していきます</li>
                     <li>• 条文番号（数字のみ）を入力してください（例：「民法123条」→「123」）</li>
                     <li>• 「項」がある場合は、条文番号入力後に項番号を入力</li>
-                    <li>• <span class="text-red-600 font-bold">⚠️ ミスタイプすると1秒減少</span>するので注意！</li>
                     <li>• 早く正解するほど高得点！制限時間は10秒</li>
                     <li>• 全${articleCount}問にチャレンジ！</li>
                 </ul>
@@ -397,15 +370,8 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
             </button>
             <p class="text-gray-600 mt-4">全${articleCount}問の条文クイズに挑戦！</p>
         </div>
-          <div id="speed-quiz-game" class="hidden">            <!-- ★★★ 法令名を一番上にデコ文字で表示 ★★★ -->
-            <div id="law-name-display" class="text-center mb-6">
-                <div class="bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl p-4 border-2 border-blue-300 shadow-lg">
-                    <div class="text-3xl font-bold law-name-gradient" style="font-family: 'M PLUS Rounded 1c', sans-serif;">
-                        ⚖️ <span id="current-law-name">法令名</span> ⚖️
-                    </div>
-                </div>
-            </div>
-            
+        
+        <div id="speed-quiz-game" class="hidden">
             <div class="mb-4 flex justify-between items-center">
                 <div class="text-lg font-bold">問題 <span id="question-number">1</span> / ${articleCount}</div>
                 <div class="text-lg font-bold">スコア: <span id="current-score">0</span></div>
@@ -612,14 +578,9 @@ function displayCurrentQuestion() {
         showResult();
         return;
     }
-      const currentArticle = gameState.articles[gameState.currentIndex];
-    console.log('📖 現在の条文:', currentArticle);
     
-    // ★★★ 法令名を表示 ★★★
-    const lawNameElement = document.getElementById('current-law-name');
-    if (lawNameElement && currentArticle.lawName) {
-        lawNameElement.textContent = currentArticle.lawName;
-    }
+    const currentArticle = gameState.articles[gameState.currentIndex];
+    console.log('📖 現在の条文:', currentArticle);
     
     // UI更新
     document.getElementById('question-number').textContent = gameState.currentIndex + 1;
@@ -932,6 +893,63 @@ function displayWrongAnswers() {
 }
 
 /**
+ * 回答送信
+ */
+// 旧システム（削除予定）
+/*
+function submitAnswer() {
+    const input = document.getElementById('speed-quiz-input');
+    const userInput = input.value.trim();
+    
+    if (!userInput) {
+        return;
+    }
+    
+    const result = checkAnswer(userInput);
+    const currentArticle = gameState.articles[gameState.currentIndex];
+    
+    if (result === 'continue') {
+        // 項の入力へ続く
+        showCorrectFeedback();
+        setTimeout(() => {
+            document.getElementById('feedback').innerHTML = '';
+        }, 1000);
+        return;
+    }
+    
+    stopTimer();
+    
+    if (result === 'correct') {
+        // 正解
+        gameState.correctAnswers++;
+        const timeBonus = Math.max(0, gameState.timeLeft * 10); // 残り時間に応じたボーナス
+        const baseScore = 100;
+        gameState.score += baseScore + timeBonus;
+        
+        showCorrectFeedback();
+    } else {
+        // 不正解
+        gameState.score = Math.max(0, gameState.score - 50); // 間違えると減点
+        
+        // 間違えた問題を記録
+        if (currentArticle && currentArticle.articleNumber !== undefined) {
+            gameState.wrongAnswers.push({
+                article: currentArticle,
+                userAnswer: userInput,
+                correctAnswer: `${currentArticle.articleNumber}${currentArticle.paragraph ? `第${currentArticle.paragraph}項` : ''}`,
+                reason: '回答間違い'
+            });
+            
+            showIncorrectFeedback(`❌ 不正解！正解は${currentArticle.articleNumber}${currentArticle.paragraph ? `第${currentArticle.paragraph}項` : ''}でした`);        } else {
+            showIncorrectFeedback(`❌ 不正解！`);
+        }
+    }
+    
+    setTimeout(nextQuestion, 2000);
+}
+*/
+
+/**
  * スピードクイズ用：既存のAPIを使用して条文内容を取得
  */
 async function fetchArticleContentForQuiz(lawName, articleNumber, paragraph, item) {
@@ -1182,8 +1200,16 @@ function handleArticleInput(event) {
     const input = event.target;
     let inputValue = input.value;
     
+    // 全角数字を半角に変換
+    inputValue = inputValue.replace(/[０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+    
     // 数字と「の」のみを許可
     inputValue = inputValue.replace(/[^0-9の]/g, '');
+    
+    // 入力フィールドを即座に更新（変換された値を反映）
+    input.value = inputValue;
     
     const currentArticle = gameState.articles[gameState.currentIndex];
     if (!currentArticle) return;
@@ -1242,25 +1268,11 @@ function handleArticleInput(event) {
             }
         }
     }
-      // 間違った入力があった場合、赤色フェードアウトアニメーション + 時間減少
+    
+    // 間違った入力があった場合、赤色フェードアウトアニメーション
     if (hasIncorrectInput) {
         showIncorrectInputAnimation(input, inputValue.slice(-1));
         input.value = validInput;
-        
-        // ★★★ ミスタイプ時に1秒減らす ★★★
-        if (gameState.timeLeft > 1) {
-            gameState.timeLeft -= 1;
-            document.getElementById('time-remaining').textContent = gameState.timeLeft;
-            
-            // プログレスバーも更新
-            const progressBar = document.getElementById('time-progress');
-            const percentage = (gameState.timeLeft / 10) * 100;
-            progressBar.style.width = percentage + '%';
-            
-            // ミスタイプフィードバック表示
-            showTypingPenaltyFeedback();
-        }
-        
         // 表示を更新（正解部分を維持）
         updateArticleDisplay(validInput, correctArticleNumber);
         return;
@@ -1295,8 +1307,16 @@ function handleParagraphInput(event) {
     const input = event.target;
     let inputValue = input.value;
     
+    // 全角数字を半角に変換
+    inputValue = inputValue.replace(/[０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+    
     // 数字のみを許可
     inputValue = inputValue.replace(/[^0-9]/g, '');
+    
+    // 入力フィールドを即座に更新（変換された値を反映）
+    input.value = inputValue;
     
     const currentArticle = gameState.articles[gameState.currentIndex];
     if (!currentArticle || !currentArticle.paragraph) return;
@@ -1314,25 +1334,11 @@ function handleParagraphInput(event) {
             hasIncorrectInput = true;
             break;
         }
-    }    // 間違った入力があった場合、赤色フェードアウトアニメーション + 時間減少
+    }
+      // 間違った入力があった場合、赤色フェードアウトアニメーション
     if (hasIncorrectInput) {
         showIncorrectInputAnimation(input, inputValue.slice(-1));
         input.value = validInput;
-        
-        // ★★★ ミスタイプ時に1秒減らす ★★★
-        if (gameState.timeLeft > 1) {
-            gameState.timeLeft -= 1;
-            document.getElementById('time-remaining').textContent = gameState.timeLeft;
-            
-            // プログレスバーも更新
-            const progressBar = document.getElementById('time-progress');
-            const percentage = (gameState.timeLeft / 10) * 100;
-            progressBar.style.width = percentage + '%';
-            
-            // ミスタイプフィードバック表示
-            showTypingPenaltyFeedback();
-        }
-        
         // 表示を更新（正解部分を維持）
         updateParagraphDisplay(validInput, correctParagraphNumber);
         return;
@@ -1348,40 +1354,6 @@ function handleParagraphInput(event) {
     if (validInput === correctParagraphNumber) {
         completeAnswer();
     }
-}
-
-/**
- * ミスタイプ時のペナルティフィードバック表示
- */
-function showTypingPenaltyFeedback() {
-    const feedbackElement = document.getElementById('feedback');
-    if (!feedbackElement) return;
-    
-    // 既存のフィードバックをクリア
-    feedbackElement.innerHTML = '';
-    
-    // ペナルティメッセージを表示
-    feedbackElement.innerHTML = `
-        <div class="typing-penalty-feedback" style="
-            color: #dc2626;
-            background-color: #fef2f2;
-            border: 2px solid #f87171;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-align: center;
-            animation: penaltyPulse 0.5s ease-out;
-        ">
-            ⚠️ ミスタイプ！ -1秒
-        </div>
-    `;
-    
-    // 1秒後に自動消去
-    setTimeout(() => {
-        if (feedbackElement) {
-            feedbackElement.innerHTML = '';
-        }
-    }, 1000);
 }
 
 /**
@@ -1537,6 +1509,12 @@ async function initializeSpeedQuizData(caseData) {
     try {
         console.log('📚 ケースデータからスピード条文用データを抽出中...');
         
+        // caseDataのnullチェック
+        if (!caseData) {
+            console.warn('⚠️ caseDataがnullまたはundefinedのため、スピード条文データの読み込みをスキップします');
+            return;
+        }
+        
         // 既にデータが読み込まれている場合はスキップ
         if (window.speedQuizArticles && window.speedQuizArticles.length > 0) {
             console.log('✅ スピード条文データは既に読み込み済み');
@@ -1559,14 +1537,14 @@ async function initializeSpeedQuizData(caseData) {
             console.log(`✅ ${articles.length}件の条文データを事前読み込み完了`);
         } else {
             console.log('⚠️ 条文データの読み込みに失敗しました');
-        }
-        
+        }        
     } catch (error) {
         console.error('❌ スピード条文データの事前読み込みでエラー:', error);
     }
 }
 
 // ★★★ グローバル関数として公開 ★★★
+window.initializeSpeedQuizData = initializeSpeedQuizData;
 window.initializeSpeedQuizData = initializeSpeedQuizData;
 window.initializeSpeedQuizGame = initializeSpeedQuizGame;
 window.extractAllArticles = extractAllArticles;

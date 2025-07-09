@@ -1,6 +1,7 @@
 // pages/homePage.js - ホームページ専用モジュール（タグ複数選択 + ランク絞り込み対応）
 
-import { caseSummaries, caseLoaders } from '../modules/index.js';
+import { caseSummaries, caseLoaders } from '../cases/index.js';
+import { processBlankFillText, processArticleReferences } from '../articleProcessor.js';
 
 // ケースデータを実際に読み込んでランク情報を取得する関数
 async function loadCaseWithRank(caseId) {
@@ -15,12 +16,13 @@ async function loadCaseWithRank(caseId) {
         const caseModule = await loader();
         const caseData = caseModule.default;
         
-        // caseSummariesから基本情報を取得し、ランク情報を追加
+        // caseSummariesから基本情報を取得し、ランク情報とQ&Aデータを追加
         const summary = currentSummaries.find(s => s.id === caseId);
         if (summary) {
             return {
                 ...summary,
-                rank: caseData.rank || caseData.difficulty || 'C'
+                rank: caseData.rank || caseData.difficulty || 'C',
+                questionsAndAnswers: caseData.questionsAndAnswers || []
             };
         }
         return null;
@@ -35,7 +37,7 @@ async function loadCaseWithRank(caseId) {
  * @param {boolean} updateHistory - URL履歴を更新するかどうか
  */
 export function renderHome(updateHistory = true) {
-    document.title = 'あたしンちの世界へGO！';
+    document.title = 'あたしンちスタディ';
     window.currentCaseData = null;
     
     if (updateHistory) {
@@ -50,8 +52,8 @@ export function renderHome(updateHistory = true) {
         <!-- ★★★ ヘッダー（ログアウトボタン付き） ★★★ -->
         <div class="flex justify-between items-center mb-8">
             <div class="text-center flex-1">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-yellow-800">法律学習アプリ</h1>
-                <h2 class="text-5xl md:text-7xl font-extrabold text-yellow-600 tracking-wider">『あたしンちの世界へGO！』</h2>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-yellow-800">なんでも学習アプリ</h1>
+                <h2 class="text-5xl md:text-7xl font-extrabold text-yellow-600 tracking-wider">『あたしンちスタディ』</h2>
             </div>
             <div class="flex flex-col items-end space-y-2">
                 <div class="text-sm text-gray-600" id="user-info">
@@ -63,6 +65,7 @@ export function renderHome(updateHistory = true) {
                     </svg>
                     ログアウト
                 </button>
+                <button id="show-qa-list-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all">Q&A一覧</button>
             </div>
         </div>
         
@@ -89,10 +92,30 @@ export function renderHome(updateHistory = true) {
                         <!-- タグチェックボックスが動的に生成される -->
                     </div>
                 </div>
-            </div>            <div class="text-center">
-                <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg mr-2">🗑️ フィルタクリア</button>
-                <button id="regenerate-index" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mr-2">🔄 目次再生成</button>
-                <span id="filter-results" class="text-sm text-gray-600"></span>
+            </div>            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="flex gap-2">
+                    <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">🗑️ フィルタクリア</button>
+                    <button id="regenerate-index" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">🔄 目次再生成</button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-700">📊 並び替え:</span>
+                        <select id="sort-by" class="p-2 border rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
+                            <option value="default">デフォルト順</option>
+                            <option value="title">タイトル順</option>
+                            <option value="rank">ランク順</option>
+                            <option value="qa-average">Q&A番号平均順</option>
+                        </select>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-700">🔄 順序:</span>
+                        <select id="sort-order" class="p-2 border rounded-lg text-sm focus:ring-2 focus:ring-yellow-500">
+                            <option value="asc">昇順</option>
+                            <option value="desc">降順</option>
+                        </select>
+                    </label>
+                    <span id="filter-results" class="text-sm text-gray-600"></span>
+                </div>
             </div>
         </div>
         
@@ -117,6 +140,43 @@ export function renderHome(updateHistory = true) {
         </div>
     `;
 
+    // Q&A/モジュール切り替え状態
+    let showQAListMode = false;
+
+    // Q&A/モジュール切り替え用グローバル関数を先に宣言してwindowに登録
+    window.renderFilteredModulesOrQAs = function() {
+        if (showQAListMode) {
+            renderFilteredQAs();
+        } else {
+            renderFilteredModules();
+        }
+        updateToggleButton(); // 切り替え時にボタンの見た目も更新
+    };
+
+    // Q&A/モジュール切り替えボタン生成
+    const qaListBtn = document.getElementById('show-qa-list-btn');
+    if (qaListBtn) {
+        qaListBtn.style.display = '';
+        qaListBtn.onclick = () => {
+            showQAListMode = !showQAListMode;
+            updateToggleButton();
+            renderFilteredModulesOrQAs();
+        };
+        // 初期状態でボタンの見た目を設定
+        updateToggleButton();
+    }
+    // トグルボタンのラベル・色を切り替える関数
+    function updateToggleButton() {
+        if (!qaListBtn) return;
+        if (showQAListMode) {
+            qaListBtn.textContent = 'モジュール一覧に戻る';
+            qaListBtn.className = 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-all';
+        } else {
+            qaListBtn.textContent = 'Q&A一覧';
+            qaListBtn.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all';
+        }
+    }
+
     // フィルタリング機能を初期化
     initializeFiltering();
     
@@ -131,19 +191,27 @@ function initializeFiltering() {
     const categoryFilter = document.getElementById('category-filter');
     const clearFilters = document.getElementById('clear-filters');
     const regenerateIndex = document.getElementById('regenerate-index');
+    const sortBy = document.getElementById('sort-by');
+    const sortOrder = document.getElementById('sort-order');
 
     // カテゴリフィルタの変更時
     categoryFilter.addEventListener('change', function() {
         updateTagFilter();
-        renderFilteredModules();
+        renderFilteredModulesOrQAs();
     });
+
+    // 並び替えの変更時
+    sortBy.addEventListener('change', renderFilteredModulesOrQAs);
+    sortOrder.addEventListener('change', renderFilteredModulesOrQAs);
 
     // フィルタクリアボタン
     clearFilters.addEventListener('click', function() {
         categoryFilter.value = '';
         document.querySelectorAll('.rank-checkbox').forEach(cb => cb.checked = false);
+        sortBy.value = 'default';
+        sortOrder.value = 'asc';
         updateTagFilter();
-        renderFilteredModules();
+        renderFilteredModulesOrQAs();
     });
 
     // 目次再生成ボタン
@@ -190,9 +258,9 @@ function updateTagFilter() {
     }
     // チェックボックスにイベントリスナーを付与
     tagFilterContainer.querySelectorAll('.tag-checkbox').forEach(cb => {
-        cb.addEventListener('change', renderFilteredModules);
+        cb.addEventListener('change', renderFilteredModulesOrQAs);
     });
-    renderFilteredModules();
+    renderFilteredModulesOrQAs();
 }
 
 function updateRankFilter() {
@@ -218,7 +286,7 @@ function updateRankFilter() {
     
     // チェックボックスにイベントリスナーを付与
     rankFilterContainer.querySelectorAll('.rank-checkbox').forEach(cb => {
-        cb.addEventListener('change', renderFilteredModules);
+        cb.addEventListener('change', renderFilteredModulesOrQAs);
     });
 }
 
@@ -230,6 +298,57 @@ function getSelectedTags() {
 function getSelectedRanks() {
     const checkboxes = document.querySelectorAll('.rank-checkbox:checked');
     return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function getSortSettings() {
+    const sortBy = document.getElementById('sort-by');
+    const sortOrder = document.getElementById('sort-order');
+    return {
+        sortBy: sortBy ? sortBy.value : 'default',
+        sortOrder: sortOrder ? sortOrder.value : 'asc'
+    };
+}
+
+function sortCasesInCategory(cases, sortBy, sortOrder) {
+    const sortedCases = [...cases];
+    
+    switch (sortBy) {
+        case 'title':
+            sortedCases.sort((a, b) => {
+                const comparison = a.title.localeCompare(b.title, 'ja');
+                return sortOrder === 'desc' ? -comparison : comparison;
+            });
+            break;
+        case 'rank':
+            sortedCases.sort((a, b) => {
+                const rankOrder = { 'S': 4, 'A': 3, 'B': 2, 'C': 1, '': 0 };
+                const rankA = (a.rank || '').replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
+                const rankB = (b.rank || '').replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
+                const comparison = (rankOrder[rankA] || 0) - (rankOrder[rankB] || 0);
+                return sortOrder === 'desc' ? -comparison : comparison;
+            });
+            break;
+        case 'qa-average':
+            sortedCases.sort((a, b) => {
+                const getQAAverage = (c) => {
+                    if (!c.questionsAndAnswers || c.questionsAndAnswers.length === 0) return 0;
+                    const ids = c.questionsAndAnswers.map(q => q.id).filter(id => typeof id === 'number');
+                    if (ids.length === 0) return 0;
+                    return ids.reduce((sum, id) => sum + id, 0) / ids.length;
+                };
+                const avgA = getQAAverage(a);
+                const avgB = getQAAverage(b);
+                const comparison = avgA - avgB;
+                return sortOrder === 'desc' ? -comparison : comparison;
+            });
+            break;
+        case 'default':
+        default:
+            // デフォルト順序を維持
+            break;
+    }
+    
+    return sortedCases;
 }
 
 function getDifficultyClass(difficulty) {
@@ -257,6 +376,7 @@ async function renderFilteredModules() {
     const selectedCategory = categoryFilter.value;
     const selectedTags = getSelectedTags();
     const selectedRanks = getSelectedRanks();
+    const { sortBy, sortOrder } = getSortSettings();
 
     // ローディング表示
     modulesContainer.innerHTML = '<div class="text-center p-12"><div class="loader">読み込み中...</div></div>';
@@ -298,7 +418,8 @@ async function renderFilteredModules() {
         // 結果表示
         const tagText = selectedTags.length > 0 ? ` (タグ: ${selectedTags.join(', ')})` : '';
         const rankText = selectedRanks.length > 0 ? ` (ランク: ${selectedRanks.join(', ')})` : '';
-        filterResults.textContent = `${filteredCases.length}件のモジュールが見つかりました${tagText}${rankText}`;
+        const sortText = sortBy !== 'default' ? ` (${getSortDisplayName(sortBy)}${sortOrder === 'desc' ? '降順' : '昇順'})` : '';
+        filterResults.textContent = `${filteredCases.length}件のモジュールが見つかりました${tagText}${rankText}${sortText}`;
 
         // カテゴリごとにグループ化
         const categories = filteredCases.reduce((acc, c) => {
@@ -307,6 +428,11 @@ async function renderFilteredModules() {
             acc[categoryName].push(c);
             return acc;
         }, {});
+
+        // 各カテゴリ内で並び替えを実行
+        Object.keys(categories).forEach(categoryName => {
+            categories[categoryName] = sortCasesInCategory(categories[categoryName], sortBy, sortOrder);
+        });
 
         // HTML生成
         if (Object.keys(categories).length === 0) {
@@ -334,6 +460,18 @@ async function renderFilteredModules() {
                             // ランク情報を取得
                             const rankValue = c.rank || '';
                             const diffClass = getDifficultyClass(rankValue);
+
+                            // Q&A番号範囲を取得
+                            let qaRangeText = '';
+                            if (c.questionsAndAnswers && c.questionsAndAnswers.length > 0) {
+                                const ids = c.questionsAndAnswers.map(q => q.id).filter(id => typeof id === 'number');
+                                if (ids.length > 0) {
+                                    const minId = Math.min(...ids);
+                                    const maxId = Math.max(...ids);
+                                    qaRangeText = `（${minId}～${maxId}）`;
+                                }
+                            }
+
                             return `
                             <div data-case-id="${c.id}" class="case-card bg-white p-6 rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-shadow">
                                 <div class="flex justify-between items-start mb-3">
@@ -348,6 +486,7 @@ async function renderFilteredModules() {
                                         return `<span class="text-xs px-2 py-1 rounded ${isSelected ? 'bg-yellow-200 text-yellow-800 font-bold' : 'bg-blue-100 text-blue-800'}">${tag}</span>`;
                                     }).join('')}
                                 </div>
+                                <div class="text-xs text-gray-600 mt-1">${qaRangeText ? `Q&A番号: ${qaRangeText}` : ''}</div>
                             </div>
                             `;
                         }).join('')}
@@ -373,6 +512,15 @@ async function renderFilteredModules() {
                 <button onclick="location.reload()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">再読み込み</button>
             </div>
         `;
+    }
+}
+
+function getSortDisplayName(sortBy) {
+    switch (sortBy) {
+        case 'title': return 'タイトル順';
+        case 'rank': return 'ランク順';
+        case 'qa-average': return 'Q&A番号平均順';
+        default: return '';
     }
 }
 
@@ -438,7 +586,7 @@ async function reloadCaseIndex() {
     try {
         // モジュールキャッシュをクリアするためにタイムスタンプを付与
         const timestamp = Date.now();
-        const indexModule = await import(`../modules/index.js?timestamp=${timestamp}`);
+        const indexModule = await import(`../cases/index.js?timestamp=${timestamp}`);
         
         // グローバルな参照を更新（危険だが必要）
         window.caseSummaries = indexModule.caseSummaries;
@@ -558,5 +706,100 @@ async function handleLogout() {
         // ボタンを復元
         logoutBtn.disabled = false;
         logoutBtn.innerHTML = originalText;
+    }
+}
+
+// Q&Aリスト描画関数
+export async function renderFilteredQAs({ container, qaList, showFilter = false } = {}) {
+    // container: 表示先DOM、qaList: 表示するQ&A配列、showFilter: フィルタUIを表示するか
+    let modulesContainer = container || document.getElementById('modules-container');
+    if (!modulesContainer) return;
+    modulesContainer.innerHTML = '<div class="text-center p-12"><div class="loader">読み込み中...</div></div>';
+    let allQAs = qaList;
+    if (!allQAs) {
+        // トップページ用: 全Q&A集約
+        allQAs = [];
+        for (const summary of (window.caseSummaries || caseSummaries)) {
+            try {
+                const loader = (window.caseLoaders || caseLoaders)[summary.id];
+                if (!loader) continue;
+                const mod = await loader();
+                const caseData = mod.default;
+                (caseData.questionsAndAnswers || []).forEach(qa => {
+                    allQAs.push({
+                        ...qa,
+                        moduleId: summary.id,
+                        moduleTitle: summary.title,
+                        category: summary.category,
+                        tags: summary.tags || []
+                    });
+                });
+            } catch (e) { /* skip error */ }
+        }
+    }
+    // フィルタ取得（トップページのみ）
+    let filteredQAs = allQAs;
+    if (showFilter) {
+        const selectedCategory = document.getElementById('category-filter').value;
+        const selectedRanks = Array.from(document.querySelectorAll('.rank-checkbox:checked')).map(cb => cb.value);
+        const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+        filteredQAs = allQAs.filter(qa => {
+            if (selectedCategory && qa.category !== selectedCategory) return false;
+            if (selectedRanks.length && !selectedRanks.includes(qa.rank)) return false;
+            if (selectedTags.length && !selectedTags.some(tag => qa.tags.includes(tag))) return false;
+            return true;
+        });
+    }
+    filteredQAs.sort((a, b) => (a.id || 0) - (b.id || 0));
+    let html = `<div class="max-w-4xl mx-auto p-6">
+        <h2 class="text-2xl font-bold mb-6 text-center">${showFilter ? '全Q&A横断リスト' : 'Q&Aリスト'}</h2>
+        <div class="space-y-6">`;
+    filteredQAs.forEach((qa, i) => {
+        const rank = qa.rank || '';
+        const diffClass = getDifficultyClass(rank);
+        const rankBadge = `<span class="inline-block px-2 py-0.5 rounded text-xs font-bold border mr-2 ${diffClass.text} ${diffClass.bg} ${diffClass.border}">${rank}</span>`;
+        const answerId = `qa-answer-${i}`;
+        const questionHtml = processArticleReferences(qa.question);
+        const answerWithRefs = processArticleReferences(qa.answer);
+        const answerHtml = processBlankFillText(answerWithRefs, `qa-list-${i}`);
+        html += `<div class="p-4 bg-white rounded-lg shadow border flex flex-col gap-2 qa-item">
+            <div class="flex items-center gap-2">
+                ${rankBadge}
+                <span class="font-bold">Q${qa.id}.</span>
+                <span>${questionHtml}</span>
+                ${showFilter ? `<span class=\"ml-auto text-xs text-blue-700 font-bold cursor-pointer hover:underline module-link\" data-module-id=\"${qa.moduleId}\">[${qa.moduleTitle}]</span>` : ''}
+            </div>
+            <div class="ml-8">
+                <button class="toggle-answer-btn bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold px-2 py-1 rounded text-xs mb-1" data-target="${answerId}">答えを表示</button>
+                <span id="${answerId}" class="hidden"><span class="font-bold">答：</span>${answerHtml}</span>
+            </div>
+        </div>`;
+    });
+    html += `</div></div>`;
+    modulesContainer.innerHTML = html;
+    document.querySelectorAll('.toggle-answer-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const target = document.getElementById(this.dataset.target);
+            if (target) {
+                if (target.classList.contains('hidden')) {
+                    target.classList.remove('hidden');
+                    this.textContent = '答えを隠す';
+                } else {
+                    target.classList.add('hidden');
+                    this.textContent = '答えを表示';
+                }
+            }
+        });
+    });
+    if (showFilter) {
+        document.querySelectorAll('.module-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const moduleId = this.dataset.moduleId;
+                if (moduleId) {
+                    window.location.hash = `#/case/${moduleId}`;
+                }
+            });
+        });
     }
 }
