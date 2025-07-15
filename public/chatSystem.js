@@ -403,12 +403,72 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
             tempResponse = tempResponse.replace(narration.full, `---NARRATION:${narration.text}---`);
         }
         
-        // 混在したナレーション＋対話の処理（前処理で分割）
-        tempResponse = tempResponse.replace(/^(.+?。.+?。)\s+([^。]+@[^:]+:.*)$/gm, '$1---$2');
+        // 混在したナレーション＋対話の処理（前処理で分割）- 改良版
+        // ★★★ 修正: 条文参照の**記号や長いセリフを考慮した分割処理 ★★★
         
-        const dialogues = tempResponse.split('---').filter(d => d.trim() !== '');
+        // 1. 【ナレーション】から始まる行を先に処理
+        const narrationLines = tempResponse.match(/【ナレーション】[^【\n]*(?:\n(?!【)[^【\n]*)*/g) || [];
         
-        for (const dialogue of dialogues) {
+        // 2. キャラクター@表情: 形式の対話行を抽出（**記号を含む可能性も考慮）
+        const dialogueLines = tempResponse.match(/[^@\n]+@[^:\n]+:[^]*?(?=\n[^@\n]+@[^:\n]+:|$)/g) || [];
+        
+        // 3. その他のナレーション（場所描写など）
+        let remainingText = tempResponse;
+        narrationLines.forEach(line => {
+            remainingText = remainingText.replace(line, '');
+        });
+        dialogueLines.forEach(line => {
+            remainingText = remainingText.replace(line, '');
+        });
+        
+        // 残ったテキストから純粋なナレーション部分を抽出
+        const additionalNarrations = remainingText.split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.includes('@') && !line.includes(':') && line.length > 10);
+        
+        // 統合された対話配列を作成
+        const dialogues = [];
+        
+        // ナレーションを追加
+        narrationLines.forEach(line => {
+            dialogues.push(`---NARRATION:${line.replace('【ナレーション】', '').trim()}---`);
+        });
+        
+        additionalNarrations.forEach(line => {
+            dialogues.push(`---NARRATION:${line}---`);
+        });
+        
+        // 対話を追加（分割しない）
+        dialogueLines.forEach(line => {
+            dialogues.push(line.trim());
+        });
+        
+        // 順序を保持するため、元の応答から順番を抽出
+        const orderedDialogues = [];
+        const originalLines = tempResponse.split('\n');
+        
+        for (const originalLine of originalLines) {
+            const trimmedOriginal = originalLine.trim();
+            if (!trimmedOriginal) continue;
+            
+            // ナレーション形式の場合
+            if (trimmedOriginal.startsWith('【ナレーション】')) {
+                orderedDialogues.push(`---NARRATION:${trimmedOriginal.replace('【ナレーション】', '').trim()}---`);
+            }
+            // キャラクター対話の場合
+            else if (trimmedOriginal.includes('@') && trimmedOriginal.includes(':')) {
+                orderedDialogues.push(trimmedOriginal);
+            }
+            // その他のナレーション
+            else if (trimmedOriginal.length > 10 && !trimmedOriginal.includes('@') && !trimmedOriginal.includes(':')) {
+                orderedDialogues.push(`---NARRATION:${trimmedOriginal}---`);
+            }
+        }
+        
+        // 最終的な対話配列（フォールバック処理）
+        const finalDialogues = orderedDialogues.length > 0 ? orderedDialogues : [tempResponse];
+        
+        for (const dialogue of finalDialogues) {
             await sleep(1500);
             
             // ナレーション特別処理
@@ -423,8 +483,8 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
         
         // ★★★ 全ての対話表示完了後にMermaid初期化 ★★★
         setTimeout(() => {
-            if (typeof initializeChatMermaid === 'function') {
-                initializeChatMermaid();
+            if (typeof initializeMermaidDiagrams === 'function') {
+                initializeMermaidDiagrams();
             }
         }, 500); // 最後の対話表示を待つ
         
@@ -670,20 +730,50 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
 
     const isScrolledToBottom = dialogueArea.scrollHeight - dialogueArea.clientHeight <= dialogueArea.scrollTop + 1;
 
-    const colonIndex = trimmedDialogue.indexOf(':');
+    // ★★★ 改良されたコロン検出（条文参照の**記号に対応） ★★★
+    let colonIndex = -1;
+    let speakerPart = '';
+    let dialogueText = '';
+    
+    // 1. 通常のコロン":"を検索
+    colonIndex = trimmedDialogue.indexOf(':');
+    
+    // 2. 全角コロン"："も検索
     if (colonIndex <= 0) {
-        dialogueArea.insertAdjacentHTML('beforeend', `
-            <div class="my-3 animate-fade-in"><div class="bg-red-100 p-3 rounded-lg border border-red-300">
-                <p class="font-bold text-sm text-red-700">AIのフォーマットエラー</p>
-                <p class="text-sm text-red-600">セリフの形式が不正です（コロン":"が見つかりません）。</p>
-                <p class="text-xs text-red-500 break-all mt-1">受信内容: "${trimmedDialogue}"</p>
-            </div></div>`);
-        dialogueArea.scrollTop = dialogueArea.scrollHeight;
-        return;
+        colonIndex = trimmedDialogue.indexOf('：');
     }
-
-    const speakerPart = trimmedDialogue.substring(0, colonIndex).trim();
-    const dialogueText = trimmedDialogue.substring(colonIndex + 1).trim();
+    
+    // 3. より詳細な解析（@記号を含むキャラクター名形式）
+    if (colonIndex <= 0) {
+        const speakerMatch = trimmedDialogue.match(/^([^@\n]+@[^:\n]+)[:：]\s*(.*)/s);
+        if (speakerMatch) {
+            speakerPart = speakerMatch[1].trim();
+            dialogueText = speakerMatch[2].trim();
+        } else {
+            // 4. @記号なしでもキャラクター名らしき部分を検索
+            const simpleMatch = trimmedDialogue.match(/^([^:\n]{1,20})[:：]\s*(.*)/s);
+            if (simpleMatch && !simpleMatch[1].includes('**') && !simpleMatch[1].includes('【')) {
+                speakerPart = simpleMatch[1].trim();
+                dialogueText = simpleMatch[2].trim();
+            } else {
+                // エラー表示
+                console.warn('🚫 コロン検出失敗:', trimmedDialogue.substring(0, 100));
+                dialogueArea.insertAdjacentHTML('beforeend', `
+                    <div class="my-3 animate-fade-in"><div class="bg-red-100 p-3 rounded-lg border border-red-300">
+                        <p class="font-bold text-sm text-red-700">AIのフォーマットエラー</p>
+                        <p class="text-sm text-red-600">セリフの形式が不正です（適切なコロン":"が見つかりません）。</p>
+                        <p class="text-xs text-red-500 break-all mt-1">受信内容: "${trimmedDialogue.substring(0, 200)}${trimmedDialogue.length > 200 ? '...' : ''}"</p>
+                        <p class="text-xs text-blue-600 mt-1"><b>期待形式:</b> キャラクター名@表情: セリフ内容</p>
+                    </div></div>`);
+                dialogueArea.scrollTop = dialogueArea.scrollHeight;
+                return;
+            }
+        }
+    } else {
+        // 通常のコロン検出が成功した場合
+        speakerPart = trimmedDialogue.substring(0, colonIndex).trim();
+        dialogueText = trimmedDialogue.substring(colonIndex + 1).trim();
+    }
     
     // 4. 具体的な発言内容の重複チェック
     const existingDialogues = dialogueArea.querySelectorAll('.dialogue-message');
@@ -706,30 +796,47 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
         }
     }
     
-    const atIndex = speakerPart.indexOf('@');
-    if (atIndex <= 0) {
-        dialogueArea.insertAdjacentHTML('beforeend', `
-            <div class="my-3 animate-fade-in"><div class="bg-red-100 p-3 rounded-lg border border-red-300">
-                <p class="font-bold text-sm text-red-700">AIのフォーマットエラー</p>
-                <p class="text-sm text-red-600">キャラクター名または表情の指定が不正です（例: "みかん@thinking"）。</p>
-                <p class="text-xs text-red-500 break-all mt-1">受信内容: "${trimmedDialogue}"</p>
-            </div></div>`);
-        dialogueArea.scrollTop = dialogueArea.scrollHeight;
-        return;
+    // ★★★ 改良された@記号検出（より寛容な処理） ★★★
+    let atIndex = speakerPart.indexOf('@');
+    let speakerName = '';
+    let expression = 'normal';
+    
+    if (atIndex > 0) {
+        // 通常の@記号検出が成功
+        speakerName = speakerPart.substring(0, atIndex).trim();
+        expression = speakerPart.substring(atIndex + 1).trim();
+    } else {
+        // @記号がない場合、speakerPart全体をキャラクター名として扱う
+        speakerName = speakerPart.trim();
+        expression = 'normal';
+        
+        console.warn('⚠️ @記号が見つかりません。デフォルト表情(normal)を使用:', speakerName);
     }
-
-    const speakerName = speakerPart.substring(0, atIndex).trim();
-    const expression = speakerPart.substring(atIndex + 1).trim();
+    
+    // 空の表情の場合はnormalを使用
+    if (!expression || expression.trim() === '') {
+        expression = 'normal';
+    }
 
     const character = characters.find(c => 
         c.name === speakerName || (c.aliases && c.aliases.includes(speakerName))
-    );    if (!character) {
+    );
+    
+    if (!character) {
+        // ★★★ エラーの詳細情報を追加して表示 ★★★
+        console.error('❌ キャラクター検索失敗:', {
+            入力されたキャラクター名: speakerName,
+            元の話者部分: speakerPart,
+            完全な対話: trimmedDialogue.substring(0, 200)
+        });
+        
         dialogueArea.insertAdjacentHTML('beforeend', `
             <div class="my-3 animate-fade-in"><div class="bg-red-100 p-3 rounded-lg border border-red-300">
                 <p class="font-bold text-sm text-red-700">AIのフォーマットエラー</p>
                 <p class="text-sm text-red-600">「${speakerName}」というキャラクターは存在しません。</p>
                 <p class="text-xs text-red-500 bg-red-50 p-1 rounded mt-1"><b>利用可能なキャラクター名:</b> ${characters.map(c => c.name).join('、')}</p>
-                <p class="text-xs text-red-500 break-all mt-1">受信内容: "${trimmedDialogue}"</p>
+                <p class="text-xs text-red-500 break-all mt-1">話者部分: "${speakerPart}"</p>
+                <p class="text-xs text-red-500 break-all mt-1">受信内容: "${trimmedDialogue.substring(0, 150)}${trimmedDialogue.length > 150 ? '...' : ''}"</p>
                 <p class="text-xs text-blue-600 mt-1"><b>ヒント:</b> ナレーション部分は【ナレーション】形式で囲んでください</p>
             </div></div>`);
         dialogueArea.scrollTop = dialogueArea.scrollHeight;
@@ -789,8 +896,8 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
     // ★★★ Mermaidグラフが含まれている場合の初期化処理 ★★★
     if (processedDialogueText.includes('mermaid-chat-container')) {
         setTimeout(() => {
-            if (typeof initializeChatMermaid === 'function') {
-                initializeChatMermaid();
+            if (typeof initializeMermaidDiagrams === 'function') {
+                initializeMermaidDiagrams();
             }
         }, 100); // DOM更新を待つため少し遅延
     }

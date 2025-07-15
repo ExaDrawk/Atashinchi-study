@@ -1,6 +1,6 @@
 // answerOverlay.js - 完全に一から作り直したシンプルな答案オーバーレイ
 
-import { processArticleReferences } from '../articleProcessor.js';
+import { processArticleReferences, processAllReferences, setupArticleRefButtons } from '../articleProcessor.js';
 
 class AnswerOverlay {
     constructor() {
@@ -52,10 +52,47 @@ class AnswerOverlay {
                         ">×</button>
                         
                         <!-- 上部: 問題 -->
-                        <div style="grid-column: 1 / span 3; grid-row: 1; background: #f5f5f5; padding: 15px; border-radius: 5px; display: flex; flex-direction: column;">
-                            <h3 style="margin-top: 0;">問題</h3>
-                            <div id="question-text" style="max-height: 140px; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: #bbb #f5f5f5;">
-                                問題文がここに表示されます
+                        <div style="
+                            grid-column: 1 / span 3; grid-row: 1; 
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            padding: 2px; border-radius: 12px; display: flex; flex-direction: column;
+                            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+                        ">
+                            <div style="
+                                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                                border-radius: 10px; padding: 20px; height: 100%;
+                                position: relative; overflow: hidden;
+                            ">
+                                <!-- 装飾的な背景要素 -->
+                                <div style="
+                                    position: absolute; top: -10px; right: -10px;
+                                    width: 80px; height: 80px;
+                                    background: radial-gradient(circle, rgba(102, 126, 234, 0.08) 0%, transparent 70%);
+                                    border-radius: 50%;
+                                "></div>
+                                <div style="
+                                    position: absolute; bottom: -15px; left: -15px;
+                                    width: 60px; height: 60px;
+                                    background: radial-gradient(circle, rgba(118, 75, 162, 0.06) 0%, transparent 70%);
+                                    border-radius: 50%;
+                                "></div>
+                                
+
+                                
+                                <!-- 問題文表示エリア -->
+                                <div id="question-text" style="
+                                    max-height:150px; overflow-y: auto; padding: 15px 18px;
+                                    background: rgba(255, 255, 255, 0.7);
+                                    border: 1px solid rgba(102, 126, 234, 0.1);
+                                    border-radius: 10px; font-size: 15px; line-height: 1.7;
+                                    color: #2c3e50; position: relative; z-index: 2;
+                                    backdrop-filter: blur(10px);
+                                    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+                                    scrollbar-width: thin; 
+                                    scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+                                ">
+                                    問題文がここに表示されます
+                                </div>
                             </div>
                         </div>
                         
@@ -134,6 +171,22 @@ class AnswerOverlay {
                                     " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0, 206, 201, 0.4)';"
                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0, 206, 201, 0.3)';">
                                     👑 模範解答を見る</button>
+                                    <button id="save-result-btn" style="
+                                        padding: 10px 18px; background: linear-gradient(135deg, #28a745, #20c997);
+                                        color: white; border: none; border-radius: 25px; cursor: pointer;
+                                        font-size: 14px; font-weight: 600; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+                                        transition: all 0.3s ease; transform: translateY(0);
+                                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(40, 167, 69, 0.4)';"
+                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(40, 167, 69, 0.3)';">
+                                    📊 結果を保存する</button>
+                                    <button id="show-past-answers-btn" style="
+                                        padding: 10px 18px; background: linear-gradient(135deg, #17a2b8, #6610f2);
+                                        color: white; border: none; border-radius: 25px; cursor: pointer;
+                                        font-size: 14px; font-weight: 600; box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+                                        transition: all 0.3s ease; transform: translateY(0);
+                                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(23, 162, 184, 0.4)';"
+                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(23, 162, 184, 0.3)';">
+                                    📜 過去の答案を見る</button>
                                 </div>
                             </div>
                         </div>
@@ -224,11 +277,21 @@ class AnswerOverlay {
             showModelAnswerBtn.onclick = () => {
                 const q = this.getCurrentQuestionData();
                 let answer = q.modelAnswer || q.answer || '模範解答が登録されていません';
-                // 改行をbrに
-                answer = this.escapeHTML(answer).replace(/\n/g, '<br>');
+                
+                // ★★★ 模範解答内の条文参照とQ&A参照を自動処理 ★★★
+                // まず改行を<br>に変換
+                const normalizedAnswer = this.escapeHTML(answer).replace(/\\n|\n/g, '<br>');
+                // processAllReferencesで条文とQ&A参照をボタン化
+                const processedAnswer = processAllReferences(
+                    normalizedAnswer, 
+                    window.SUPPORTED_LAWS || [], 
+                    window.currentCaseData?.questionsAndAnswers || []
+                );
+                
                 // 既存ポップアップ削除
                 const old = document.getElementById('model-answer-popup');
                 if (old) old.remove();
+                
                 // ポップアップ生成
                 const popup = document.createElement('div');
                 popup.id = 'model-answer-popup';
@@ -238,8 +301,13 @@ class AnswerOverlay {
                     padding: 32px 28px 24px 28px; min-width: 320px; max-width: 90vw; max-height: 70vh; overflow-y: auto;
                     font-size: 18px; color: #222; line-height: 1.8; text-align: left;
                 `;
-                popup.innerHTML = `<div style="font-weight:700;font-size:20px;margin-bottom:12px;">👑 模範解答</div><div>${answer}</div><button id="close-model-answer-popup" style="position:absolute;top:10px;right:16px;background:#eee;border:none;border-radius:50%;width:28px;height:28px;font-size:18px;cursor:pointer;">×</button>`;
+                popup.innerHTML = `<div style="font-weight:700;font-size:20px;margin-bottom:12px;">👑 模範解答</div><div>${processedAnswer}</div><button id="close-model-answer-popup" style="position:absolute;top:10px;right:16px;background:#eee;border:none;border-radius:50%;width:28px;height:28px;font-size:18px;cursor:pointer;">×</button>`;
                 document.body.appendChild(popup);
+                
+                // ボタンのイベントリスナーを設定
+                setupArticleRefButtons(popup);
+                
+                // 閉じるボタンのイベント
                 document.getElementById('close-model-answer-popup').onclick = () => popup.remove();
             };
         }
@@ -252,6 +320,18 @@ class AnswerOverlay {
         const btnArea = document.querySelector('#answer-area + div > div:last-child');
         if (btnArea) btnArea.insertBefore(saveBtn, btnArea.firstChild);
         saveBtn.onclick = () => this.saveTempAnswer();
+
+        // 新しいボタンのイベントリスナー
+        const saveResultBtn = document.getElementById('save-result-btn');
+        const showPastAnswersBtn = document.getElementById('show-past-answers-btn');
+        
+        if (saveResultBtn) {
+            saveResultBtn.onclick = () => this.saveFullResult();
+        }
+        
+        if (showPastAnswersBtn) {
+            showPastAnswersBtn.onclick = () => this.showPastAnswers();
+        }
     }
 
     getPlainText(editor) {
@@ -555,12 +635,35 @@ class AnswerOverlay {
                 quizGroup.subProblems[subIndex] : 
                 quizGroup; // 旧形式の場合はquizGroup自体が小問
             
-            // 大問タイトルと小問を両方表示
+            // 大問タイトルと小問を両方表示（改行対応）
+            const titleHtml = `【大問】${quizGroup.title || 'ミニ論文問題'}`;
+            const backgroundHtml = quizGroup.background ? this.escapeHTML(quizGroup.background).replace(/\\n|\n/g, '<br>') : '';
+            const subTitleHtml = `【設問】${subProblem.title ? this.escapeHTML(subProblem.title).replace(/\\n|\n/g, '<br>') : ''}`;
+            const problemHtml = subProblem.problem ? this.escapeHTML(subProblem.problem).replace(/\\n|\n/g, '<br>') : (subProblem.description ? this.escapeHTML(subProblem.description).replace(/\\n|\n/g, '<br>') : '');
+            
             questionDiv.innerHTML = `
-                <h4 style="font-size: 1.1rem; color: #333; margin-bottom: 8px;">【大問】${quizGroup.title || 'ミニ論文問題'}</h4>
-                ${quizGroup.background ? `<div style="background: #f0f8ff; padding: 8px; border-radius: 4px; margin-bottom: 12px; font-size: 0.9rem;"><p>${quizGroup.background}</p></div>` : ''}
-                <h5 style="font-size: 1rem; color: #444; margin-top: 12px; margin-bottom: 6px;">【設問】${subProblem.title ? subProblem.title : ''}</h5>
-                <p>${subProblem.problem || subProblem.description || ''}</p>
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white; padding: 8px 16px; border-radius: 8px;
+                    margin-bottom: 12px; font-size: 1.1rem; font-weight: 700;
+                    display: inline-flex; align-items: center; gap: 8px;
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                ">
+                    <span style="font-size: 1.2em;">📚</span>
+                    ${processAllReferences(titleHtml, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || [])}
+                </div>
+                ${quizGroup.background ? `<div style="background: #f0f8ff; padding: 8px; border-radius: 4px; margin-bottom: 12px; font-size: 0.9rem;"><p>${processAllReferences(backgroundHtml, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || [])}</p></div>` : ''}
+                <div style="
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+                    color: white; padding: 6px 14px; border-radius: 6px;
+                    margin-top: 12px; margin-bottom: 8px; font-size: 1rem; font-weight: 600;
+                    display: inline-flex; align-items: center; gap: 6px;
+                    box-shadow: 0 3px 10px rgba(238, 90, 82, 0.3);
+                ">
+                    <span style="font-size: 1.1em;">❓</span>
+                    ${processAllReferences(subTitleHtml, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || [])}
+                </div>
+                <p style="margin-top: 8px; line-height: 1.6;">${processAllReferences(problemHtml, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || [])}</p>
             `;
         } else {
             questionDiv.innerHTML = '<p>問題を読み込めませんでした</p>';
@@ -591,7 +694,17 @@ class AnswerOverlay {
         setTimeout(() => {
             editor.focus();
             this.loadTempAnswer(); // 一時保存読込
+            this.setupQuestionArticleButtons(); // 問題文内のボタンイベント設定
         }, 100);
+    }
+
+    // 問題文内の条文・Q&Aボタンのイベント設定
+    setupQuestionArticleButtons() {
+        const questionDiv = document.getElementById('question-text');
+        if (!questionDiv) return;
+        
+        // setupArticleRefButtonsを使用してイベントを設定
+        setupArticleRefButtons(questionDiv);
     }
 
     // 🎨 初期罫線生成（文字の下に配置、23行目が太線）
@@ -728,6 +841,8 @@ class AnswerOverlay {
             const questionData = this.getCurrentQuestionData();
             // AI添削実行
             const correctionData = await performAnswerCorrection(text, questionData);
+            // 添削結果をインスタンス変数に保存
+            this.currentCorrectionResults = correctionData;
             // 添削結果をマーカーで表示
             this.applyCorrectionMarkers(editor, correctionData);
             // 結果エリアに表示
@@ -1134,6 +1249,303 @@ class AnswerOverlay {
         return {
             url: '', // デフォルトは空
         };
+    }
+
+    // 完全な結果を保存する（添削前・後どちらでも対応）
+    saveFullResult() {
+        const editor = document.getElementById('answer-editor');
+        if (!editor) return;
+        
+        const answerText = this.getPlainText(editor).trim();
+        if (!answerText) {
+            this.showNotification('❌ 答案が入力されていません', 'error');
+            return;
+        }
+        
+        // 保存データを作成
+        const saveData = {
+            // 基本情報
+            caseId: window.currentCaseData?.caseId || 'unknown',
+            quizIndex: this.currentQuizIndex,
+            subIndex: this.currentSubIndex,
+            timestamp: new Date().toISOString(),
+            
+            // 答案内容
+            answerText: answerText,
+            
+            // 添削結果（あれば）
+            correctionResults: this.currentCorrectionResults || null,
+            
+            // 問題情報
+            problemInfo: this.getCurrentQuestionData()
+        };
+        
+        // LocalStorageに保存
+        const key = this.getAnswerSaveKey();
+        let savedAnswers = JSON.parse(localStorage.getItem(key) || '[]');
+        
+        // 新しい答案を先頭に追加
+        savedAnswers.unshift(saveData);
+        
+        // 最大50件まで保持（古いものを削除）
+        if (savedAnswers.length > 50) {
+            savedAnswers = savedAnswers.slice(0, 50);
+        }
+        
+        // 保存
+        localStorage.setItem(key, JSON.stringify(savedAnswers));
+        
+        // 成功通知
+        const resultText = saveData.correctionResults ? 
+            `添削結果付きで保存しました（${saveData.correctionResults.score}/${saveData.correctionResults.maxScore}点）` : 
+            '答案を保存しました（添削前）';
+        this.showNotification(`✅ ${resultText}`, 'success');
+        
+        console.log('📊 答案結果保存完了:', saveData);
+    }
+    
+    // 過去の答案を表示
+    showPastAnswers() {
+        const key = this.getAnswerSaveKey();
+        const savedAnswers = JSON.parse(localStorage.getItem(key) || '[]');
+        
+        if (savedAnswers.length === 0) {
+            this.showNotification('📝 保存された答案がありません', 'info');
+            return;
+        }
+        
+        this.showPastAnswersModal(savedAnswers);
+    }
+    
+    // 過去の答案モーダルを表示
+    showPastAnswersModal(savedAnswers) {
+        // 既存のモーダルを削除
+        const existingModal = document.getElementById('past-answers-modal');
+        if (existingModal) existingModal.remove();
+        
+        // モーダルHTML作成
+        const modal = document.createElement('div');
+        modal.id = 'past-answers-modal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 100000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white; border-radius: 12px; padding: 24px;
+            width: 90%; max-width: 800px; max-height: 70vh; overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        `;
+        
+        let listHtml = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #333;">📜 過去の答案 (${savedAnswers.length}件)</h2>
+                <button id="close-past-answers" style="
+                    background: #dc3545; color: white; border: none; border-radius: 50%;
+                    width: 32px; height: 32px; cursor: pointer; font-size: 18px;
+                ">×</button>
+            </div>
+            <div style="max-height: 50vh; overflow-y: auto;">
+        `;
+        
+        savedAnswers.forEach((answer, index) => {
+            const date = new Date(answer.timestamp);
+            const dateStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            
+            // 点数情報
+            let scoreInfo = '';
+            if (answer.correctionResults) {
+                const score = answer.correctionResults.score || 0;
+                const maxScore = answer.correctionResults.maxScore || 100;
+                const percentage = Math.round((score / maxScore) * 100);
+                let scoreColor = '#28a745';
+                if (percentage < 60) scoreColor = '#dc3545';
+                else if (percentage < 80) scoreColor = '#ffc107';
+                
+                scoreInfo = `<span style="color: ${scoreColor}; font-weight: bold;">${score}/${maxScore}点 (${percentage}%)</span>`;
+            } else {
+                scoreInfo = '<span style="color: #6c757d;">添削前</span>';
+            }
+            
+            // 答案プレビュー
+            const preview = answer.answerText.length > 100 ? 
+                answer.answerText.substring(0, 100) + '...' : 
+                answer.answerText;
+            
+            listHtml += `
+                <div style="
+                    border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; margin-bottom: 12px;
+                    background: ${index === 0 ? '#f8f9fa' : 'white'};
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-weight: bold; color: #495057;">${dateStr}</div>
+                        <div>${scoreInfo}</div>
+                    </div>
+                    <div style="
+                        background: #f8f9fa; padding: 12px; border-radius: 6px; 
+                        font-family: monospace; line-height: 1.4; font-size: 14px; color: #495057;
+                        margin-bottom: 8px;
+                    ">${this.escapeHTML(preview)}</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="overlay.viewFullAnswer(${index})" style="
+                            background: #007bff; color: white; border: none; padding: 6px 12px;
+                            border-radius: 4px; cursor: pointer; font-size: 12px;
+                        ">📖 全文表示</button>
+                        <button onclick="overlay.deleteAnswer(${index})" style="
+                            background: #dc3545; color: white; border: none; padding: 6px 12px;
+                            border-radius: 4px; cursor: pointer; font-size: 12px;
+                        ">🗑️ 削除</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listHtml += `</div>`;
+        content.innerHTML = listHtml;
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // イベントリスナー
+        document.getElementById('close-past-answers').onclick = () => modal.remove();
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+        
+        // 現在の答案データを保存（削除用）
+        this.currentSavedAnswers = savedAnswers;
+    }
+    
+    // 答案全文表示
+    viewFullAnswer(index) {
+        const answers = this.currentSavedAnswers;
+        if (!answers || !answers[index]) return;
+        
+        const answer = answers[index];
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 100001;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white; border-radius: 12px; padding: 24px;
+            width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        `;
+        
+        const date = new Date(answer.timestamp);
+        const dateStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP');
+        
+        let scoreHtml = '';
+        if (answer.correctionResults) {
+            const score = answer.correctionResults.score || 0;
+            const maxScore = answer.correctionResults.maxScore || 100;
+            const percentage = Math.round((score / maxScore) * 100);
+            let scoreColor = '#28a745';
+            if (percentage < 60) scoreColor = '#dc3545';
+            else if (percentage < 80) scoreColor = '#ffc107';
+            
+            scoreHtml = `
+                <div style="margin: 16px 0; padding: 12px; background: ${scoreColor}20; border-radius: 8px; border-left: 4px solid ${scoreColor};">
+                    <div style="font-weight: bold; color: ${scoreColor};">📊 添削結果: ${score}/${maxScore}点 (${percentage}%)</div>
+                    ${answer.correctionResults.overallComment ? `<div style="margin-top: 8px; color: #495057;">${this.escapeHTML(answer.correctionResults.overallComment)}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        content.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="margin: 0; color: #333;">📖 答案詳細</h3>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                    background: #dc3545; color: white; border: none; border-radius: 50%;
+                    width: 32px; height: 32px; cursor: pointer; font-size: 18px;
+                ">×</button>
+            </div>
+            <div style="color: #6c757d; margin-bottom: 16px;">${dateStr}</div>
+            ${scoreHtml}
+            <div style="
+                background: #f8f9fa; padding: 16px; border-radius: 8px;
+                font-family: monospace; line-height: 1.6; white-space: pre-wrap;
+                color: #495057; border: 1px solid #dee2e6;
+            ">${this.escapeHTML(answer.answerText)}</div>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+    }
+    
+    // 答案削除
+    deleteAnswer(index) {
+        if (!confirm('この答案を削除してもよろしいですか？')) return;
+        
+        const key = this.getAnswerSaveKey();
+        let savedAnswers = JSON.parse(localStorage.getItem(key) || '[]');
+        
+        // 削除
+        savedAnswers.splice(index, 1);
+        localStorage.setItem(key, JSON.stringify(savedAnswers));
+        
+        // モーダルを再表示
+        document.getElementById('past-answers-modal')?.remove();
+        this.showPastAnswersModal(savedAnswers);
+        
+        this.showNotification('🗑️ 答案を削除しました', 'success');
+    }
+    
+    // 答案保存用キー生成
+    getAnswerSaveKey() {
+        const caseId = window.currentCaseData?.caseId || 'unknown';
+        return `savedAnswers_${caseId}_${this.currentQuizIndex}_${this.currentSubIndex}`;
+    }
+    
+    // 通知表示
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        let bgColor = '#17a2b8';
+        if (type === 'success') bgColor = '#28a745';
+        else if (type === 'error') bgColor = '#dc3545';
+        else if (type === 'warning') bgColor = '#ffc107';
+        
+        notification.style.cssText = `
+            position: fixed; bottom: 24px; right: 24px; z-index: 100002;
+            background: ${bgColor}; color: white; padding: 12px 20px;
+            border-radius: 8px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        // アニメーションCSS追加
+        if (!document.getElementById('notification-animation-style')) {
+            const style = document.createElement('style');
+            style.id = 'notification-animation-style';
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        // 3秒後に自動削除
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 3000);
     }
 }
 

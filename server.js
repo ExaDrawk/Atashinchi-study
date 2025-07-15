@@ -177,7 +177,7 @@ app.use(session({
 // カスタム認証ミドルウェア
 const requireAuth = (req, res, next) => {
     // 認証不要なパス
-    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping'];
+    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping', '/api/subfolders'];
     const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
     
     if (isPublicPath) {
@@ -227,8 +227,41 @@ async function ensureLogsDirectory() {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 認証ミドルウェア適用
-app.use(requireAuth);
+// ★★★ 認証不要のパブリックAPI（認証ミドルウェアより前に配置） ★★★
+// サブフォルダ一覧取得API（認証不要）
+app.get('/api/subfolders/:category', async (req, res) => {
+    try {
+        const category = decodeURIComponent(req.params.category);
+        const casesDir = path.join(process.cwd(), 'public', 'cases', category);
+        
+        console.log(`📂 サブフォルダ検索: ${casesDir}`); // デバッグログ
+        
+        // ディレクトリが存在するかチェック
+        try {
+            await fs.access(casesDir);
+        } catch (error) {
+            console.log(`⚠️ ディレクトリが存在しません: ${casesDir}`);
+            return res.json([]); // ディレクトリが存在しない場合は空配列
+        }
+        
+        // ディレクトリ内容を読み取り
+        const items = await fs.readdir(casesDir, { withFileTypes: true });
+        
+        // フォルダのみを抽出（ファイルは除外）
+        const subfolders = items
+            .filter(item => item.isDirectory())
+            .map(item => item.name);
+        
+        console.log(`✅ サブフォルダ一覧: ${JSON.stringify(subfolders)}`);
+        res.json(subfolders);
+    } catch (error) {
+        console.error('サブフォルダ取得エラー:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// 認証が必要なAPIエンドポイント用のミドルウェア
+// app.use(requireAuth); // 全体適用を無効化
 
 // 静的ファイル配信（icoファイルの特別設定含む）
 app.use(express.static('public', {
@@ -251,6 +284,45 @@ app.get('/favicon.ico', (req, res) => {
     res.set('Content-Type', 'image/x-icon');
     res.set('Cache-Control', 'public, max-age=86400'); // 1日キャッシュ
     res.sendFile(path.resolve('./yuzu.ico'));
+});
+
+// ★★★ module_settings.json取得API ★★★
+app.get('/api/module-settings/:category', async (req, res) => {
+    try {
+        const { category } = req.params;
+        const settingsPath = path.join(process.cwd(), 'public', 'cases', category, 'module_settings.json');
+        
+        try {
+            const settingsData = await fs.readFile(settingsPath, 'utf-8');
+            const settings = JSON.parse(settingsData);
+            res.json(settings);
+        } catch (fileError) {
+            // ファイルが存在しない場合は404
+            res.status(404).json({ error: 'module_settings.json not found' });
+        }
+    } catch (error) {
+        console.error('module_settings.json取得エラー:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/module-settings/:category/:subfolder', async (req, res) => {
+    try {
+        const { category, subfolder } = req.params;
+        const settingsPath = path.join(process.cwd(), 'public', 'cases', category, subfolder, 'module_settings.json');
+        
+        try {
+            const settingsData = await fs.readFile(settingsPath, 'utf-8');
+            const settings = JSON.parse(settingsData);
+            res.json(settings);
+        } catch (fileError) {
+            // ファイルが存在しない場合は404
+            res.status(404).json({ error: 'module_settings.json not found' });
+        }
+    } catch (error) {
+        console.error('module_settings.json取得エラー:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // ★★★ 条文取得API（lawLoader.js委任） ★★★
@@ -425,158 +497,37 @@ app.post('/api/regenerate-case-index', async (req, res) => {
     try {
         console.log('📂 目次ファイル再生成リクエストを受信');
         
-        // build-case-index.jsのロジックを直接実行
+        // ★★★ build-case-index.jsの共通関数を利用（キャッシュバスティング付き） ★★★
+        console.log('🔄 build-case-index.jsをインポート中...');
+        const timestamp = Date.now();
+        const buildIndexModule = await import(`./scripts/build-case-index.js?t=${timestamp}`);
+        console.log('✅ インポート完了:', Object.keys(buildIndexModule));
+        
+        const { generateCaseIndex } = buildIndexModule;
         const casesRootDirectory = path.join(process.cwd(), 'public', 'cases');
         const outputFilePath = path.join(casesRootDirectory, 'index.js');
         
-        // ケースファイルを探索
-        function findJsFiles(dir) {
-            let results = [];
-            const list = fssync.readdirSync(dir);
-            list.forEach(file => {
-                const filePath = path.join(dir, file);
-                const stat = fssync.statSync(filePath);
-                if (stat && stat.isDirectory()) {
-                    results = results.concat(findJsFiles(filePath));
-                } else if (file.endsWith('.js') && file !== 'index.js') {
-                    results.push(filePath);
-                }
-            });
-            return results;
-        }
-          const allCaseFiles = findJsFiles(casesRootDirectory);
-        console.log(`🔍 発見されたケースファイル: ${allCaseFiles.length}件`);
-        
-        // ★★★ 競合防止機能を追加 ★★★
-        // 同名ファイルの競合を検出するためのマップ
-        const fileNameMap = new Map();
-        
-        // 各ケースファイルからメタデータを読み込み
-        const summaries = await Promise.all(allCaseFiles.map(async filePath => {
-            try {
-                // 動的インポートでキャッシュをバイパス
-                const fileUrl = `file://${filePath}?timestamp=${Date.now()}`;
-                const caseModule = await import(fileUrl);
-                const caseData = caseModule.default;
-                const originalId = path.basename(filePath, '.js');
-                const category = path.basename(path.dirname(filePath));
-                
-                // 競合防止のための一意ID生成
-                let uniqueId;
-                const fileNameKey = originalId;
-                if (fileNameMap.has(fileNameKey)) {
-                    // 既に同名ファイルが存在する場合、カテゴリ名を含めたIDを使用
-                    uniqueId = `${category}-${originalId}`;
-                    // 既存のエントリも更新
-                    const existingEntry = fileNameMap.get(fileNameKey);
-                    existingEntry.needsCategoryPrefix = true;
-                    console.log(`⚠️  同名ファイル検出: ${originalId} (${category}と${existingEntry.category})`);
-                } else {
-                    uniqueId = originalId;
-                    fileNameMap.set(fileNameKey, { 
-                        category, 
-                        uniqueId, 
-                        needsCategoryPrefix: false 
-                    });
-                }
-                
-                console.log(`📂 処理中: ${category}/${originalId}.js → ID: ${uniqueId}`);
-                
-                if (!caseData) {
-                    console.error(`❌ エラー: ${filePath} - caseData が undefined です`);
-                    return null;
-                }
-                
-                if (!caseData.title) {
-                    console.error(`❌ エラー: ${filePath} - title プロパティが見つかりません`);
-                    return null;
-                }
-                
-                return { 
-                    id: uniqueId,
-                    originalId,
-                    category, 
-                    title: caseData.title, 
-                    citation: caseData.citation || '引用情報なし', 
-                    tags: caseData.tags || [],
-                    filePath: path.relative(casesRootDirectory, filePath).replace(/\\/g, '/')
-                };
-            } catch (error) {
-                console.error(`⚠️ ケースファイル読み込みエラー ${filePath}:`, error.message);
-                return null;
-            }
-        }));
-        
-        // エラーのあるファイルを除外
-        const validSummaries = summaries.filter(summary => summary !== null);
-        
-        // 競合ファイルのIDを再設定
-        const finalSummaries = validSummaries.map(summary => {
-            const fileNameKey = summary.originalId;
-            const mapEntry = fileNameMap.get(fileNameKey);
-            
-            if (mapEntry && mapEntry.needsCategoryPrefix) {
-                // 同名ファイルが複数存在する場合、カテゴリプレフィックスを付与
-                return {
-                    ...summary,
-                    id: `${summary.category}-${summary.originalId}`
-                };
-            }
-            return summary;
-        });
-        
-        console.log(`✅ 有効な事例ファイル: ${finalSummaries.length}/${summaries.length}件`);
-        
-        // 競合ファイルのレポート
-        const conflicts = Array.from(fileNameMap.entries())
-            .filter(([, entry]) => entry.needsCategoryPrefix);
-        if (conflicts.length > 0) {
-            console.log(`⚠️  ファイル名競合を検出し、カテゴリプレフィックスを適用しました:`);
-            conflicts.forEach(([fileName]) => {
-                const conflictingFiles = finalSummaries.filter(s => s.originalId === fileName);
-                conflictingFiles.forEach(file => {
-                    console.log(`   - ${fileName} → ${file.id} (${file.category}カテゴリ)`);
-                });
-            });
-        }
-        
-        // 競合統計レポート
-        console.log(`\n📊 ファイル名競合レポート:`);
-        console.log(`   - 総ファイル数: ${finalSummaries.length}`);
-        console.log(`   - 競合ファイル数: ${conflicts.length}`);
-        console.log(`   - 一意ID生成率: ${((finalSummaries.length - conflicts.length) / finalSummaries.length * 100).toFixed(1)}%`);
-        
-        // ローダー定義を生成
-        const loaders = finalSummaries.map(summary => {
-            // 実際のファイルパスを使用してloaderを生成
-            return `'${summary.id}': () => import('./${summary.filePath}')`;
-        }).join(',\n    ');        // ファイル内容を生成
-        const fileContent = `// このファイルは build-case-index.js によって自動生成されました。
-// 手動で編集しないでください。
-export const caseSummaries = ${JSON.stringify(finalSummaries, null, 4)};
-export const caseLoaders = {
-    ${loaders}
-};
-`;
-
-        // ファイルに書き込み
-        await fs.writeFile(outputFilePath, fileContent, 'utf8');
+        console.log('🚀 generateCaseIndex関数を実行中...');
+        const result = await generateCaseIndex(casesRootDirectory, outputFilePath);
+        console.log('✅ generateCaseIndex実行完了:', result);
         
         console.log(`✅ 目次ファイル再生成完了: ${outputFilePath}`);
-        console.log(`📊 処理されたケース: ${finalSummaries.length}件`);
+        console.log(`📊 処理されたケース: ${result.casesCount}件`);
+        console.log('📁 カテゴリ一覧:', result.categories);
+        console.log('📂 サブフォルダ一覧:', result.subfolders);
         
         res.json({
             success: true,
-            message: '目次ファイルの再生成が完了しました（競合防止機能適用済み）',
-            casesCount: finalSummaries.length,
-            conflictsCount: conflicts.length,
-            uniqueIdRate: `${((finalSummaries.length - conflicts.length) / finalSummaries.length * 100).toFixed(1)}%`,
-            categories: [...new Set(finalSummaries.map(s => s.category))],
+            message: '目次ファイルの再生成が完了しました',
+            casesCount: result.casesCount,
+            categories: result.categories,
+            subfolders: result.subfolders,
             outputFile: outputFilePath
         });
         
     } catch (error) {
         console.error('❌ 目次ファイル再生成エラー:', error);
+        console.error('❌ スタックトレース:', error.stack);
         res.status(500).json({
             success: false,
             error: '目次ファイルの再生成中にエラーが発生しました',

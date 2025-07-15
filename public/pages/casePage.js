@@ -2,11 +2,12 @@
 
 import { caseLoaders } from '../cases/index.js';
 import { characters } from '../data/characters.js';
-import { processArticleReferences, processAllReferences, setupArticleRefButtons, processBoldText } from '../articleProcessor.js';
+import { processArticleReferences, processAllReferences, setupArticleRefButtons, processBoldText, processBlankFillText } from '../articleProcessor.js';
 import { showArticlePanel } from '../articlePanel.js';
 import { ApiService } from '../apiService.js';
 import { startChatSession } from '../chatSystem.js';
 import { renderFilteredQAs } from './homePage.js';
+import { recreateQAPopup, createGlobalPopupContainer } from '../qaPopup.js';
 
 // 答案入力ボタンのシンプルスタイル
 const answerButtonCSS = document.createElement('style');
@@ -48,6 +49,201 @@ answerButtonCSS.innerHTML = `
 `;
 document.head.appendChild(answerButtonCSS);
 
+// Mermaid図表の大きなサイズ表示用CSS（縦幅無制限対応）
+const mermaidCSS = document.createElement('style');
+mermaidCSS.innerHTML = `
+/* Mermaid図表の無制限縦幅表示設定 */
+.mermaid {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 400px !important;
+    max-height: none !important;
+    padding: 15px !important;
+    margin: 16px 0 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: block !important;
+    position: relative !important;
+    cursor: grab !important;
+    user-select: none !important;
+}
+
+.mermaid:active {
+    cursor: grabbing !important;
+}
+
+.mermaid svg {
+    width: 100% !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: none !important;
+    max-width: 100% !important;
+    display: block !important;
+    transition: transform 0.2s ease !important;
+    transform-origin: center center !important;
+}
+
+/* ストーリー内のMermaid図表専用設定 */
+#tab-story-content .mermaid {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 500px !important;
+    max-height: none !important;
+    padding: 20px !important;
+    margin: 20px 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+#tab-story-content .mermaid svg {
+    width: 100% !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: none !important;
+}
+
+/* Mermaidコンテナも無制限に */
+.mermaid-container {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 450px !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    position: relative !important;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin: 16px 0;
+}
+
+.embed-container {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 400px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 12px 0 !important;
+    padding: 8px !important;
+    border-radius: 6px !important;
+}
+
+.embed-content {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 380px !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* インタラクティブコントロール */
+.mermaid-controls {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    z-index: 100 !important;
+    display: flex !important;
+    gap: 4px !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.3s !important;
+}
+
+.mermaid-controls:hover {
+    opacity: 1 !important;
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    transition: all 0.2s !important;
+    min-width: 40px !important;
+    text-align: center !important;
+    color: #333 !important;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    border-color: #4a90e2 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2) !important;
+}
+
+.zoom-info {
+    background: rgba(0, 0, 0, 0.7) !important;
+    color: white !important;
+    padding: 3px 6px !important;
+    border-radius: 3px !important;
+    font-size: 10px !important;
+    position: absolute !important;
+    bottom: 8px !important;
+    right: 8px !important;
+    z-index: 100 !important;
+    pointer-events: none !important;
+}
+
+/* チャット内のMermaid図表も同様に無制限 */
+.mermaid-chat-container .mermaid {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 350px !important;
+    max-height: none !important;
+    padding: 15px !important;
+    margin: 16px 0 !important;
+}
+
+.mermaid-chat-container .mermaid svg {
+    width: 100% !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: none !important;
+}
+
+/* Mermaid図表のテキストサイズも調整 */
+.mermaid text {
+    font-size: 16px !important;
+    font-family: 'M PLUS Rounded 1c', sans-serif !important;
+}
+
+.mermaid .nodeLabel {
+    font-size: 18px !important;
+    font-weight: 500 !important;
+}
+
+/* インタラクティブモード専用スタイル */
+.mermaid.interactive {
+    overflow: hidden !important;
+    height: 400px !important;
+}
+
+.mermaid.interactive svg {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    cursor: move !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    transform-origin: center center !important;
+    transition: transform 0.2s ease !important;
+}
+
+/* インタラクティブモード用の初期位置 */
+.mermaid.interactive svg[data-initial="true"] {
+    transform: translate(-50%, -50%) !important;
+}
+`;
+document.head.appendChild(mermaidCSS);
+
 // グローバル関数として showArticlePanel を利用可能にする
 window.showArticlePanel = showArticlePanel;
 
@@ -68,9 +264,11 @@ export async function loadAndRenderCase(caseId, updateHistory = true) {
     const app = document.getElementById('app');
     app.innerHTML = `<div class="flex justify-center items-center p-20"><div class="loader"></div></div>`;
     
-    const loader = caseLoaders[caseId];
+    // window.caseLoaders があればそれを使用（目次再生成後の更新されたローダー）
+    const currentLoaders = window.caseLoaders || caseLoaders;
+    const loader = currentLoaders[caseId];
     if (!loader) {
-        console.error('ローダーが見つかりません:', caseId, Object.keys(caseLoaders));
+        console.error('ローダーが見つかりません:', caseId, Object.keys(currentLoaders));
         const { renderHome } = await import('./homePage.js');
         renderHome();
         return;
@@ -126,21 +324,36 @@ function renderCaseDetail() {
             </div>
             <div id="tab-content"></div>
         </div>    `;    renderTabContent('story');
-      // ★★★ Mermaid初期化（エラー対策強化版） ★★★
+      // ★★★ Mermaid初期化（強化版・DOM構築完了保証） ★★★
+    // まず最初の初期化を待機
     setTimeout(() => {
-        console.log('🎨 第1回Mermaid初期化開始（遅延実行）');
+        console.log('🎨 第1回Mermaid初期化開始（DOM構築後）');
         initializeMermaidDiagrams();
-    }, 500);
-    
-    setTimeout(() => {
-        console.log('🎨 第2回Mermaid初期化開始（DOM安定化後）');
-        initializeMermaidDiagrams();
-    }, 2000);
-    
-    setTimeout(() => {
-        console.log('🎨 第3回Mermaid初期化開始（最終確認）');
-        initializeMermaidDiagrams();
-    }, 5000);
+        
+        // DOM確実化のため追加チェック
+        setTimeout(() => {
+            console.log('🎨 第2回Mermaid初期化開始（DOM安定化後）');
+            const remainingElements = document.querySelectorAll('.mermaid:not([data-processed="true"])');
+            if (remainingElements.length > 0) {
+                console.log(`🔍 未処理要素${remainingElements.length}個を発見、追加処理実行`);
+                mermaidInitialized = false;
+                mermaidInitializing = false;
+                initializeMermaidDiagrams();
+            }
+        }, 1000);
+        
+        // 最終確認
+        setTimeout(() => {
+            console.log('🎨 第3回Mermaid初期化開始（最終確認）');
+            const finalCheck = document.querySelectorAll('.mermaid:not([data-processed="true"])');
+            if (finalCheck.length > 0) {
+                console.log(`🔍 最終チェック: 未処理要素${finalCheck.length}個を発見、最終処理実行`);
+                mermaidInitialized = false;
+                mermaidInitializing = false;
+                initializeMermaidDiagrams();
+            }
+        }, 3000);
+    }, 300);
     
       // ★★★ スピード条文用データを事前読み込み ★★★
     if (window.currentCaseData) {
@@ -155,116 +368,6 @@ function renderCaseDetail() {
     }
 }
 
-// ★★★ Q&Aポップアップのグローバル状態管理 ★★★
-window.qaPopupState = {
-    openPopups: [],
-    savePopup: function(popupId, qaIndex, qNumber, quizIndex, subIndex) {
-        this.openPopups.push({ popupId, qaIndex, qNumber, quizIndex, subIndex });
-    },
-    removePopup: function(popupId) {
-        this.openPopups = this.openPopups.filter(p => p.popupId !== popupId);
-    },    clearAll: function() {
-        console.log(`🧹 Q&Aポップアップ状態をクリア (${this.openPopups.length}個)`);
-        this.openPopups = [];
-        
-        // DOM上の全てのQ&Aポップアップも削除
-        const allQAPopups = document.querySelectorAll('.qa-ref-popup');
-        allQAPopups.forEach(popup => {
-            console.log(`🗑️ DOM上のポップアップも削除: ${popup.id}`);
-            popup.remove();
-        });
-    },
-    restorePopups: function() {
-        // 現在開いているポップアップを復元
-        this.openPopups.forEach(popup => {
-            recreateQAPopup(popup);
-        });
-    }
-};
-
-function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex }) {
-    const qa = window.currentCaseData.questionsAndAnswers[qaIndex];
-    if (!qa) return;
-
-    // 既存のポップアップがあれば削除
-    const existing = document.getElementById(popupId);
-    if (existing) existing.remove();    // ポップアップHTML生成（条文参照ボタン化 + 空欄化処理）
-    let qaQuestion = qa.question.replace(/(【[^】]+】)/g, match => {
-        const lawText = match.replace(/[【】]/g, '');
-        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}'>${lawText}</button>`;
-    });
-    
-    // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
-    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer);
-    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-recreate-${qaIndex}`);
-
-    const popupHtml = `
-        <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
-                <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
-            </div>
-            <div class="mb-2"><span class="font-bold">問題：</span>${qaQuestion}</div>
-            <div class="mb-2">
-                <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
-                <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
-                    <div class="flex gap-2 mb-2">
-                        <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">🔍 全て表示</button>
-                        <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
-                    </div>
-                    <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // グローバルポップアップコンテナに追加
-    const globalContainer = document.getElementById('qa-ref-popup-global-container');
-    if (globalContainer) {
-        globalContainer.insertAdjacentHTML('beforeend', popupHtml);
-    } else {
-        document.body.insertAdjacentHTML('beforeend', popupHtml);
-    }
-    
-    // ポップアップ内のイベントリスナーを設定
-    const recreatedPopup = document.getElementById(popupId);
-    if (recreatedPopup) {
-        // 解答表示ボタンのイベントリスナーを設定
-        const answerToggleBtn = recreatedPopup.querySelector('.toggle-qa-answer-btn');
-        const answerContent = recreatedPopup.querySelector('.qa-answer-content');
-        if (answerToggleBtn && answerContent) {
-            // デフォルトで解答が表示されているので、条文参照ボタンを有効にする
-            setupArticleRefButtons(answerContent);
-            
-            answerToggleBtn.addEventListener('click', function() {
-                const isHidden = answerContent.classList.toggle('hidden');
-                this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
-                
-                // 解答内の条文参照ボタンも有効にする
-                if (!isHidden) {
-                    setupArticleRefButtons(answerContent);
-                }
-            });
-        }
-        
-        // 空欄一括操作ボタンのイベントリスナーを設定
-        const showAllBlanksBtn = recreatedPopup.querySelector('.show-all-blanks-btn');
-        const hideAllBlanksBtn = recreatedPopup.querySelector('.hide-all-blanks-btn');
-        
-        if (showAllBlanksBtn && answerContent) {
-            showAllBlanksBtn.addEventListener('click', function() {
-                toggleAllBlanks(answerContent, true);
-            });
-        }
-        
-        if (hideAllBlanksBtn && answerContent) {
-            hideAllBlanksBtn.addEventListener('click', function() {
-                toggleAllBlanks(answerContent, false);
-            });
-        }
-    }
-}
-
 export function renderTabContent(tabName) {
     console.log(`🔄 タブ表示: ${tabName}`);
     const contentDiv = document.getElementById('tab-content');
@@ -276,12 +379,7 @@ export function renderTabContent(tabName) {
     if (!storyTab) {
         console.log('📝 タブコンテンツ初期作成');
         // グローバルQ&Aポップアップコンテナを作成（初回のみ）
-        if (!document.getElementById('qa-ref-popup-global-container')) {
-            const globalContainer = document.createElement('div');
-            globalContainer.id = 'qa-ref-popup-global-container';
-            globalContainer.className = 'qa-ref-popup-global-container';
-            document.body.appendChild(globalContainer);
-        }
+        createGlobalPopupContainer();
         const storyHtml = buildStoryHtml(window.currentCaseData.story);
         const processedStoryHtml = processAllReferences(storyHtml, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []);
         const explanationHtml = (window.currentCaseData.explanation && window.currentCaseData.explanation.trim()) ? window.currentCaseData.explanation : '<div class="text-center text-gray-400">解説はありません</div>';
@@ -422,10 +520,31 @@ export function renderTabContent(tabName) {
             }
         }, 200);
         
-        // ★★★ Mermaid図表のレンダリング ★★★
+        // ★★★ Mermaid図表のレンダリング（遅延強化版） ★★★
         setTimeout(() => {
+            console.log(`🎨 タブ切り替え時のMermaid初期化: ${tabName}`);
+            // ストーリータブの場合は特に確実に処理
+            if (tabName === 'story') {
+                // 初期化フラグをリセットして再処理を可能にする
+                mermaidInitialized = false;
+                mermaidInitializing = false;
+            }
             initializeMermaidDiagrams();
-        }, 100);
+        }, 200);
+        
+        // ★★★ ストーリータブの場合は追加の初期化を実行 ★★★
+        if (tabName === 'story') {
+            setTimeout(() => {
+                console.log('🎨 ストーリータブ専用の追加Mermaid初期化');
+                const mermaidElements = targetTab.querySelectorAll('.mermaid');
+                if (mermaidElements.length > 0) {
+                    console.log(`🔍 ストーリータブ内にMermaid要素${mermaidElements.length}個発見、強制再初期化`);
+                    mermaidInitialized = false;
+                    mermaidInitializing = false;
+                    initializeMermaidDiagrams();
+                }
+            }, 500);
+        }
         
         // Q&Aポップアップを復元
         if (window.qaPopupState) {
@@ -545,8 +664,8 @@ function generateSubProblems(quizGroup, quizIndex) {
         let pointsHtml = '';
         if (quizGroup.points && Array.isArray(quizGroup.points) && quizGroup.points.length > 0) {
             const processedPoints = quizGroup.points.map(point => 
-                processAllReferences(point, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || [])
-            );
+                processAllReferences(point, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []))
+            ;
             
             pointsHtml = `
                 <div class="mb-4">
@@ -619,6 +738,9 @@ function generateSubProblems(quizGroup, quizIndex) {
                     const qaIndex = window.currentCaseData.questionsAndAnswers.indexOf(qa);
                     return `<button type="button" class="qa-ref-btn ml-1 px-2 py-0.5 rounded bg-yellow-200 text-yellow-900 border border-yellow-400 text-xs font-bold" data-qa-index="${qaIndex}" data-quiz-index="${quizIndex}" data-sub-index="${subIndex}" data-q-number="${qNum}">Q${qNum}</button>`;
                 }).join(' ');
+
+                // Q&Aボタンがある場合は、上下にスペースを追加
+                qaButtonsHtml = `<div class="mb-4 flex items-center gap-1"><span class="text-xs text-gray-600 font-medium">関連Q&A:</span> ${qaButtonsHtml}</div>`;
             }
         }// ★★★ ヒントはデフォルト非表示、ボタンで開閉 ★★★
         let hintHtml = '';
@@ -638,8 +760,8 @@ function generateSubProblems(quizGroup, quizIndex) {
         let pointsHtml = '';
         if (subProblem.points && Array.isArray(subProblem.points) && subProblem.points.length > 0) {
             const processedPoints = subProblem.points.map(point => 
-                processAllReferences(point, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || [])
-            );
+                processAllReferences(point, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []))
+            ;
             
             pointsHtml = `
                 <div class="mb-4">
@@ -663,7 +785,7 @@ function generateSubProblems(quizGroup, quizIndex) {
                     </div>                    <div class="flex gap-1">
                         <button class="view-past-answers-btn bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1 px-2 rounded" data-case-id="${window.currentCaseData.id}" data-problem-type="quiz" data-problem-index="${quizIndex}-${subIndex}">📝 過去回答</button>
                     </div>                </div>
-                ${qaButtonsHtml ? `<div class="mb-4 flex items-center gap-1"><span class="text-xs text-gray-600 font-medium">関連Q&A:</span> ${qaButtonsHtml}</div>` : ''}
+                ${qaButtonsHtml}
                 <div class="mb-4 bg-gray-100 p-4 rounded-lg problem-text">${processAllReferences(subProblem.problem, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || [])}</div>
                 ${hintHtml}
                 ${pointsHtml}
@@ -773,8 +895,8 @@ async function initializeEssayContent() {
     let pointsHtml = '';
     if (window.currentCaseData.essay.points && Array.isArray(window.currentCaseData.essay.points) && window.currentCaseData.essay.points.length > 0) {
         const processedPoints = window.currentCaseData.essay.points.map(point => 
-            processAllReferences(point, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || [])
-        );
+            processAllReferences(point, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []))
+        ;
         
         pointsHtml = `
             <div class="mb-4">
@@ -909,28 +1031,9 @@ async function initializeSpeedQuizContent() {
 }
 
 // 答案添削ビューのロード状態管理
-let answerCorrectionLoaded = false;
+// answerCorrectionLoaded変数は削除（answerOverlay.js直接使用のため不要）
 
-/**
- * 答案添削ビューシステムを動的ロード
- */
-async function loadAnswerCorrectionSystem() {
-    if (answerCorrectionLoaded) return true;
-    
-    try {
-        console.log('🚀 答案添削ビューシステムをロード中...');
-        
-        // 答案添削ビューをロード
-        await loadScript('./pages/answerCorrectionView.js');
-        
-        answerCorrectionLoaded = true;
-        console.log('✅ 答案添削ビューシステムロード完了');
-        return true;
-    } catch (error) {
-        console.error('❌ 答案添削ビューシステムロード失敗:', error);
-        return false;
-    }
-}
+// answerCorrectionView.jsは削除されました - answerOverlay.jsを直接使用
 
 /**
  * スクリプトファイルの動的ロード
@@ -958,8 +1061,6 @@ function loadScript(src) {
     });
 }
 
-// ...existing code...
-
 // ★★★ Mermaid初期化状態管理
 let mermaidInitialized = false;
 let mermaidInitializing = false;
@@ -968,7 +1069,7 @@ let mermaidInitializing = false;
 function initializeMermaidDiagrams() {
     console.log('🎨 Mermaid初期化開始');
     
-    // ✨ 初期化済みまたは初期化中の場合はスキップ
+    // ✨ 初期化中の場合はスキップ
     if (mermaidInitializing) {
         console.log('⏳ Mermaid初期化中のためスキップ');
         return;
@@ -979,18 +1080,20 @@ function initializeMermaidDiagrams() {
         return;
     }
     
-    mermaidInitializing = true;
+    // ✨ 未処理のMermaid要素があるかチェック
+    const unprocessedElements = document.querySelectorAll('.mermaid:not([data-processed="true"])');
+    console.log(`🔍 未処理のMermaid要素: ${unprocessedElements.length}個`);
     
-    // すでに初期化中または初期化済みの場合はスキップ
-    if (mermaidInitializing || mermaidInitialized) {
-        console.log('⏭️ Mermaidはすでに初期化中または初期化済みです');
+    // 未処理要素がない場合で、かつ初期化済みの場合はスキップ
+    if (unprocessedElements.length === 0 && mermaidInitialized) {
+        console.log('⏭️ 未処理要素なし、かつ初期化済みのためスキップ');
         return;
     }
     
     mermaidInitializing = true; // 初期化中フラグを立てる
     
     try {
-        // ✨ より安全なMermaid設定
+        // ✨ より安全なMermaid設定（サイズ調整対応版）
         mermaid.initialize({
             startOnLoad: false,
             theme: 'default',
@@ -1002,15 +1105,23 @@ function initializeMermaidDiagrams() {
                 curve: 'linear',
                 // ✨ 座標エラー対策
                 rankdir: 'TD',
-                nodeSpacing: 50,
-                rankSpacing: 50
+                nodeSpacing: 80, // ノード間隔を拡大
+                rankSpacing: 100, // ランク間隔を拡大
+                // ✨ サイズ調整対応
+                diagramPadding: 40, // パディングを拡大
+                wrappingWidth: 300 // テキスト折り返し幅を拡大
+            },
+            // ✨ グラフの幅と高さを適切に設定
+            graph: {
+                useMaxWidth: true,
+                htmlLabels: true
             },
             themeVariables: {
                 primaryColor: '#f0f9ff',
                 primaryTextColor: '#1e293b',
                 primaryBorderColor: '#0284c7',
                 lineColor: '#475569',
-                fontSize: '14px'
+                fontSize: '18px' // フォントサイズをさらに大きく
             },
             // ✨ エラー対策の追加設定
             maxTextSize: 50000,
@@ -1020,83 +1131,131 @@ function initializeMermaidDiagrams() {
             deterministicIDSeed: 'mermaid-seed'
         });
         
-        // 現在表示されているMermaid要素をレンダリング
-        const mermaidElements = document.querySelectorAll('.mermaid');
-        console.log(`🔍 Mermaid要素を${mermaidElements.length}個発見`);
+        // 現在表示されている未処理のMermaid要素のみをレンダリング
+        const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed="true"])');
+        console.log(`🔍 処理対象のMermaid要素を${mermaidElements.length}個発見`);
+        
+        if (mermaidElements.length === 0) {
+            console.log('✅ 処理対象のMermaid要素なし、初期化完了');
+            mermaidInitializing = false;
+            mermaidInitialized = true;
+            return;
+        }
         
         mermaidElements.forEach(async (element, index) => {
-            if (element.getAttribute('data-processed') !== 'true') {
-                let graphDefinition = element.textContent || element.innerText;
-                console.log(`📝 図表定義 #${index}:`, graphDefinition);
+            try {
+                const graphDefinition = element.textContent.trim();
+                console.log(`🎨 Mermaid #${index} 描画開始:`, graphDefinition.substring(0, 100));
                 
-                // ✨ グラフ定義の前処理とバリデーション
-                if (!graphDefinition || graphDefinition.trim() === '') {
-                    console.warn(`⚠️ 空のグラフ定義 #${index}`);
-                    return;
+                // スタイル設定（無制限縦幅で表示）
+                element.style.padding = '30px';
+                element.style.margin = '24px 0';
+                element.style.border = '1px solid #e5e7eb';
+                element.style.borderRadius = '12px';
+                element.style.backgroundColor = '#ffffff';
+                element.style.width = '100%';
+                element.style.boxSizing = 'border-box';
+                element.style.height = 'auto'; // 高さを自動調整
+                element.style.minHeight = 'unset'; // 最小高さ制限を解除
+                element.style.maxHeight = 'none'; // 最大高さ制限を解除
+                element.style.overflow = 'visible';
+                element.setAttribute('data-processed', 'true');
+                
+                // 親コンテナの調整（無制限縦幅対応）
+                const parentContainer = element.parentElement;
+                if (parentContainer) {
+                    parentContainer.style.width = '100%';
+                    parentContainer.style.height = 'auto';
+                    parentContainer.style.maxHeight = 'none';
+                    parentContainer.style.overflow = 'visible';
                 }
+
+                // Mermaid構文修正
+                const fixedDefinition = fixMermaidSyntax(graphDefinition);
                 
-                // ✨ 基本的な構文チェック
-                graphDefinition = graphDefinition.trim();
-                if (!graphDefinition.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|pie|gantt|erDiagram|journey)/)) {
-                    console.warn(`⚠️ 不正なMermaid構文 #${index}:`, graphDefinition.substring(0, 50));
-                    element.innerHTML = `
-                        <div style="color: orange; padding: 15px; border: 2px solid orange; border-radius: 8px; background: #fff7ed;">
-                            <h4>⚠️ 図表構文エラー</h4>
-                            <p>Mermaid図表の構文が正しくありません。</p>
-                        </div>
-                    `;
-                    return;
-                }
+                // Mermaidレンダリング実行
+                const renderResult = await mermaid.render(`mermaid-${index}-${Date.now()}`, fixedDefinition);
+                element.innerHTML = renderResult.svg;
                 
-                // 新しいAPIでレンダリング
-                try {
-                    const graphId = `graph-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}`;
-                    console.log(`🎨 レンダリング開始 #${index}, ID: ${graphId}`);
-                    
-                    // ✨ タイムアウト付きレンダリング
-                    const renderPromise = mermaid.render(graphId, graphDefinition);
-                    const timeoutPromise = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('レンダリングタイムアウト')), 10000)
-                    );
-                    
-                    const { svg } = await Promise.race([renderPromise, timeoutPromise]);
-                    
-                    // ✨ SVGの検証
-                    if (!svg || svg.trim() === '') {
-                        throw new Error('空のSVGが生成されました');
+                // SVGサイズ調整（縦幅無制限対応）
+                setTimeout(() => {
+                    const svg = element.querySelector('svg');
+                    if (svg) {
+                        // インタラクティブモードの場合の特別処理
+                        if (element.classList.contains('interactive')) {
+                            // インタラクティブモード用のSVG設定
+                            svg.style.position = 'absolute';
+                            svg.style.top = '50%';
+                            svg.style.left = '50%';
+                            svg.style.transform = 'translate(-50%, -50%)';
+                            svg.style.transformOrigin = 'center center';
+                            svg.style.cursor = 'move';
+                            svg.style.maxWidth = 'none';
+                            svg.style.maxHeight = 'none';
+                            svg.style.width = 'auto';
+                            svg.style.height = 'auto';
+                            svg.style.transition = 'transform 0.2s ease';
+                            svg.setAttribute('data-initial', 'true');
+                            
+                            // コンテナの高さを固定
+                            element.style.height = '400px';
+                            element.style.overflow = 'hidden';
+                            element.style.position = 'relative';
+                            
+                            console.log('🎮 インタラクティブSVG設定完了:', svg);
+                        } else {
+                            // 通常モードのSVG設定
+                            svg.setAttribute('width', '100%');
+                            svg.removeAttribute('height');
+                            svg.style.width = '100%';
+                            svg.style.height = 'auto';
+                            svg.style.minHeight = 'unset';
+                            svg.style.maxHeight = 'none';
+                            svg.style.maxWidth = '100%';
+                            svg.style.display = 'block';
+                        }
+                        
+                        // preserveAspectRatio を設定してスケールを適切に
+                        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                        
+                        // viewBoxがある場合は調整
+                        const viewBox = svg.getAttribute('viewBox');
+                        if (viewBox) {
+                            console.log(`🎨 ViewBox設定: ${viewBox}`);
+                            const [x, y, width, height] = viewBox.split(' ').map(Number);
+                            svg.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
+                        }
                     }
-                    
-                    element.innerHTML = svg;
-                    element.setAttribute('data-processed', 'true');
-                    console.log(`✅ Mermaid図表 #${index} レンダリング完了`);
-                } catch (renderError) {
-                    console.error(`❌ Mermaid レンダリングエラー #${index}:`, renderError);
-                    element.innerHTML = `
-                        <div style="color: red; padding: 20px; border: 2px solid red; border-radius: 8px; background: #fef2f2;">
-                            <h3>❌ 図表レンダリングエラー</h3>
-                            <p><strong>エラー:</strong> ${renderError.message}</p>
-                            <details style="margin-top: 10px;">
-                                <summary style="cursor: pointer; color: #dc2626; font-weight: bold;">図表定義を表示</summary>
-                                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap; margin-top: 8px;">${graphDefinition}</pre>
-                            </details>
-                        </div>
-                    `;
-                    element.setAttribute('data-processed', 'error');
-                }
+                }, 100);
+                
+                console.log(`✅ Mermaid #${index} 描画完了`);
+            } catch (renderError) {
+                console.error(`❌ Mermaid レンダリングエラー #${index}:`, renderError);
+                const graphDefinition = element.textContent.trim();
+                element.innerHTML = `
+                    <div style="color: red; padding: 20px; border: 2px solid red; border-radius: 8px; background: #fef2f2;">
+                        <h3>❌ 図表レンダリングエラー</h3>
+                        <p><strong>エラー:</strong> ${renderError.message}</p>
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #dc2626; font-weight: bold;">図表定義を表示</summary>
+                            <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; white-space: pre-wrap; margin-top: 8px;">${graphDefinition}</pre>
+                        </details>
+                    </div>
+                `;
+                element.setAttribute('data-processed', 'error');
             }
         });
-          console.log('🎨 Mermaid初期化完了');
+        console.log('🎨 Mermaid初期化完了');
         
         // ✨ 初期化フラグをリセット
         mermaidInitializing = false;
         mermaidInitialized = true;
         
-        // Mermaid描画後にズーム機能を必ず再初期化（DOM再構築時も対応）
+        // ★★★ インタラクティブ機能を初期化 ★★★
         setTimeout(() => {
-            initializeMermaidZoom();
+            initializeMermaidInteractive();
         }, 100);
         
-        mermaidInitialized = true; // 初期化済みフラグを立てる
     } catch (error) {
         console.error('❌ Mermaid初期化エラー:', error);
         // ✨ エラー時もフラグをリセット
@@ -1106,167 +1265,448 @@ function initializeMermaidDiagrams() {
     }
 }
 
-// ★★★ Mermaidズーム機能初期化関数 ★★★
-function initializeMermaidZoom() {
-    console.log('🔍 Mermaidズーム機能を初期化開始');
+// ★★★ Mermaidインタラクティブ機能初期化 ★★★
+function initializeMermaidInteractive() {
+    console.log('🎮 Mermaidインタラクティブ機能を初期化');
     
-    const mermaidContainers = document.querySelectorAll('.mermaid-container');
-    console.log(`🎯 ${mermaidContainers.length}個のMermaidコンテナを発見`);
+    // すべてのmermaid-containerを対象にする
+    const containers = document.querySelectorAll('.mermaid-container');
     
-    mermaidContainers.forEach((container, index) => {
-        // 既にズーム機能が初期化されている場合はスキップ
-        if (container.hasAttribute('data-zoom-initialized')) {
-            return;
-        }
+    containers.forEach(container => {
+        const mermaidDiv = container.querySelector('.mermaid');
+        const controls = container.querySelector('.mermaid-controls');
+        const zoomInfo = container.querySelector('.zoom-info');
         
-        const mermaidElement = container.querySelector('.mermaid');
-        if (!mermaidElement) {
-            console.warn(`⚠️ コンテナ #${index} にMermaid要素が見つかりません`);
-            return;
-        }
+        if (!mermaidDiv || !controls) return;
         
-        // ズーム状態を初期化
-        let scale = 1;
-        let translateX = 0;
-        let translateY = 0;
-        let isDragging = false;
-        let lastMouseX = 0;
-        let lastMouseY = 0;
+        // インタラクティブデータを初期化
+        // ★★★ Mermaidインタラクティブデータ（拡張移動範囲対応） ★★★
+        const interactiveData = {
+            scale: 1,
+            translateX: 0,
+            translateY: 0,
+            isDragging: false,
+            lastMouseX: 0,
+            lastMouseY: 0,
+            minScale: 0.1,
+            maxScale: 5
+        };
         
-        // ズームコントロールボタンのイベント設定
-        const zoomControls = container.querySelector('.zoom-controls');
-        const zoomInBtn = container.querySelector('.zoom-in');
-        const zoomOutBtn = container.querySelector('.zoom-out');
-        const zoomResetBtn = container.querySelector('.zoom-reset');
+        // データを要素に保存（移動範囲は実際の制限計算で2倍拡張される）
+        mermaidDiv._interactiveData = interactiveData;
         
-        // ズームコントロール自体のクリックを防ぐ
-        if (zoomControls) {
-            zoomControls.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-            });
-            zoomControls.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
+        // SVG要素の取得
+        const svg = mermaidDiv.querySelector('svg');
+        if (!svg) return;
         
-        if (zoomInBtn) {
-            zoomInBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                scale = Math.min(scale * 1.3, 4);
-                updateTransform();
-                console.log(`📈 ズームイン: ${scale.toFixed(2)}`);
-            });
-        }
+        // 初期設定
+        updateMermaidTransform(mermaidDiv);
+        updateZoomInfo(zoomInfo, interactiveData.scale);
         
-        if (zoomOutBtn) {
-            zoomOutBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                scale = Math.max(scale / 1.3, 0.2);
-                updateTransform();
-                console.log(`📉 ズームアウト: ${scale.toFixed(2)}`);
-            });
-        }
+        // コントロールボタンのイベント設定
+        setupMermaidControls(controls, mermaidDiv, zoomInfo);
         
-        if (zoomResetBtn) {
-            zoomResetBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                scale = 1;
-                translateX = 0;
-                translateY = 0;
-                updateTransform();
-                console.log(`🔄 ズームリセット`);
-            });
-        }
+        // マウスイベントの設定
+        setupMermaidMouseEvents(mermaidDiv, zoomInfo);
         
-        // マウスホイールでズーム（ズームコントロール以外）
-        container.addEventListener('wheel', (e) => {
-            // ズームコントロール上でのホイールイベントは無視
-            if (e.target.closest('.zoom-controls')) return;
-            
+        console.log('✅ インタラクティブ機能設定完了:', container);
+    });
+}
+
+// ★★★ Mermaidコントロールボタン設定 ★★★
+function setupMermaidControls(controls, mermaidDiv, zoomInfo) {
+    const buttons = controls.querySelectorAll('.control-btn');
+    
+    buttons.forEach(button => {
+        const action = button.dataset.action;
+        
+        button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             
-            const rect = container.getBoundingClientRect();
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
+            const data = mermaidDiv._interactiveData;
+            if (!data) return;
             
-            const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-            const newScale = Math.max(0.2, Math.min(4, scale * zoomFactor));
-            
-            // ズーム中心を調整
-            const scaleChange = newScale / scale;
-            translateX = centerX + (translateX - centerX) * scaleChange;
-            translateY = centerY + (translateY - centerY) * scaleChange;
-            
-            scale = newScale;
-            updateTransform();
-        });
-        
-        // ドラッグでパン（ズームコントロール以外の領域のみ）
-        container.addEventListener('mousedown', (e) => {
-            // ズームコントロールエリアのクリックは無視
-            if (e.target.closest('.zoom-controls')) {
-                return;
+            switch (action) {
+                case 'zoom-in':
+                    data.scale = Math.min(data.maxScale, data.scale * 1.2);
+                    break;
+                case 'zoom-out':
+                    data.scale = Math.max(data.minScale, data.scale / 1.2);
+                    break;
+                case 'reset':
+                    data.scale = 1;
+                    data.translateX = 0;
+                    data.translateY = 0;
+                    break;
+                case 'fullscreen':
+                    toggleMermaidFullscreen(mermaidDiv);
+                    return;
             }
-            isDragging = true;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-            // ドラッグ開始時のスタイル
-            container.style.cursor = 'grabbing';
-            mermaidElement.style.transition = 'none';
-            // ズームコントロールのpointer-eventsを常にautoに維持
-            if (zoomControls) zoomControls.style.pointerEvents = 'auto';
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🖱️ ドラッグ開始');
+            
+            // ズーム後に位置を調整（境界制限を適用）
+            updateMermaidTransform(mermaidDiv);
+            updateZoomInfo(zoomInfo, data.scale);
         });
+    });
+}
+
+// ★★★ Mermaidマウスイベント設定 ★★★
+function setupMermaidMouseEvents(mermaidDiv, zoomInfo) {
+    const data = mermaidDiv._interactiveData;
+    if (!data) return;
+    
+    // マウスホイールでズーム
+    mermaidDiv.addEventListener('wheel', (e) => {
+        e.preventDefault();
         
-        // グローバルマウス移動イベント
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            
-            const deltaX = e.clientX - lastMouseX;
-            const deltaY = e.clientY - lastMouseY;
-            
-            translateX += deltaX;
-            translateY += deltaY;
-            
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-            
-            updateTransform();
-        });
+        const rect = mermaidDiv.getBoundingClientRect();
+        const svg = mermaidDiv.querySelector('svg');
+        if (!svg) return;
         
-        // グローバルマウスアップイベント
-        document.addEventListener('mouseup', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                container.style.cursor = 'grab';
-                mermaidElement.style.transition = 'transform 0.2s ease';
-                // ズームコントロールのpointer-eventsを常にautoに維持
-                if (zoomControls) zoomControls.style.pointerEvents = 'auto';
-                console.log('🖱️ ドラッグ終了');
-            }
-        });
+        // マウス位置（mermaidDiv内の相対座標）
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
         
-        // トランスフォーム更新関数
-        function updateTransform() {
-            if (mermaidElement) {
-                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-                mermaidElement.style.transformOrigin = 'center center';
-            }
+        // mermaidDivの中心点
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // 現在のtranslateを考慮したマウス位置（SVG座標系）
+        const svgMouseX = (mouseX - centerX - data.translateX) / data.scale;
+        const svgMouseY = (mouseY - centerY - data.translateY) / data.scale;
+        
+        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(data.minScale, Math.min(data.maxScale, data.scale * scaleFactor));
+        
+        if (newScale !== data.scale) {
+            // 新しいスケールでのマウス位置
+            const newSvgMouseX = svgMouseX * newScale;
+            const newSvgMouseY = svgMouseY * newScale;
+            
+            // マウス位置が変わらないように新しいtranslateを計算
+            data.translateX = mouseX - centerX - newSvgMouseX;
+            data.translateY = mouseY - centerY - newSvgMouseY;
+            
+            data.scale = newScale;
+            updateMermaidTransform(mermaidDiv);
+            updateZoomInfo(zoomInfo, data.scale);
         }
-        
-        // 初期化完了をマーク
-        container.setAttribute('data-zoom-initialized', 'true');
-        console.log(`✅ コンテナ #${index} のズーム機能初期化完了`);
     });
     
-    console.log('🔍 Mermaidズーム機能初期化完了');
+    // マウスドラッグでパン
+    mermaidDiv.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // 左クリックのみ
+        
+        e.preventDefault();
+        data.isDragging = true;
+        data.lastMouseX = e.clientX;
+        data.lastMouseY = e.clientY;
+        
+        mermaidDiv.style.cursor = 'grabbing';
+        
+        // ズーム情報を表示
+        if (zoomInfo) zoomInfo.style.display = 'block';
+    });
+    
+    mermaidDiv.addEventListener('mousemove', (e) => {
+        if (!data.isDragging) return;
+        
+        const deltaX = e.clientX - data.lastMouseX;
+        const deltaY = e.clientY - data.lastMouseY;
+        
+        // 仮の新しい位置を計算
+        const newTranslateX = data.translateX + deltaX;
+        const newTranslateY = data.translateY + deltaY;
+        
+        // 境界チェック
+        const container = mermaidDiv.closest('.mermaid-container') || mermaidDiv;
+        const containerRect = container.getBoundingClientRect();
+        const svg = mermaidDiv.querySelector('svg');
+        
+        if (svg) {
+            const svgRect = svg.getBoundingClientRect();
+            const scaledWidth = svgRect.width * data.scale;
+            const scaledHeight = svgRect.height * data.scale;
+            
+            // ★★★ 最小移動範囲を設定（ズームレベルに関係なく常に動かせる） ★★★
+            const minMovableRange = 400; // 最小400px分は動かせるようにする（拡大）
+            const baseMaxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+            const baseMaxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+            
+            // 基本範囲の2倍と最小範囲の大きい方を採用
+            const maxTranslateX = Math.max(minMovableRange, baseMaxTranslateX * 2);
+            const maxTranslateY = Math.max(minMovableRange, baseMaxTranslateY * 2);
+            
+            // 制限範囲内に収める
+            data.translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, newTranslateX));
+            data.translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, newTranslateY));
+        } else {
+            data.translateX = newTranslateX;
+            data.translateY = newTranslateY;
+        }
+        
+        data.lastMouseX = e.clientX;
+        data.lastMouseY = e.clientY;
+        
+        updateMermaidTransform(mermaidDiv);
+    });
+    
+    // グローバルなマウスアップイベント
+    document.addEventListener('mouseup', () => {
+        if (data.isDragging) {
+            data.isDragging = false;
+            mermaidDiv.style.cursor = 'grab';
+            
+            // ズーム情報を一定時間後に非表示
+            setTimeout(() => {
+                if (zoomInfo) zoomInfo.style.display = 'none';
+            }, 2000);
+        }
+    });
+    
+    // マウスリーブ時の処理
+    mermaidDiv.addEventListener('mouseleave', () => {
+        if (data.isDragging) {
+            data.isDragging = false;
+            mermaidDiv.style.cursor = 'grab';
+        }
+    });
+}
+
+// ★★★ Mermaid変形適用 ★★★
+function updateMermaidTransform(mermaidDiv) {
+    const data = mermaidDiv._interactiveData;
+    const svg = mermaidDiv.querySelector('svg');
+    
+    if (!data || !svg) {
+        console.warn('⚠️ updateMermaidTransform: データまたはSVGが見つかりません');
+        return;
+    }
+    
+    // 境界チェックと制限
+    const container = mermaidDiv.closest('.mermaid-container') || mermaidDiv;
+    const containerRect = container.getBoundingClientRect();
+    const svgRect = svg.getBoundingClientRect();
+    
+    // スケール済みのSVGサイズ
+    const scaledWidth = svgRect.width * data.scale;
+    const scaledHeight = svgRect.height * data.scale;
+    
+    // ★★★ 最小移動範囲を設定（ズームレベルに関係なく常に動かせる） ★★★
+    const minMovableRange = 400; // 最小400px分は動かせるようにする（拡大）
+    const baseMaxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+    const baseMaxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+    
+    // 基本範囲の2倍と最小範囲の大きい方を採用
+    const maxTranslateX = Math.max(minMovableRange, baseMaxTranslateX * 2);
+    const maxTranslateY = Math.max(minMovableRange, baseMaxTranslateY * 2);
+    
+    // 移動量を制限
+    data.translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, data.translateX));
+    data.translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, data.translateY));
+    
+    console.log('🎯 変形適用:', {
+        scale: data.scale,
+        translateX: data.translateX,
+        translateY: data.translateY,
+        scaledSize: { width: scaledWidth, height: scaledHeight },
+        containerSize: { width: containerRect.width, height: containerRect.height },
+        movableRange: { maxX: maxTranslateX, maxY: maxTranslateY }
+    });
+    
+    // SVGのスタイルを強制的に設定
+    svg.style.transformOrigin = 'center center';
+    svg.style.transition = 'transform 0.2s ease';
+    
+    // インタラクティブモードでは初期位置(-50%, -50%)を含めてtransformを計算
+    const baseTransform = 'translate(-50%, -50%)';
+    const userTransform = `translate(${data.translateX}px, ${data.translateY}px) scale(${data.scale})`;
+    const finalTransform = `${baseTransform} ${userTransform}`;
+    
+    svg.style.transform = finalTransform;
+    
+    // 強制的にスタイルを適用
+    svg.style.setProperty('transform', finalTransform, 'important');
+    
+    console.log('✅ 変形適用完了:', finalTransform);
+}
+
+// ★★★ ズーム情報更新 ★★★
+function updateZoomInfo(zoomInfo, scale) {
+    if (!zoomInfo) return;
+    
+    const percentage = Math.round(scale * 100);
+    zoomInfo.textContent = `${percentage}%`;
+    zoomInfo.style.display = 'block';
+    
+    // 一定時間後に非表示
+    clearTimeout(zoomInfo._hideTimeout);
+    zoomInfo._hideTimeout = setTimeout(() => {
+        zoomInfo.style.display = 'none';
+    }, 3000);
+}
+
+// ★★★ フルスクリーン切り替え ★★★
+function toggleMermaidFullscreen(mermaidDiv) {
+    const container = mermaidDiv.closest('.mermaid-container');
+    if (!container) return;
+    
+    if (container.classList.contains('fullscreen')) {
+        // フルスクリーン解除
+        container.classList.remove('fullscreen');
+        container.style.cssText = '';
+        document.body.style.overflow = '';
+        
+        // 通常モードのスタイルを復元
+        mermaidDiv.classList.remove('fullscreen-mermaid');
+        mermaidDiv.style.cssText = '';
+        
+        // 変形をリセット
+        const data = mermaidDiv._interactiveData;
+        if (data) {
+            data.scale = 1;
+            data.translateX = 0;
+            data.translateY = 0;
+            updateMermaidTransform(mermaidDiv);
+        }
+    } else {
+        // フルスクリーン化
+        container.classList.add('fullscreen');
+        container.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            background: white !important;
+            border: none !important;
+            border-radius: 0 !important;
+        `;
+        
+        mermaidDiv.classList.add('fullscreen-mermaid');
+        mermaidDiv.style.cssText = `
+            width: 100% !important;
+            height: 100% !important;
+            padding: 20px !important;
+            margin: 0 !important;
+        `;
+        
+        document.body.style.overflow = 'hidden';
+        
+        // ESCキーでフルスクリーン解除
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                toggleMermaidFullscreen(mermaidDiv);
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+}
+
+// ★★★ 修正されたMermaid構文エラー自動修正関数 ★★★
+function fixMermaidSyntax(definition) {
+    console.log('🔧 Mermaid構文エラー自動修正開始');
+    
+    // 1. 開始行とノード定義の分離（より厳密にチェック）
+    const lines = definition.split('\n');
+    const firstLine = lines[0].trim();
+    
+    // flowchart TD A[...] のような開始行にノード定義が含まれている場合
+    if (firstLine.match(/^(flowchart|graph)\s+(TD|LR|TB|RL|BT)\s+[A-Z]/)) {
+        console.log('🔧 開始行にノード定義が含まれているため分離します');
+        const parts = firstLine.split(/\s+/);
+        const chartType = parts[0]; // flowchart
+        const direction = parts[1]; // TD
+        const nodeDefinition = parts.slice(2).join(' '); // A[...] --> ...
+        
+        // 分離して再構築
+        lines[0] = `${chartType} ${direction}`;
+        lines.splice(1, 0, '    ' + nodeDefinition);
+        definition = lines.join('\n');
+    }
+    
+    // 2. 無効な文字を除去・置換
+    definition = definition
+        .replace(/[\u200B-\u200D\uFEFF]/g, '') // ゼロ幅文字を削除
+        .replace(/[""]/g, '"') // 特殊なクォートを標準に
+        .replace(/['']/g, "'"); // 特殊なアポストロフィを標準に
+    
+    // 3. ノードラベル内の特殊文字と改行をサニタイズ（角括弧ノード）
+    definition = definition.replace(/\[([^\]]+)\]/g, (match, label) => {
+        let sanitizedLabel = label
+            .replace(/\n/g, ' ') // 改行を空白に変換
+            .replace(/<br\/?>/gi, ' ') // HTMLブレークタグを空白に変換（大文字小文字無視）
+            .replace(/<[^>]+>/g, ' ') // その他のHTMLタグを空白に変換
+            .replace(/\(/g, '（') // 半角括弧を全角に
+            .replace(/\)/g, '）')
+            .replace(/:/g, '：') // 半角コロンを全角に
+            .replace(/;/g, '；') // 半角セミコロンを全角に
+            .replace(/"/g, '"') // 半角ダブルクォートを全角に
+            .replace(/'/g, "'") // 半角シングルクォートを全角に
+            .replace(/\s+/g, ' ') // 連続する空白を単一の空白に
+            .trim(); // 前後の空白を削除
+        
+        return `[${sanitizedLabel}]`;
+    });
+    
+    // 4. 円形ノード（二重丸）内の特殊文字もサニタイズ
+    definition = definition.replace(/\(\(([^)]+)\)\)/g, (match, label) => {
+        let sanitizedLabel = label
+            .replace(/\n/g, ' ')
+            .replace(/<br\/?>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\(/g, '（')
+            .replace(/\)/g, '）')
+            .replace(/:/g, '：')
+            .replace(/;/g, '；')
+            .replace(/"/g, '"')
+            .replace(/'/g, "'")
+            .replace(/\s+/g, ' ')
+            .trim();
+        
+        return `((${sanitizedLabel}))`;
+    });
+    
+    // 5. 判断ノード（菱形）内の特殊文字もサニタイズ
+    definition = definition.replace(/\{([^}]+)\}/g, (match, label) => {
+        let sanitizedLabel = label
+            .replace(/\n/g, ' ')
+            .replace(/<br\/?>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\(/g, '（')
+            .replace(/\)/g, '）')
+            .replace(/:/g, '：')
+            .replace(/;/g, '；')
+            .replace(/"/g, '"')
+            .replace(/'/g, "'")
+            .replace(/\s+/g, ' ')
+            .trim();
+        
+        return `{${sanitizedLabel}}`;
+    });
+    
+    // 6. エッジラベル内の特殊文字もサニタイズ
+    definition = definition.replace(/--\s*"([^"]+)"\s*-->/g, (match, label) => {
+        let sanitizedLabel = label
+            .replace(/\n/g, ' ')
+            .replace(/<br\/?>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        
+        return `-- "${sanitizedLabel}" -->`;
+    });
+    
+    // 7. コメント行の改行問題を修正
+    definition = definition.replace(/%%.*$/gm, (match) => {
+        return match.replace(/\n/g, ' ');
+    });
+    
+    console.log('🔧 修正後のMermaid定義:', definition);
+    return definition;
 }
 
 // ★★★ キャラクター名@表情を事前処理する関数 ★★★
@@ -1309,7 +1749,7 @@ function preprocessCharacterNodes(graphDefinition) {
         
         console.log('✅ キャラクター@表情の事前処理完了');
         return processedDefinition;
-    } catch (error) {
+       } catch (error) {
         console.error('❌ キャラクター事前処理エラー:', error);
         return graphDefinition;
     }
@@ -1321,150 +1761,6 @@ function renderMermaidInTab() {
         initializeMermaidDiagrams();
     }, 100);
 }
-
-/**
- * {{}}で囲まれた重要語句を空欄化し、クリックで開示できるHTMLに変換する
- * @param {string} text - 処理対象のテキスト
- * @param {string} uniqueId - 一意のID（複数のQ&Aで重複しないように）
- * @returns {string} - 空欄化されたHTML
- */
-function processBlankFillText(text, uniqueId = '') {
-    if (!text) return text;
-    
-    // {{}}で囲まれた部分を検出する正規表現
-    const blankPattern = /\{\{([^}]+)\}\}/g;
-    let blankCounter = 0;
-    let processedText = text;
-    
-    // まず、{{}}の外側にある【】を条文参照ボタン化
-    let outsideBlankText = text;
-    let blankMatches = [];
-    let match;
-    
-    // {{}}の内容を一時的にプレースホルダーに置換
-    while ((match = blankPattern.exec(text)) !== null) {
-               blankMatches.push(match[1]);
-        const placeholder = `__BLANK_${blankMatches.length - 1}__`;
-        outsideBlankText = outsideBlankText.replace(match[0], placeholder);
-    }
-    
-    // {{}}の外側の【】を条文参照ボタン化
-    outsideBlankText = outsideBlankText.replace(/【([^】]+)】/g, (match, lawText) => {
-        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
-    });
-    
-    // プレースホルダーを空欄に戻す
-    for (let i = 0; i < blankMatches.length; i++) {
-        blankCounter++;
-        const content = blankMatches[i];
-        const blankId = `blank-${uniqueId}-${blankCounter}`;
-        
-        // {{}}内に【】が含まれているかチェック
-        const hasArticleRef = /【([^】]+)】/.test(content);
-        let displayContent, dataAnswer;
-        
-        if (hasArticleRef) {
-            // 条文参照がある場合：ボタン化して色を変える
-            displayContent = content.replace(/【([^】]+)】/g, (match, lawText) => {
-                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
-            });
-            dataAnswer = content.replace(/【([^】]+)】/g, '$1'); // data-answerはプレーンテキスト
-        } else {
-            // 通常の空欄
-            displayContent = content;
-            dataAnswer = content;
-        }
-        
-        const blankLength = Math.max(4, Math.floor(dataAnswer.length * 0.9));
-        const underscores = '＿'.repeat(blankLength);
-        
-        // 条文参照がある場合は背景色を変える
-        const bgClass = hasArticleRef ? 'bg-blue-100 hover:bg-blue-200 border-blue-400 text-blue-800' : 'bg-yellow-100 hover:bg-yellow-200 border-yellow-400 text-yellow-800';
-        
-        const blankHtml = `<span class="blank-container inline-block">
-            <span id="${blankId}" class="blank-text cursor-pointer ${bgClass} px-2 py-1 rounded border-b-2 font-bold transition-all duration-200" 
-                  data-answer="${dataAnswer.replace(/"/g, '&quot;')}" data-display-content="${displayContent.replace(/"/g, '&quot;')}" data-blank-id="${blankId}" onclick="toggleBlankReveal(this)" title="クリックして答えを表示">
-                ${underscores}
-            </span>
-        </span>`;
-        
-        outsideBlankText = outsideBlankText.replace(`__BLANK_${i}__`, blankHtml);
-    }
-    
-    return outsideBlankText;
-}
-
-/**
- * 空欄の表示/非表示を切り替える（グローバル関数）
- * @param {HTMLElement} element - クリックされた空欄要素
- */
-window.toggleBlankReveal = function(element) {
-    const answer = element.dataset.answer;
-    const displayContent = element.dataset.displayContent;
-    const isRevealed = element.dataset.revealed === 'true';
-    
-    if (isRevealed) {
-        // 答えを隠す
-        const blankLength = Math.max(4, Math.floor(answer.length * 0.9));
-        const underscores = '＿'.repeat(blankLength);
-        element.innerHTML = underscores;
-        element.dataset.revealed = 'false';
-        element.title = 'クリックして答えを表示';
-        
-        // 色をリセット（条文参照があるかどうかで分岐）
-        const hasArticleRef = displayContent && displayContent.includes('article-ref-btn');
-        if (hasArticleRef) {
-            element.className = element.className.replace(/bg-\w+-\d+|border-\w+-\d+|text-\w+-\d+/g, '');
-            element.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-800');
-        } else {
-            element.className = element.className.replace(/bg-\w+-\d+|border-\w+-\d+|text-\w+-\d+/g, '');
-            element.classList.add('bg-yellow-100', 'border-yellow-400', 'text-yellow-800');
-        }
-    } else {
-        // 答えを表示（HTMLコンテンツがあればそれを使用、なければプレーンテキスト）
-        if (displayContent && displayContent !== answer) {
-            // HTMLエスケープを戻す
-            const unescapedContent = displayContent.replace(/&quot;/g, '"');
-            element.innerHTML = unescapedContent;
-        } else {
-            element.textContent = answer;
-        }
-        element.dataset.revealed = 'true';
-        element.title = 'クリックして答えを隠す';
-        
-        // 条文参照ボタンがある場合は、そのイベントリスナーを有効化
-        const articleButtons = element.querySelectorAll('.article-ref-btn');
-        articleButtons.forEach(btn => {
-            if (btn.dataset.lawText) {
-                // 既存のクリックイベントを上書き
-                btn.onclick = function(event) {
-                    event.stopPropagation();
-                    if (window.showArticlePanel) {
-                        window.showArticlePanel(btn.dataset.lawText);
-                                       }
-                };
-            }
-        });
-    }
-};
-
-/**
- * Q&A内のすべての空欄を一括で表示/非表示を切り替える
- * @param {HTMLElement} container - Q&Aコンテナ
- * @param {boolean} reveal - true: すべて表示, false: すべて隠す
- */
-function toggleAllBlanks(container, reveal) {
-    const blanks = container.querySelectorAll('.blank-text');
-    blanks.forEach(blank => {
-        const currentRevealed = blank.dataset.revealed === 'true';
-        if (reveal && !currentRevealed) {
-            window.toggleBlankReveal(blank);
-        } else if (!reveal && currentRevealed) {
-            window.toggleBlankReveal(blank);
-        }
-    });
-}
-
 
 function buildStoryHtml(storyData) {
     if (!storyData || (Array.isArray(storyData) && storyData.length === 0) || (typeof storyData === 'string' && !storyData.trim())) {
@@ -1495,12 +1791,14 @@ function buildStoryHtml(storyData) {
                         ${description}
                         <div class="embed-content">
                             <div class="mermaid-container" data-mermaid-id="${mermaidId}">
-                                <div class="zoom-controls">
-                                    <button class="zoom-btn zoom-in">拡大</button>
-                                    <button class="zoom-btn zoom-out">縮小</button>
-                                    <button class="zoom-btn zoom-reset">リセット</button>
+                                <div class="mermaid-controls">
+                                    <button class="control-btn zoom-in" data-action="zoom-in">🔍+</button>
+                                    <button class="control-btn zoom-out" data-action="zoom-out">🔍-</button>
+                                    <button class="control-btn zoom-reset" data-action="reset">📐</button>
+                                    <button class="control-btn fullscreen" data-action="fullscreen">⛶</button>
                                 </div>
-                                <div id="${mermaidId}" class="mermaid">${item.content}</div>
+                                <div class="zoom-info" style="display: none;">100%</div>
+                                <div id="${mermaidId}" class="mermaid interactive">${item.content}</div>
                             </div>
                         </div>
                     </div>
@@ -1612,7 +1910,8 @@ function addCharacterImagesToMermaid(mermaidElement, graphDefinition) {
                 // フォールバック: 全てのテキスト要素を確認
                 console.log('📋 利用可能なテキスト要素:');
                 textElements.forEach((el, i) => {
-                    console.log(`  ${i}: "${el.textContent}"`);                });
+                    console.log(`  ${i}: "${el.textContent}"`);
+                });
             }
         });
         
@@ -1698,9 +1997,6 @@ function addCharacterImageToNode(svgElement, targetTextElement, characterName, e
         labelElement.setAttribute('text-anchor', 'middle');
         labelElement.setAttribute('font-family', 'M PLUS Rounded 1c, sans-serif');
         labelElement.setAttribute('font-size', '16');
-        labelElement.setAttribute('font-weight', 'bold');
-        labelElement.setAttribute('fill', '#374151');
-        labelElement.textContent = normalizedCharacter.displayName || characterName;
         svgElement.appendChild(labelElement);
         
         console.log(`✅ ${characterName}@${expression} の画像を追加完了`);
@@ -1796,36 +2092,100 @@ function setupNewAnswerModeButtons(container) {
             const subIndex = this.dataset.subIndex;
             console.log(`✅ 答案入力モード開始: 問題${quizIndex}-${subIndex}`);
             
-            // 答案添削画面に遷移
+            // 答案添削画面に遷移（answerOverlay.jsのstartAnswerCorrectionModeを使用）
             if (window.startAnswerCorrectionMode) {
                 window.startAnswerCorrectionMode(quizIndex, subIndex);
             } else {
-                console.error('❌ window.startAnswerCorrectionMode関数が見つかりません');
+                console.error('❌ window.startAnswerCorrectionMode関数が見つかりません（answerOverlay.js未読み込み？）');
             }
         });
     });
 }
 
-/**
- * 答案添削ビューを起動する（グローバル関数）
- */
-window.startAnswerCorrectionMode = async function(quizIndex, subIndex) {
-    console.log(`✍️ 答案添削モード開始: quiz=${quizIndex}, sub=${subIndex}`);
+// answerCorrectionView.jsは削除 - answerOverlay.jsを直接使用
+
+// ★★★ Mermaid移動範囲テスト関数（デバッグ用） ★★★
+function testMermaidMovableRange() {
+    console.log('🧪 Mermaidの移動範囲テスト開始');
     
-    if (!answerCorrectionLoaded) {
-        const loaded = await loadAnswerCorrectionSystem();
-        if (!loaded) {
-            alert('答案添削ビューの読み込みに失敗しました。ページを再読み込みしてください。');
+    const mermaidDivs = document.querySelectorAll('.mermaid-diagram');
+    if (mermaidDivs.length === 0) {
+        console.warn('⚠️ Mermaidダイアグラムが見つかりません');
+        return;
+    }
+    
+    mermaidDivs.forEach((mermaidDiv, index) => {
+        console.log(`\n📊 Mermaidダイアグラム ${index + 1}:`);
+        
+        const data = mermaidDiv._interactiveData;
+        if (!data) {
+            console.warn(`⚠️ インタラクティブデータが見つかりません`);
             return;
         }
-    }
+        
+        const container = mermaidDiv.closest('.mermaid-container') || mermaidDiv;
+        const containerRect = container.getBoundingClientRect();
+        const svg = mermaidDiv.querySelector('svg');
+        
+        if (!svg) {
+            console.warn(`⚠️ SVG要素が見つかりません`);
+            return;
+        }
+        
+        const svgRect = svg.getBoundingClientRect();
+        const scaledWidth = svgRect.width * data.scale;
+        const scaledHeight = svgRect.height * data.scale;
+        
+        // ★★★ 最小移動範囲を含む拡張移動範囲を計算 ★★★
+        const minMovableRange = 400; // 最小400px分は動かせるようにする（拡大）
+        const baseMaxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+        const baseMaxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+        
+        // 基本範囲の2倍と最小範囲の大きい方を採用
+        const maxTranslateX = Math.max(minMovableRange, baseMaxTranslateX * 2);
+        const maxTranslateY = Math.max(minMovableRange, baseMaxTranslateY * 2);
+        
+        console.log(`📐 サイズ情報:`);
+        console.log(`  - コンテナサイズ: ${containerRect.width}x${containerRect.height}`);
+        console.log(`  - SVGサイズ: ${svgRect.width}x${svgRect.height}`);
+        console.log(`  - スケール: ${data.scale}`);
+        console.log(`  - スケール済みサイズ: ${scaledWidth}x${scaledHeight}`);
+        
+        console.log(`🎯 移動範囲:`);
+        console.log(`  - 基本範囲X: ${baseMaxTranslateX} → 拡張範囲X: ${maxTranslateX}`);
+        console.log(`  - 基本範囲Y: ${baseMaxTranslateY} → 拡張範囲Y: ${maxTranslateY}`);
+        console.log(`  - X軸: -${maxTranslateX} ～ +${maxTranslateX} (幅: ${maxTranslateX * 2})`);
+        console.log(`  - Y軸: -${maxTranslateY} ～ +${maxTranslateY} (高さ: ${maxTranslateY * 2})`);
+        console.log(`  - 最小保証範囲: ${minMovableRange}px`);
+        
+        console.log(`📍 現在位置:`);
+        console.log(`  - translateX: ${data.translateX}`);
+        console.log(`  - translateY: ${data.translateY}`);
+        
+        // 移動範囲の比率を計算
+        const originalMaxX = baseMaxTranslateX;
+        const originalMaxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+        
+        // 最小範囲が適用されているかチェック
+        const isMinRangeActiveX = maxTranslateX === minMovableRange;
+        const isMinRangeActiveY = maxTranslateY === minMovableRange;
+        
+        console.log(`🔍 移動範囲の詳細:`);
+        console.log(`  - X軸最小範囲適用: ${isMinRangeActiveX ? 'はい' : 'いいえ'} (${isMinRangeActiveX ? '常に動かせます' : 'ズーム依存'})`);
+        console.log(`  - Y軸最小範囲適用: ${isMinRangeActiveY ? 'はい' : 'いいえ'} (${isMinRangeActiveY ? '常に動かせます' : 'ズーム依存'})`);
+        
+        if (!isMinRangeActiveX && !isMinRangeActiveY) {
+            const expansionRatio = originalMaxX > 0 ? maxTranslateX / originalMaxX : 2;
+            console.log(`  - 拡張比率: ${expansionRatio.toFixed(1)}倍`);
+        }
+        
+        console.log(`✅ 移動可能性: ${(isMinRangeActiveX || isMinRangeActiveY) ? '常に動かせます！' : '拡大後により動かしやすくなります'}`);
+    });
     
-    if (window.showAnswerCorrectionView) {
-        window.showAnswerCorrectionView(quizIndex, subIndex);
-    } else {
-        console.error('❌ 答案添削ビューの起動関数が見つかりません');
-        alert('答案添削ビューの起動に失敗しました。');
-    }
-};
+    console.log('\n🧪 Mermaidの移動範囲テスト完了');
+    console.log('💡 使用方法: マウスドラッグでMermaidを動かして範囲を確認してください');
+    console.log('🎯 改善点: 最小400px分の移動範囲を保証し、ズーム前でも常に動かせるようになりました！');
+}
 
-console.log('✅ casePage.js 答案添削システム統合完了');
+// グローバル関数として登録
+window.testMermaidMovableRange = testMermaidMovableRange;

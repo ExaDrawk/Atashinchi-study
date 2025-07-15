@@ -100,14 +100,39 @@ export function getTextContent(node) {
     return content;
 }
 
+// ★★★ 全角数字を半角数字に変換する関数 ★★★
+function convertFullWidthToHalfWidth(text) {
+    if (!text || typeof text !== 'string') {
+        return text;
+    }
+    
+    // 全角数字を半角数字に変換
+    const fullWidthDigits = '０１２３４５６７８９';
+    const halfWidthDigits = '0123456789';
+    
+    let convertedText = text;
+    for (let i = 0; i < fullWidthDigits.length; i++) {
+        const fullWidthChar = fullWidthDigits[i];
+        const halfWidthChar = halfWidthDigits[i];
+        convertedText = convertedText.replace(new RegExp(fullWidthChar, 'g'), halfWidthChar);
+    }
+    
+    return convertedText;
+}
+
 // ★★★ parseInputText関数（1条・2条対応） ★★★
 function parseInputText(inputText, supportedLaws) {
     if (!inputText || typeof inputText !== 'string') {
         return { success: false, error: '入力が無効です' };
     }
     
-    const trimmedInput = inputText.trim();
-    console.log(`🔍 条文解析開始: "${trimmedInput}"`);
+    // ★★★ 全角数字を半角数字に変換 ★★★
+    const normalizedInput = convertFullWidthToHalfWidth(inputText.trim());
+    if (normalizedInput !== inputText.trim()) {
+        console.log(`🔄 全角数字を半角数字に変換: "${inputText.trim()}" → "${normalizedInput}"`);
+    }
+    
+    console.log(`🔍 条文解析開始: "${normalizedInput}"`);
     
     const lawPattern = supportedLaws.map(law => 
         law.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -115,7 +140,7 @@ function parseInputText(inputText, supportedLaws) {
     
     // ★★★ パターン1: 「民法548条の2第1項2号」形式 ★★★
     const pattern1 = new RegExp(`^(${lawPattern})(\\d+)条の(\\d+)第(\\d+)項(\\d+)号$`);
-    const match1 = pattern1.exec(trimmedInput);
+    const match1 = pattern1.exec(normalizedInput);
     if (match1) {
         return {
             success: true,
@@ -128,7 +153,7 @@ function parseInputText(inputText, supportedLaws) {
 
     // ★★★ パターン2: 「民法197条1項2号」形式 ★★★
     const pattern2 = new RegExp(`^(${lawPattern})(\\d+)条(\\d+)項(\\d+)号$`);
-    const match2 = pattern2.exec(trimmedInput);
+    const match2 = pattern2.exec(normalizedInput);
     if (match2) {
         return {
             success: true,
@@ -139,9 +164,34 @@ function parseInputText(inputText, supportedLaws) {
         };
     }
 
+    // ★★★ パターン2-前段後段: 「民法719条1項前段」「民法719条1項後段」形式 ★★★
+    const patternSegment = new RegExp(`^(${lawPattern})(\\d+)条(\\d+)項(前段|後段)$`);
+    const matchSegment = patternSegment.exec(normalizedInput);
+    if (matchSegment) {
+        return {
+            success: true,
+            lawName: matchSegment[1],
+            articleNumber: matchSegment[2],
+            paragraphNumber: matchSegment[3],
+            segment: matchSegment[4] // '前段' または '後段'
+        };
+    }
+
+    // ★★★ パターン2-前段後段（条のみ）: 「民法719条前段」「民法719条後段」形式 ★★★
+    const patternSegmentOnly = new RegExp(`^(${lawPattern})(\\d+)条(前段|後段)$`);
+    const matchSegmentOnly = patternSegmentOnly.exec(normalizedInput);
+    if (matchSegmentOnly) {
+        return {
+            success: true,
+            lawName: matchSegmentOnly[1],
+            articleNumber: matchSegmentOnly[2],
+            segment: matchSegmentOnly[3] // '前段' または '後段'
+        };
+    }
+
     // ★★★ パターン2-A: 「民法197条2号」形式（項なし号指定） ★★★
     const pattern2A = new RegExp(`^(${lawPattern})(\\d+)条(\\d+)号$`);
-    const match2A = pattern2A.exec(trimmedInput);
+    const match2A = pattern2A.exec(normalizedInput);
     if (match2A) {
         return {
             success: true,
@@ -153,7 +203,7 @@ function parseInputText(inputText, supportedLaws) {
 
     // ★★★ パターン2-B: 「民法548条の2第1号」形式（条の＋号指定） ★★★
     const pattern2B = new RegExp(`^(${lawPattern})(\\d+)条の(\\d+)第(\\d+)号$`);
-    const match2B = pattern2B.exec(trimmedInput);
+    const match2B = pattern2B.exec(normalizedInput);
     if (match2B) {
         return {
             success: true,
@@ -165,7 +215,7 @@ function parseInputText(inputText, supportedLaws) {
 
     // ★★★ パターン3: 「民法548条の2第1項」形式 ★★★
     const pattern3 = new RegExp(`^(${lawPattern})(\\d+)条の(\\d+)第(\\d+)項$`);
-    const match3 = pattern3.exec(trimmedInput);
+    const match3 = pattern3.exec(normalizedInput);
     if (match3) {
         return {
             success: true,
@@ -177,7 +227,7 @@ function parseInputText(inputText, supportedLaws) {
 
     // ★★★ パターン4: 「民法548の2第1項」形式 ★★★
     const pattern4 = new RegExp(`^(${lawPattern})(\\d+)の(\\d+)第(\\d+)項$`);
-    const match4 = pattern4.exec(trimmedInput);
+    const match4 = pattern4.exec(normalizedInput);
     if (match4) {
         return {
             success: true,
@@ -199,7 +249,7 @@ function parseInputText(inputText, supportedLaws) {
     ];
 
     for (const pattern of patterns) {
-        const match = pattern.regex.exec(trimmedInput);
+        const match = pattern.regex.exec(normalizedInput);
         if (match) {
             return { success: true, ...pattern.format(match) };
         }
@@ -207,7 +257,7 @@ function parseInputText(inputText, supportedLaws) {
 
     return { 
         success: false, 
-        error: `対応していない形式: "${trimmedInput}"`,
+        error: `対応していない形式: "${normalizedInput}"`,
         supportedFormats: [
             "民法1条",
             "民法2条",
@@ -678,14 +728,14 @@ export function findArticleNode(lawData, articleNumber) {
     return result;
 }
 
-// ★★★ 条文ノードを整形（完全修正版・1条・2条完全対応） ★★★
-export function formatArticleNode(articleNode, paragraphNumber = null, itemNumber = null) {
+// ★★★ 条文ノードを整形（完全修正版・1条・2条・前段後段完全対応） ★★★
+export function formatArticleNode(articleNode, paragraphNumber = null, itemNumber = null, segment = null) {
     let content = '';
     
     try {
         console.log(`📄 条文ノード整形開始:`, Object.keys(articleNode));
         const articleNum = articleNode.$.Num || '';
-        console.log(`📄 条文番号: ${articleNum}`);
+        console.log(`📄 条文番号: ${articleNum}, 前段後段: ${segment}`);
         
         // ★★★ 条文番号の表示形式を統一 ★★★
         let displayNum = articleNum;
@@ -713,7 +763,7 @@ export function formatArticleNode(articleNode, paragraphNumber = null, itemNumbe
         // ★★★ 条文本文の処理（Paragraph要素を直接処理） ★★★
         if (articleNode.Paragraph) {
             console.log(`📄 Paragraph要素存在: ${Array.isArray(articleNode.Paragraph) ? '配列' : 'オブジェクト'}`);
-            content += formatParagraphs(articleNode.Paragraph, paragraphNumber, itemNumber);
+            content += formatParagraphs(articleNode.Paragraph, paragraphNumber, itemNumber, segment);
         } else {
             console.log(`❌ Paragraph要素が存在しません`);
             console.log(`利用可能なキー:`, Object.keys(articleNode));
@@ -728,8 +778,56 @@ export function formatArticleNode(articleNode, paragraphNumber = null, itemNumbe
     }
 }
 
-// ★★★ 段落を整形（完全修正版・explicitArray: true対応） ★★★
-function formatParagraphs(paragraphs, targetParagraph, targetItem) {
+// ★★★ 前段・後段のハイライト処理関数 ★★★
+function processSegmentHighlight(text, segment) {
+    console.log(`🎯 前段・後段処理開始: segment="${segment}", text="${text}"`);
+    
+    // 句点（。）で文を分割
+    const sentences = text.split('。').filter(sentence => sentence.trim().length > 0);
+    console.log(`📝 分割された文: ${sentences.length}個`, sentences);
+    
+    if (sentences.length === 0) {
+        return text;
+    }
+    
+    let result = '';
+    
+    sentences.forEach((sentence, index) => {
+        const trimmedSentence = sentence.trim();
+        if (trimmedSentence.length === 0) return;
+        
+        let processedSentence = trimmedSentence;
+        
+        // 前段・後段の判定とマーキング
+        if (segment === '前段' && index === 0) {
+            // 最初の文を前段としてマーキング
+            processedSentence = `<span class="font-bold text-blue-700 bg-yellow-300 px-1 rounded">${trimmedSentence}</span>`;
+            console.log(`🎯 前段マーキング適用: "${trimmedSentence}"`);
+        } else if (segment === '後段' && index === sentences.length - 1) {
+            // 最後の文を後段としてマーキング（2文以上ある場合）
+            if (sentences.length > 1) {
+                processedSentence = `<span class="font-bold text-blue-700 bg-yellow-300 px-1 rounded">${trimmedSentence}</span>`;
+                console.log(`🎯 後段マーキング適用: "${trimmedSentence}"`);
+            }
+        } else if (segment === '後段' && sentences.length === 1) {
+            // 1文しかない場合は後段指定でもマーキングしない
+            console.log(`⚠️ 1文のみの条文で後段指定: マーキングなし`);
+        }
+        
+        result += processedSentence;
+        
+        // 最後の文以外は句点を追加
+        if (index < sentences.length - 1) {
+            result += '。';
+        }
+    });
+    
+    console.log(`✅ 前段・後段処理完了: "${result}"`);
+    return result;
+}
+
+// ★★★ 段落を整形（完全修正版・explicitArray: true・前段後段対応） ★★★
+function formatParagraphs(paragraphs, targetParagraph, targetItem, segment) {
     let content = '';
     
     try {
@@ -764,6 +862,8 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
             if (para.ParagraphSentence) {
                 console.log(`📄 条文処理: Paragraph ${paraNum} - ParagraphSentence発見`);
                 const paragraphSentences = Array.isArray(para.ParagraphSentence) ? para.ParagraphSentence : [para.ParagraphSentence];
+                
+                let paragraphText = '';
                 paragraphSentences.forEach((paragraphSentence, index) => {
                     // ParagraphSentenceが直接Sentenceを含む場合
                     if (paragraphSentence.Sentence) {
@@ -771,15 +871,22 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
                         sentenceArray.forEach((sent, sentIndex) => {
                             const sentenceText = getTextContent(sent);
                             console.log(`📝 Sentence ${sentIndex} 抽出: "${sentenceText}"`);
-                            content += sentenceText;
+                            paragraphText += sentenceText;
                         });
                     } else {
                         // ParagraphSentence自体にテキストが含まれる場合
-                        const paragraphText = getTextContent(paragraphSentence);
-                        console.log(`📝 ParagraphSentence直接テキスト: "${paragraphText}"`);
-                        content += paragraphText;
+                        const sentenceText = getTextContent(paragraphSentence);
+                        console.log(`📝 ParagraphSentence直接テキスト: "${sentenceText}"`);
+                        paragraphText += sentenceText;
                     }
                 });
+                
+                // ★★★ 前段・後段の処理 ★★★
+                if (segment && (segment === '前段' || segment === '後段')) {
+                    paragraphText = processSegmentHighlight(paragraphText, segment);
+                }
+                
+                content += paragraphText;
             } else {
                 // ParagraphSentenceが存在しない場合のデバッグ出力
                 console.log(`❌ ParagraphSentence未発見 - Paragraph ${paraNum}`);
@@ -802,7 +909,7 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
                     
                     if (isTargetItem) {
                         console.log(`✅ マーキング開始: Item ${itemNum}`);
-                        content += `\n<span style="background-color: #fef08a; padding: 2px 4px; border-radius: 3px; font-weight: bold;">`;
+                        content += `\n<span style="background-color: #fde047; padding: 2px 4px; border-radius: 3px; font-weight: bold;">`;
                     } else {
                         content += '\n';
                     }
@@ -902,10 +1009,10 @@ function formatParagraphs(paragraphs, targetParagraph, targetItem) {
     }
 }
 
-// ★★★ 整形済み条文を取得（完全修正版） ★★★
-export async function getFormattedArticle(lawName, articleNumber, paragraphNumber = null, itemNumber = null, existingFiles = new Map()) {
+// ★★★ 整形済み条文を取得（完全修正版・前段後段対応） ★★★
+export async function getFormattedArticle(lawName, articleNumber, paragraphNumber = null, itemNumber = null, segment = null, existingFiles = new Map()) {
     try {
-        console.log(`📖 条文取得開始: ${lawName} 第${articleNumber}条${paragraphNumber ? ` 第${paragraphNumber}項` : ''}${itemNumber ? ` ${itemNumber}号` : ''}`);
+        console.log(`📖 条文取得開始: ${lawName} 第${articleNumber}条${paragraphNumber ? ` 第${paragraphNumber}項` : ''}${itemNumber ? ` ${itemNumber}号` : ''}${segment ? ` ${segment}` : ''}`);
         
         const xmlText = await ensureLawXMLByFileName(lawName, existingFiles);
         console.log(`📄 XML読み込み完了: ${xmlText.length}文字`);
@@ -927,7 +1034,7 @@ export async function getFormattedArticle(lawName, articleNumber, paragraphNumbe
         }
         
         console.log(`🎯 条文ノード発見: ${lawName} 第${articleNumber}条`);
-        const formattedText = formatArticleNode(articleNode, paragraphNumber, itemNumber);
+        const formattedText = formatArticleNode(articleNode, paragraphNumber, itemNumber, segment);
         console.log(`✅ 条文取得成功: ${lawName} 第${articleNumber}条`);
         console.log(`📋 最終結果: "${formattedText}"`);
         
@@ -945,13 +1052,13 @@ export async function parseAndGetArticle(inputText, supportedLaws = null, existi
     const parseResult = parseInputText(inputText, lawsList);
     
     if (!parseResult.success) {
-        return `❌ 対応していない形式です: "${inputText}"\n\n対応形式の例：\n- 民法1条\n- 民法2条\n- 民法548条の2\n- 民法548条の2第1項\n- 民法548の2第1項\n- 会社法784条\n- 民法109条1項\n- 民法197条1項2号`;
+        return `❌ 対応していない形式です: "${inputText}"\n\n対応形式の例：\n- 民法1条\n- 民法2条\n- 民法548条の2\n- 民法548条の2第1項\n- 民法548の2第1項\n- 会社法784条\n- 民法109条1項\n- 民法197条1項2号\n- 民法719条1項前段\n- 民法719条後段`;
     }
     
-    const { lawName, articleNumber, paragraphNumber, itemNumber } = parseResult;
+    const { lawName, articleNumber, paragraphNumber, itemNumber, segment } = parseResult;
     
     try {
-        const articleText = await getFormattedArticle(lawName, articleNumber, paragraphNumber, itemNumber, existingFiles);
+        const articleText = await getFormattedArticle(lawName, articleNumber, paragraphNumber, itemNumber, segment, existingFiles);
         return articleText;
     } catch (error) {
         return `❌ 条文の取得中にエラーが発生しました: ${error.message}`;

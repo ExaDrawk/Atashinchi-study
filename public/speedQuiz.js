@@ -147,14 +147,50 @@ export async function extractAllArticles(caseData) {
     
     // 非同期で条文を解析
     const parsedArticles = [];
+    console.log(`🔄 ${Array.from(articles).length}件の条文を解析開始...`);
+    
+    let successCount = 0;
+    let failureCount = 0;
+    
     for (const articleStr of Array.from(articles)) {
-        const parsed = await parseArticle(articleStr);
-        if (parsed) {
-            parsedArticles.push(parsed);
+        console.log(`🔍 解析中: ${articleStr}`);
+        try {
+            const parsed = await parseArticle(articleStr);
+            if (parsed) {
+                parsedArticles.push(parsed);
+                successCount++;
+                console.log(`✅ 解析成功: ${articleStr} -> ${parsed.displayText}`);
+            } else {
+                failureCount++;
+                console.warn(`❌ 解析失敗: ${articleStr} (null返却)`);
+            }
+        } catch (error) {
+            failureCount++;
+            console.error(`❌ 解析エラー: ${articleStr} - ${error.message}`);
+            
+            // エラーが発生した場合でも、基本的な条文データを作成して保持
+            try {
+                const basicData = createBasicArticleData(articleStr);
+                if (basicData) {
+                    parsedArticles.push(basicData);
+                    console.log(`🔧 エラー回復: 基本データで保持 - ${basicData.displayText}`);
+                }
+            } catch (recoveryError) {
+                console.error(`❌ 回復処理も失敗: ${articleStr} - ${recoveryError.message}`);
+            }
         }
     }
     
-    return parsedArticles;
+    console.log(`📊 解析結果: 成功=${successCount}件, 失敗=${failureCount}件, 最終保持=${parsedArticles.length}件`);
+    
+    // 少なくとも1件でも条文があれば返す
+    if (parsedArticles.length > 0) {
+        console.log(`✅ 条文データ抽出完了: ${parsedArticles.length}件`);
+        return parsedArticles;
+    } else {
+        console.warn(`⚠️ 抽出された条文がありません`);
+        return [];
+    }
 }
 
 /**
@@ -216,18 +252,20 @@ async function parseArticle(articleStr) {
     console.log(`🔍 条文解析成功: 法令名="${lawName.trim()}", 条文番号="${articleNumberStr}", 項=${paragraphNum}, 号=${itemNum}`);
     console.log(`📄 元の入力: "${articleStr}" -> 解析結果: "${fullMatch}"`);
     
-    // 実際の条文内容を取得
-    const content = await fetchArticleContentForQuiz(lawName.trim(), articleNumberStr, paragraphNum, itemNum);
-    
-    return {
+    // 条文メタデータのみを作成（本文は取得せず）
+    const articleData = {
         lawName: lawName.trim(),
         fullText: articleStr,
         articleNumber: articleNumberStr, // 文字列として保持（「413の2」など）
         paragraph: paragraphNum,
         item: itemNum,
         displayText: `${lawName.trim()}${articleWithJou}${paragraph ? `第${paragraph}項` : ''}${item ? `第${item}号` : ''}`,
-        content: content // 実際の条文内容
+        content: null // 本文は事前に取得しない
     };
+    
+    console.log(`✅ 条文メタデータ作成: ${articleData.displayText}`);
+    
+    return articleData;
 }
 
 /**
@@ -304,9 +342,10 @@ function hideAnswersInContentForQuiz(content, article) {
  * スピード条文ゲームを初期化
  * @param {string} containerId - ゲームコンテナのID
  * @param {Object} caseData - ケースデータ
+ * @param {boolean} preserveExistingArticles - 既存の条文データを保持するかどうか
  */
-export async function initializeSpeedQuizGame(containerId, caseData) {
-    console.log('🎮 スピード条文ゲーム初期化開始', { containerId, caseData: caseData?.title });
+export async function initializeSpeedQuizGame(containerId, caseData, preserveExistingArticles = false) {
+    console.log('🎮 スピード条文ゲーム初期化開始', { containerId, caseData: caseData?.title, preserveExistingArticles });
     
     const container = document.getElementById(containerId);
     if (!container) {
@@ -323,15 +362,32 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
     `;
     
     try {
-        // 条文を抽出（非同期）
-        window.speedQuizArticles = await extractAllArticles(caseData);
-        console.log('📚 抽出された条文数:', window.speedQuizArticles.length);
+        // 既存の条文データがあり、保持フラグが有効な場合はそれを使用
+        if (preserveExistingArticles && window.speedQuizArticles && window.speedQuizArticles.length > 0) {
+            console.log('🔄 既存の条文データを使用:', window.speedQuizArticles.length + '件');
+        } else {
+            // 条文を抽出（非同期）
+            console.log('🔍 条文抽出開始:', caseData?.title);
+            window.speedQuizArticles = await extractAllArticles(caseData);
+        }
+        
+        console.log('📚 使用する条文数:', window.speedQuizArticles?.length || 0);
+        console.log('📚 使用する条文詳細:', window.speedQuizArticles);
         
         if (!window.speedQuizArticles || window.speedQuizArticles.length === 0) {
+            console.warn('⚠️ 条文データが空です');
             container.innerHTML = `
                 <div class="text-center p-8 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p class="text-yellow-700 font-bold text-lg mb-2">⚠️ 条文が見つかりません</p>
                     <p class="text-yellow-600">このモジュールには条文参照が含まれていないため、<br>スピード条文ゲームをプレイできません。</p>
+                    <details class="mt-4 text-left">
+                        <summary class="cursor-pointer text-yellow-700 font-semibold">デバッグ情報</summary>
+                        <pre class="mt-2 text-xs bg-white p-2 rounded border">${JSON.stringify({
+                            caseDataTitle: caseData?.title,
+                            caseDataKeys: caseData ? Object.keys(caseData) : null,
+                            articlesLength: window.speedQuizArticles?.length || 0
+                        }, null, 2)}</pre>
+                    </details>
                 </div>
             `;
             return;
@@ -350,11 +406,39 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
     // ゲームUI設定
     const articleCount = window.speedQuizArticles ? window.speedQuizArticles.length : 0;
     container.innerHTML = `
+        <style>
+            @keyframes correctCircle {
+                0% { transform: scale(0) rotate(0deg); opacity: 0; }
+                50% { transform: scale(1.1) rotate(180deg); opacity: 1; }
+                100% { transform: scale(1) rotate(360deg); opacity: 0; }
+            }
+            
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+            
+            .correct-circle-animation {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 9999;
+                animation: correctCircle 1.2s ease-out forwards;
+                pointer-events: none;
+            }
+            
+            .shake {
+                animation: shake 0.5s ease-in-out;
+            }
+        </style>
+        
         <div id="speed-quiz-rules" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg mb-6">
             <h2 class="text-2xl font-bold mb-4 text-center">⚡ スピード条文ゲーム</h2>
             <div class="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
-                <h3 class="font-bold mb-2">🎯 ゲームルール：</h3>
-                <ul class="text-sm space-y-1">
+                <h3 class="font-bold mb-2 text-white">🎯 ゲームルール：</h3>
+                <ul class="text-sm space-y-1 text-white">
                     <li>• 条文の内容が表示され、だんだん拡大していきます</li>
                     <li>• 条文番号（数字のみ）を入力してください（例：「民法123条」→「123」）</li>
                     <li>• 「項」がある場合は、条文番号入力後に項番号を入力</li>
@@ -384,18 +468,18 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
                 <div class="text-center mt-1">残り時間: <span id="time-remaining">10</span>秒</div>
             </div>
             
-            <div id="article-display" class="bg-white border-2 border-gray-300 rounded-lg p-6 mb-6 min-h-40 flex items-center justify-center text-center">
-                <div id="article-text" class="transition-all duration-500 text-xs">条文内容が表示されます...</div>
+            <div id="article-display" class="bg-white border-2 border-gray-300 rounded-lg p-6 mb-6 min-h-40 flex items-center justify-center text-center text-black">
+                <div id="article-text" class="transition-all duration-500 text-xs text-black">条文内容が表示されます...</div>
             </div>            <div class="text-center mb-4">                <div class="flex items-center justify-center gap-2">
                     <div class="relative">                        <input type="text" id="article-number-input" class="text-3xl text-center border-2 border-blue-300 rounded-lg p-4 w-40 font-mono tracking-widest bg-transparent" style="color: transparent;" maxlength="8" autocomplete="off">
-                        <div id="article-overlay" class="absolute top-0 left-0 text-3xl text-center p-4 w-40 font-mono tracking-widest pointer-events-none"></div>
+                        <div id="article-overlay" class="absolute top-0 left-0 text-3xl text-center p-4 w-40 font-mono tracking-widest pointer-events-none text-black"></div>
                     </div>
                     <span class="text-3xl font-mono text-gray-600">条</span>
                     <div id="paragraph-section" class="flex items-center gap-2" style="display: none;">
                         <span class="text-3xl font-mono text-gray-600">第</span>
                         <div class="relative">
                             <input type="text" id="paragraph-number-input" class="text-3xl text-center border-2 border-blue-300 rounded-lg p-4 w-20 font-mono tracking-widest bg-transparent" style="color: transparent;" maxlength="2" autocomplete="off">
-                            <div id="paragraph-overlay" class="absolute top-0 left-0 text-3xl text-center p-4 w-20 font-mono tracking-widest pointer-events-none"></div>
+                            <div id="paragraph-overlay" class="absolute top-0 left-0 text-3xl text-center p-4 w-20 font-mono tracking-widest pointer-events-none text-black"></div>
                         </div>
                         <span class="text-3xl font-mono text-gray-600">項</span>
                     </div>
@@ -411,8 +495,8 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
         </div>
         
         <div id="speed-quiz-result" class="hidden text-center">
-            <h2 class="text-3xl font-bold mb-4">🎉 ゲーム結果</h2>
-            <div class="bg-white rounded-lg p-6 shadow-lg mb-6">
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">🎉 ゲーム結果</h2>
+            <div class="bg-white rounded-lg p-6 shadow-lg mb-6 text-black">
                 <div class="text-4xl font-bold text-blue-600 mb-2">
                     <span id="final-score">0</span>点
                 </div>
@@ -429,6 +513,7 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
             </div>
             
             <div class="space-x-4">
+                <button id="download-answer-rates" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">📊 正答率データをダウンロード</button>
                 <button id="retry-game" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">もう一度</button>
                 <button id="back-to-menu" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">メニューに戻る</button>
             </div>
@@ -439,6 +524,205 @@ export async function initializeSpeedQuizGame(containerId, caseData) {
     setupSpeedQuizEventListeners();
     
     console.log('✅ スピード条文ゲーム初期化完了');
+}
+
+/**
+ * 条文番号の入力を処理
+ */
+function handleArticleInput(e) {
+    const input = e.target;
+    const originalValue = input.value;
+    const correctArticleNumber = gameState.correctArticleNumberNormalized || '';
+    
+    // validInputを抽出
+    const validInput = extractValidInput(originalValue, correctArticleNumber);
+    
+    // validInputの長さ分だけinputValueを切り出す
+    let newInputValue = '';
+    let count = 0;
+    for (let i = 0; i < originalValue.length && count < validInput.length; i++) {
+        let c = originalValue[i];
+        let n = c.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)).replace(/[のノ]/g, 'の');
+        if (n === validInput[count]) {
+            newInputValue += c;
+            count++;
+        }
+    }
+    
+    // ミスタイプ検出: 入力値が正解部分以降まで入力された場合
+    if (originalValue.length > validInput.length) {
+        // 1秒減点
+        if (typeof gameState.timeLeft === 'number' && gameState.timeLeft > 0) {
+            gameState.timeLeft = Math.max(0, gameState.timeLeft - 1);
+            const timeRemainingElement = document.getElementById('time-remaining');
+            if (timeRemainingElement) timeRemainingElement.textContent = gameState.timeLeft;
+            showMistypeTimePenalty(); // アニメーション表示
+        }
+    }
+    
+    if (originalValue !== newInputValue) {
+        input.value = newInputValue;
+        input.focus();
+        input.setSelectionRange(newInputValue.length, newInputValue.length);
+    }
+    
+    // validInputを画面に表示
+    const articleOverlay = document.getElementById('article-overlay');
+    if (articleOverlay) {
+        articleOverlay.textContent = validInput;
+    }
+    
+    // 正解判定＆次問題移動
+    if (validInput === correctArticleNumber && correctArticleNumber.length > 0) {
+        input.readOnly = true;
+        const currentArticle = gameState.articles[gameState.currentIndex];
+        if (currentArticle && currentArticle.paragraph) {
+            showParagraphSection();
+            const paragraphInput = document.getElementById('paragraph-number-input');
+            if (paragraphInput) {
+                paragraphInput.value = '';
+                paragraphInput.focus();
+            }
+            gameState.currentAnswerStage = 'paragraph';
+            gameState.isWaitingForParagraph = true;
+        } else {
+            completeAnswer();
+        }
+    }
+    
+    // デバッグ出力
+    console.log({inputValue: originalValue, correctArticleNumber, validInput, newInputValue});
+}
+
+/**
+ * 項番号の入力を処理
+ */
+function handleParagraphInput(event) {
+    if (gameState.isProcessingAnswer) return;
+    
+    const input = event.target;
+    let inputValue = input.value;
+    
+    // 全角数字を半角に変換
+    inputValue = inputValue.replace(/[０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+    
+    // 数字のみを許可
+    inputValue = inputValue.replace(/[^0-9]/g, '');
+    
+    // 入力フィールドを即座に更新（変換された値を反映）
+    input.value = inputValue;
+    
+    const currentArticle = gameState.articles[gameState.currentIndex];
+    if (!currentArticle || !currentArticle.paragraph) return;
+    
+    const correctParagraphNumber = currentArticle.paragraph.toString();
+    
+    // 入力が正解の一部かチェック
+    let validInput = '';
+    let hasIncorrectInput = false;
+    
+    for (let i = 0; i < inputValue.length; i++) {
+        if (i < correctParagraphNumber.length && inputValue[i] === correctParagraphNumber[i]) {
+            validInput += inputValue[i];
+        } else {
+            hasIncorrectInput = true;
+            break;
+        }
+    }
+    
+    // ミスタイプ時に1秒減点
+    if (hasIncorrectInput) {
+        if (typeof gameState.timeLeft === 'number' && gameState.timeLeft > 0) {
+            gameState.timeLeft = Math.max(0, gameState.timeLeft - 1);
+            const timeRemainingElement = document.getElementById('time-remaining');
+            if (timeRemainingElement) timeRemainingElement.textContent = gameState.timeLeft;
+            showMistypeTimePenalty(); // アニメーション表示
+        }
+        showIncorrectInputAnimation(input, inputValue.slice(-1));
+        input.value = validInput;
+        updateParagraphDisplay(validInput, correctParagraphNumber);
+        return;
+    }
+    
+    // 入力フィールドを更新
+    input.value = validInput;
+    
+    // 表示を更新
+    updateParagraphDisplay(validInput, correctParagraphNumber);
+    
+    // 項番号が完成した場合
+    if (validInput === correctParagraphNumber) {
+        completeAnswer();
+    }
+}
+
+/**
+ * 正解時の処理
+ */
+function handleCorrectAnswer() {
+    if (gameState.isProcessingAnswer) return;
+    
+    gameState.isProcessingAnswer = true;
+    stopTimer();
+    
+    // 正答率記録
+    const currentArticle = gameState.articles[gameState.currentIndex];
+    if (currentArticle) {
+        recordArticleAnswer(
+            currentArticle.lawName || 'その他',
+            currentArticle.articleNumber,
+            currentArticle.paragraph || 1,
+            true  // 正解
+        );
+    }
+    
+    // スコア更新
+    gameState.score += Math.max(1, gameState.timeLeft);
+    gameState.correctAnswers++;
+    
+    // フィードバック表示
+    showCorrectFeedback();
+    showCorrectCircleAnimation();
+    
+    console.log('✅ 正解処理完了');
+    
+    // 次の問題へ
+    setTimeout(() => {
+        gameState.isProcessingAnswer = false;
+        nextQuestion();
+    }, 1500);
+}
+
+/**
+ * 条文番号のキーダウンイベントを処理
+ */
+function handleArticleKeyDown(event) {
+    if (gameState.isProcessingAnswer) {
+        event.preventDefault();
+        return;
+    }
+    
+    // バックスペース、削除は無効
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+    }
+}
+
+/**
+ * 項番号のキーダウンイベントを処理
+ */
+function handleParagraphKeyDown(event) {
+    if (gameState.isProcessingAnswer) {
+        event.preventDefault();
+        return;
+    }
+    
+    // バックスペース、削除は無効
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+    }
 }
 
 /**
@@ -484,6 +768,12 @@ function setupSpeedQuizEventListeners() {
     const backBtn = document.getElementById('back-to-menu');
     if (backBtn) {
         backBtn.addEventListener('click', backToMenu);
+    }
+    
+    // 正答率データダウンロードボタン
+    const downloadBtn = document.getElementById('download-answer-rates');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', downloadAnswerRates);
     }    // 一文字ずつの入力判定
     const articleInput = document.getElementById('article-number-input');
     const paragraphInput = document.getElementById('paragraph-number-input');
@@ -497,6 +787,52 @@ function setupSpeedQuizEventListeners() {
         paragraphInput.addEventListener('input', handleParagraphInput);
         paragraphInput.addEventListener('keydown', handleParagraphKeyDown);
     }
+    
+    // グローバルで数字キー入力を監視し、入力欄が未フォーカスでも自動でフォーカス＆入力
+    window.addEventListener('keydown', function(e) {
+        // 数字キー・テンキー・全角数字・「の」・カタカナノのみ許可
+        const isNumber = (e.key >= '0' && e.key <= '9') || /[０-９]/.test(e.key);
+        const isNo = e.key === 'の' || e.key === 'ﾉ' || e.key === 'ノ';
+        if (isNumber || isNo) {
+            const articleInput = document.getElementById('article-number-input');
+            const paragraphInput = document.getElementById('paragraph-number-input');
+            
+            // 項入力中なら項入力欄に送る
+            if (isNumber && gameState && gameState.currentAnswerStage === 'paragraph' && paragraphInput) {
+                if (document.activeElement !== paragraphInput) {
+                    paragraphInput.focus();
+                    // 数字のみ追加
+                    let val = paragraphInput.value || '';
+                    if (/[０-９]/.test(e.key)) {
+                        val += String.fromCharCode(e.key.charCodeAt(0) - 0xFEE0);
+                    } else {
+                        val += e.key;
+                    }
+                    paragraphInput.value = val;
+                    paragraphInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    e.preventDefault();
+                }
+            }
+            // 条文番号入力中かつreadOnlyでない場合のみ条文番号欄に送る
+            else if (articleInput && !articleInput.readOnly && document.activeElement !== articleInput) {
+                articleInput.focus();
+                // 入力値を追加
+                let val = articleInput.value || '';
+                // 全角数字→半角
+                if (/[０-９]/.test(e.key)) {
+                    val += String.fromCharCode(e.key.charCodeAt(0) - 0xFEE0);
+                } else if (isNo) {
+                    val += 'の';
+                } else {
+                    val += e.key;
+                }
+                articleInput.value = val;
+                // inputイベントを手動発火
+                articleInput.dispatchEvent(new Event('input', { bubbles: true }));
+                e.preventDefault();
+            }
+        }
+    });
     
     console.log('✅ スピード条文ゲーム イベントリスナー設定完了');
 }
@@ -520,7 +856,11 @@ let gameState = {
 /**
  * ゲーム開始
  */
-function startSpeedQuiz() {
+// DOM要素待機用の再帰制限
+let startSpeedQuizRetryCount = 0;
+const MAX_RETRY_COUNT = 10;
+
+export async function startSpeedQuiz() {
     console.log('🎮 スピード条文ゲーム開始');
     console.log('📚 利用可能な条文:', window.speedQuizArticles);
     
@@ -530,6 +870,28 @@ function startSpeedQuiz() {
         alert('条文データの読み込みに失敗しました。ページを再読み込みしてください。');
         return;
     }
+    
+    // DOM要素の存在チェック（警告のみ、継続実行）
+    const speedQuizGameElement = document.getElementById('speed-quiz-game');
+    if (!speedQuizGameElement) {
+        console.warn('⚠️ スピードクイズのDOM要素が見つかりません。DOM生成を待機します。');
+        
+        // 再帰制限チェック
+        if (startSpeedQuizRetryCount < MAX_RETRY_COUNT) {
+            startSpeedQuizRetryCount++;
+            setTimeout(() => {
+                startSpeedQuiz();
+            }, 100);
+            return;
+        } else {
+            console.error('❌ DOM要素の待機がタイムアウトしました');
+            alert('スピードクイズの初期化に失敗しました。ページを再読み込みしてください。');
+            return;
+        }
+    }
+    
+    // 成功時は再帰カウントをリセット
+    startSpeedQuizRetryCount = 0;
       // ゲーム状態を初期化
     gameState = {
         articles: [...window.speedQuizArticles],
@@ -550,12 +912,16 @@ function startSpeedQuiz() {
     gameState.articles = shuffleArray(gameState.articles);
     
     // UIを切り替え（ルール部分も非表示にする）
-    document.getElementById('speed-quiz-rules').classList.add('hidden');
-    document.getElementById('speed-quiz-menu').classList.add('hidden');
-    document.getElementById('speed-quiz-game').classList.remove('hidden');
+    const rulesElement = document.getElementById('speed-quiz-rules');
+    const menuElement = document.getElementById('speed-quiz-menu');
+    const gameElement = document.getElementById('speed-quiz-game');
+    
+    if (rulesElement) rulesElement.classList.add('hidden');
+    if (menuElement) menuElement.classList.add('hidden');
+    if (gameElement) gameElement.classList.remove('hidden');
     
     // 最初の問題を表示
-    displayCurrentQuestion();
+    await displayCurrentQuestion();
 }
 
 /**
@@ -573,9 +939,9 @@ function shuffleArray(array) {
 /**
  * 現在の問題を表示
  */
-function displayCurrentQuestion() {
+async function displayCurrentQuestion() {
     if (gameState.currentIndex >= gameState.articles.length) {
-        showResult();
+        await showResult();
         return;
     }
     
@@ -583,20 +949,45 @@ function displayCurrentQuestion() {
     console.log('📖 現在の条文:', currentArticle);
     
     // UI更新
-    document.getElementById('question-number').textContent = gameState.currentIndex + 1;
-    document.getElementById('current-score').textContent = gameState.score;
+    const questionNumberElement = document.getElementById('question-number');
+    const currentScoreElement = document.getElementById('current-score');
+    
+    if (questionNumberElement) questionNumberElement.textContent = gameState.currentIndex + 1;
+    if (currentScoreElement) currentScoreElement.textContent = gameState.score;
     
     // 条文内容を表示（徐々に拡大）
     const articleDisplay = document.getElementById('article-text');
     
-    // 条文の内容を取得（複数のプロパティ名をチェック）
-    let content = currentArticle.content || currentArticle.text || currentArticle.displayText || '条文内容が見つかりません';    // 条文内容から答えが分かる部分を隠す
-    content = hideAnswersInContentForQuiz(content, currentArticle);
+    if (!articleDisplay) {
+        console.error('❌ 条文表示要素が見つかりません');
+        return;
+    }
     
-    console.log('📝 表示する内容:', content);
-    // HTMLとして表示し、改行を保持
-    articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed">${content}</div>`;
-    articleDisplay.className = 'text-base'; // 固定サイズで表示    // 入力フィールドをリセット
+    // 条文の内容をオンデマンドで取得
+    let content = '条文内容を読み込み中...';
+    console.log('🔄 条文本文をオンデマンドで取得開始:', currentArticle.displayText);
+    
+    // 読み込み中表示
+    articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black">${content}</div>`;
+    articleDisplay.className = 'text-base text-black';
+    
+    // 非同期で条文本文を取得
+    try {
+        const fetchedContent = await fetchArticleContentOnDemand(currentArticle);
+        content = fetchedContent || currentArticle.displayText || '条文内容が見つかりません';
+        
+        // 条文内容から答えが分かる部分を隠す
+        content = hideAnswersInContentForQuiz(content, currentArticle);
+        
+        console.log('📝 表示する内容:', content);
+        // HTMLとして表示し、改行を保持
+        articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black">${content}</div>`;
+        
+    } catch (error) {
+        console.error('❌ 条文本文取得エラー:', error);
+        content = currentArticle.displayText || '条文内容の取得に失敗しました';
+        articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black">${content}</div>`;
+    }    // 入力フィールドをリセット
     const articleInput = document.getElementById('article-number-input');
     const paragraphInput = document.getElementById('paragraph-number-input');
     const articleOverlay = document.getElementById('article-overlay');
@@ -606,12 +997,19 @@ function displayCurrentQuestion() {
     // 条文番号入力をリセット
     if (articleInput) {
         articleInput.value = '';
-        articleInput.focus();
+        articleInput.readOnly = false; // readonly状態を解除
+        // 少し遅延してフォーカスを設定
+        setTimeout(() => {
+            articleInput.focus();
+        }, 50);
     }
     if (articleOverlay) articleOverlay.innerHTML = '';
     
     // 項番号入力をリセット・非表示
-    if (paragraphInput) paragraphInput.value = '';
+    if (paragraphInput) {
+        paragraphInput.value = '';
+        paragraphInput.readOnly = false; // readonly状態を解除
+    }
     if (paragraphOverlay) paragraphOverlay.innerHTML = '';
     if (paragraphSection) paragraphSection.style.display = 'none';
     
@@ -620,11 +1018,25 @@ function displayCurrentQuestion() {
     
     // 入力段階を初期化
     gameState.currentAnswerStage = 'article';
-    gameState.isWaitingForParagraph = false;    // 正解の文字列を更新（内部処理用）
-    let correctAnswer = currentArticle.articleNumber.toString();
-    if (currentArticle.paragraph) {
-        correctAnswer += currentArticle.paragraph.toString();
+    gameState.isWaitingForParagraph = false;
+    
+    // 入力フィールドの状態を確実にリセット
+    if (articleInput) {
+        articleInput.disabled = false;
+        articleInput.style.backgroundColor = '';
+        articleInput.style.cursor = 'text';
     }
+    if (paragraphInput) {
+        paragraphInput.disabled = false;
+        paragraphInput.style.backgroundColor = '';
+        paragraphInput.style.cursor = 'text';
+    }
+    
+    // 正解の条文番号のみを正規化して保存（項番号は含めない）
+    const correctArticleNumber = currentArticle.articleNumber.toString();
+    gameState.correctArticleNumberNormalized = correctArticleNumber
+        .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248))
+        .replace(/[のノ]/g, 'の');
     
     // フィードバックをクリア
     const feedback = document.getElementById('feedback');
@@ -640,19 +1052,23 @@ function displayCurrentQuestion() {
  * タイマー開始
  */
 function startTimer() {
-    gameState.timeLeft = 10; // 制限時間を10秒に変更
-    document.getElementById('time-remaining').textContent = gameState.timeLeft;
+    const timeLimit = gameState.timeLimit || 10;
+    gameState.timeLeft = timeLimit;
     
+    const timeRemainingElement = document.getElementById('time-remaining');
     const progressBar = document.getElementById('time-progress');
-    progressBar.style.width = '100%';
+    
+    if (timeRemainingElement) timeRemainingElement.textContent = gameState.timeLeft;
+    if (progressBar) progressBar.style.width = '100%';
     
     gameState.timer = setInterval(() => {
         gameState.timeLeft--;
-        document.getElementById('time-remaining').textContent = gameState.timeLeft;
         
-        const percentage = (gameState.timeLeft / 10) * 100; // 10秒ベースに変更
-        progressBar.style.width = percentage + '%';
-          // 時間切れ処理
+        if (timeRemainingElement) timeRemainingElement.textContent = gameState.timeLeft;
+        
+        updateTimerBar(); // バー更新関数を使用
+        
+        // 時間切れ処理
         if (gameState.timeLeft <= 0) {
             if (gameState.isProcessingAnswer) return; // 既に処理中なら無視
             
@@ -667,9 +1083,17 @@ function startTimer() {
                     correctAnswer: `${currentArticle.articleNumber}${currentArticle.paragraph ? `第${currentArticle.paragraph}項` : ''}`,
                     reason: '時間切れ'
                 });
+                
+                // 正答率記録（時間切れ＝不正解）
+                recordArticleAnswer(
+                    currentArticle.lawName || 'その他',
+                    currentArticle.articleNumber,
+                    currentArticle.paragraph || 1,
+                    false  // 不正解
+                );
             }
             
-            showIncorrectFeedback('時間切れ！');
+            showIncorrectFeedback('時間切れ！', currentArticle.articleNumber, currentArticle.paragraph);
             setTimeout(() => {
                 gameState.isProcessingAnswer = false;
                 nextQuestion();
@@ -685,6 +1109,27 @@ function stopTimer() {
     if (gameState.timer) {
         clearInterval(gameState.timer);
         gameState.timer = null;
+    }
+}
+
+/**
+ * タイマーバーの更新
+ */
+function updateTimerBar() {
+    const progressBar = document.getElementById('time-progress');
+    if (!progressBar) return;
+    
+    const timeLimit = gameState.timeLimit || 10;
+    const percentage = (gameState.timeLeft / timeLimit) * 100;
+    progressBar.style.width = percentage + '%';
+    
+    // 時間が減った場合の警告色変更
+    if (gameState.timeLeft <= 3) {
+        progressBar.style.backgroundColor = '#ef4444'; // 赤色
+    } else if (gameState.timeLeft <= 5) {
+        progressBar.style.backgroundColor = '#f59e0b'; // 黄色
+    } else {
+        progressBar.style.backgroundColor = '#10b981'; // 緑色
     }
 }
 
@@ -729,29 +1174,88 @@ function checkAnswer(userInput) {
  */
 function showCorrectFeedback() {
     const feedback = document.getElementById('feedback');
-    feedback.innerHTML = '<div class="text-green-600 font-bold text-xl">✅ 正解！</div>';
-    feedback.className = 'mb-4 h-8 text-green-600';
+    if (feedback) {
+        feedback.innerHTML = '<div class="text-green-600 font-bold text-xl">✅ 正解！</div>';
+        feedback.className = 'mb-4 h-8 text-green-600';
+    } else {
+        console.warn('⚠️ feedback要素が見つかりません');
+    }
 }
 
 /**
- * 不正解フィードバック表示
+ * 正解時の○付けアニメーションを表示
  */
-function showIncorrectFeedback(message = '❌ 不正解') {
+function showCorrectCircleAnimation() {
+    // 既存のアニメーションがあれば削除
+    const existingAnimation = document.querySelector('.correct-circle-animation');
+    if (existingAnimation) {
+        existingAnimation.remove();
+    }
+    
+    // 大きな緑の○を作成
+    const circle = document.createElement('div');
+    circle.className = 'correct-circle-animation';
+    circle.innerHTML = `
+        <div style="
+            width: 200px;
+            height: 200px;
+            border: 12px solid #10b981;
+            border-radius: 50%;
+            background-color: rgba(16, 185, 129, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        ">
+            <div style="
+                font-size: 80px;
+                color: #10b981;
+                font-weight: bold;
+            ">✓</div>
+        </div>
+    `;
+    
+    // ページに追加
+    document.body.appendChild(circle);
+    
+    // アニメーション終了後に削除
+    setTimeout(() => {
+        if (circle.parentElement) {
+            circle.parentElement.removeChild(circle);
+        }
+    }, 1200);
+}
+
+/**
+ * 不正解フィードバック表示＋正解表示
+ * @param {string} message - フィードバックメッセージ
+ * @param {string|number} correctArticle - 正しい条文番号
+ * @param {string|number} correctParagraph - 正しい項（省略可）
+ */
+function showIncorrectFeedback(message = '❌ 不正解', correctArticle = '', correctParagraph = '') {
     const feedback = document.getElementById('feedback');
-    feedback.innerHTML = `<div class="text-red-600 font-bold text-xl">${message}</div>`;
-    feedback.className = 'mb-4 h-8 text-red-600';
+    let correctText = '';
+    if (correctArticle) {
+        correctText = `<div class='text-red-500 text-base mt-1'>正解: <span class='font-mono'>${correctArticle}${correctParagraph ? '－' + correctParagraph + '項' : ''}</span></div>`;
+    }
+    if (feedback) {
+        feedback.innerHTML = `<div class="text-red-600 font-bold text-xl">${message}</div>${correctText}`;
+        feedback.className = 'mb-4 h-8 text-red-600';
+    } else {
+        console.warn('⚠️ feedback要素が見つかりません');
+    }
 }
 
 /**
  * 次の問題へ
  */
-function nextQuestion() {
+async function nextQuestion() {
     gameState.currentIndex++;
     
     if (gameState.currentIndex >= gameState.articles.length) {
-        showResult();
+        await showResult();
     } else {
-        displayCurrentQuestion();
+        await displayCurrentQuestion();
     }
 }
 
@@ -772,26 +1276,42 @@ function skipQuestion() {
             correctAnswer: `${currentArticle.articleNumber}${currentArticle.paragraph ? `第${currentArticle.paragraph}項` : ''}`,
             reason: 'スキップ'
         });
+        
+        // 正答率記録（スキップ＝不正解）
+        recordArticleAnswer(
+            currentArticle.lawName || 'その他',
+            currentArticle.articleNumber,
+            currentArticle.paragraph || 1,
+            false  // 不正解
+        );
     }
     
-    showIncorrectFeedback('スキップしました');
-    setTimeout(() => {
+    showIncorrectFeedback('スキップしました', currentArticle.articleNumber, currentArticle.paragraph);
+    setTimeout(async () => {
         gameState.isProcessingAnswer = false;
-        nextQuestion();
+        await nextQuestion();
     }, 1000);
 }
 
 /**
  * ゲーム終了
  */
-function quitGame() {
+async function quitGame() {
     stopTimer();
+    
+    // 元の条文データを復元（特定法律モードの場合）
+    if (window.originalSpeedQuizArticles) {
+        window.speedQuizArticles = window.originalSpeedQuizArticles;
+        delete window.originalSpeedQuizArticles;
+        console.log('🔄 元の条文データを復元しました');
+    }
+    
     if (confirm('ゲームを終了しますか？')) {
         document.getElementById('speed-quiz-game').classList.add('hidden');
         document.getElementById('speed-quiz-rules').classList.remove('hidden');
         document.getElementById('speed-quiz-menu').classList.remove('hidden');
     } else {
-        displayCurrentQuestion();
+        await displayCurrentQuestion();
     }
 }
 
@@ -799,6 +1319,13 @@ function quitGame() {
  * メニューに戻る
  */
 function backToMenu() {
+    // 元の条文データを復元（特定法律モードの場合）
+    if (window.originalSpeedQuizArticles) {
+        window.speedQuizArticles = window.originalSpeedQuizArticles;
+        delete window.originalSpeedQuizArticles;
+        console.log('🔄 元の条文データを復元しました');
+    }
+    
     document.getElementById('speed-quiz-result').classList.add('hidden');
     document.getElementById('speed-quiz-game').classList.add('hidden');
     document.getElementById('speed-quiz-rules').classList.remove('hidden');
@@ -808,11 +1335,14 @@ function backToMenu() {
 /**
  * 結果表示
  */
-function showResult() {
+async function showResult() {
     stopTimer();
     
-    document.getElementById('speed-quiz-game').classList.add('hidden');
-    document.getElementById('speed-quiz-result').classList.remove('hidden');
+    const gameElement = document.getElementById('speed-quiz-game');
+    const resultElement = document.getElementById('speed-quiz-result');
+    
+    if (gameElement) gameElement.classList.add('hidden');
+    if (resultElement) resultElement.classList.remove('hidden');
     
     // 結果を計算
     const totalQuestions = gameState.articles.length;
@@ -821,8 +1351,11 @@ function showResult() {
     const accuracy = Math.round((correctCount / totalQuestions) * 100);
     
     // 結果を表示
-    document.getElementById('final-score').textContent = score;
-    document.getElementById('correct-count').textContent = correctCount;
+    const finalScoreElement = document.getElementById('final-score');
+    const correctCountElement = document.getElementById('correct-count');
+    
+    if (finalScoreElement) finalScoreElement.textContent = score;
+    if (correctCountElement) correctCountElement.textContent = correctCount;
     
     // ランクを決定
     let rank, comment;
@@ -843,17 +1376,20 @@ function showResult() {
         comment = '頑張りましょう！復習が必要かも？';
     }
     
-    document.getElementById('score-rank').textContent = rank;
-    document.getElementById('score-comment').textContent = comment;
+    const rankElement = document.getElementById('score-rank');
+    const commentElement = document.getElementById('score-comment');
+    
+    if (rankElement) rankElement.textContent = rank;
+    if (commentElement) commentElement.textContent = comment;
     
     // 間違えた問題がある場合は表示
-    displayWrongAnswers();
+    await displayWrongAnswers();
 }
 
 /**
  * 間違えた問題を表示
  */
-function displayWrongAnswers() {
+async function displayWrongAnswers() {
     if (!gameState.wrongAnswers || gameState.wrongAnswers.length === 0) {
         return;
     }
@@ -861,29 +1397,39 @@ function displayWrongAnswers() {
     const wrongSection = document.getElementById('wrong-answers-section');
     const wrongList = document.getElementById('wrong-answers-list');
     
-    wrongSection.classList.remove('hidden');
-    wrongList.innerHTML = '';
+    if (wrongSection) wrongSection.classList.remove('hidden');
+    if (wrongList) wrongList.innerHTML = '';
     
-    gameState.wrongAnswers.forEach((wrong, index) => {
+    if (!wrongList) return; // wrongListがない場合は何もしない
+    
+    gameState.wrongAnswers.forEach(async (wrong, index) => {
         const article = wrong.article;
         const correctAnswer = wrong.correctAnswer;
         const userAnswer = wrong.userAnswer || '無回答';
         const reason = wrong.reason;
         
-        // 条文内容から答えを隠した内容を取得
-        const content = article.content || article.text || article.displayText || '条文内容が見つかりません';
+        // 条文内容をオンデマンドで取得
+        let content = '条文内容を読み込み中...';
+        try {
+            const fetchedContent = await fetchArticleContentOnDemand(article);
+            content = fetchedContent || article.displayText || '条文内容が見つかりません';
+        } catch (error) {
+            console.error('❌ 条文本文取得エラー（間違い表示）:', error);
+            content = article.displayText || '条文内容の取得に失敗しました';
+        }
+        
         const cleanedContent = hideAnswersInContentForQuiz(content, article);
         
         const wrongItem = document.createElement('div');
-        wrongItem.className = 'bg-white p-4 rounded border-l-4 border-red-500';
+        wrongItem.className = 'bg-white p-4 rounded border-l-4 border-red-500 text-black';
         wrongItem.innerHTML = `
             <div class="flex justify-between items-start mb-2">
                 <span class="font-bold text-red-600">【${correctAnswer}】</span>
                 <span class="text-sm text-gray-500">${reason}</span>
             </div>
             <div class="text-sm text-gray-600 mb-2">
-                あなたの回答: <span class="font-mono bg-gray-100 px-2 py-1 rounded">${userAnswer}</span>
-            </div>            <div class="text-sm bg-gray-50 p-3 rounded whitespace-pre-line leading-relaxed">
+                あなたの回答: <span class="font-mono bg-gray-100 px-2 py-1 rounded text-black">${userAnswer}</span>
+            </div>            <div class="text-sm bg-gray-50 p-3 rounded whitespace-pre-line leading-relaxed text-black">
                 ${cleanedContent}
             </div>
         `;
@@ -893,61 +1439,35 @@ function displayWrongAnswers() {
 }
 
 /**
- * 回答送信
+ * サーバーに統計データを送信
  */
-// 旧システム（削除予定）
-/*
-function submitAnswer() {
-    const input = document.getElementById('speed-quiz-input');
-    const userInput = input.value.trim();
-    
-    if (!userInput) {
-        return;
-    }
-    
-    const result = checkAnswer(userInput);
-    const currentArticle = gameState.articles[gameState.currentIndex];
-    
-    if (result === 'continue') {
-        // 項の入力へ続く
-        showCorrectFeedback();
-        setTimeout(() => {
-            document.getElementById('feedback').innerHTML = '';
-        }, 1000);
-        return;
-    }
-    
-    stopTimer();
-    
-    if (result === 'correct') {
-        // 正解
-        gameState.correctAnswers++;
-        const timeBonus = Math.max(0, gameState.timeLeft * 10); // 残り時間に応じたボーナス
-        const baseScore = 100;
-        gameState.score += baseScore + timeBonus;
+async function sendStatsToServer(lawName, articleNumber, paragraph, isCorrect) {
+    try {
+        const response = await fetch('/api/article-stats/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                lawName,
+                articleNumber,
+                paragraph,
+                isCorrect
+            })
+        });
         
-        showCorrectFeedback();
-    } else {
-        // 不正解
-        gameState.score = Math.max(0, gameState.score - 50); // 間違えると減点
-        
-        // 間違えた問題を記録
-        if (currentArticle && currentArticle.articleNumber !== undefined) {
-            gameState.wrongAnswers.push({
-                article: currentArticle,
-                userAnswer: userInput,
-                correctAnswer: `${currentArticle.articleNumber}${currentArticle.paragraph ? `第${currentArticle.paragraph}項` : ''}`,
-                reason: '回答間違い'
-            });
-            
-            showIncorrectFeedback(`❌ 不正解！正解は${currentArticle.articleNumber}${currentArticle.paragraph ? `第${currentArticle.paragraph}項` : ''}でした`);        } else {
-            showIncorrectFeedback(`❌ 不正解！`);
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ サーバー統計更新成功:', result.message);
+        } else {
+            const error = await response.json();
+            console.warn('⚠️ サーバー統計更新失敗:', error.error);
         }
+    } catch (error) {
+        console.warn('⚠️ サーバー統計送信エラー:', error.message);
+        // エラーでもローカル統計は保持されるので、続行
     }
-    
-    setTimeout(nextQuestion, 2000);
 }
-*/
 
 /**
  * スピードクイズ用：既存のAPIを使用して条文内容を取得
@@ -1012,12 +1532,27 @@ async function fetchArticleContentForQuiz(lawName, articleNumber, paragraph, ite
         }
         
         // 既存の条文表示と同じデコレーション処理を適用
-        return formatDoubleParenthesesForQuiz(articleContent);
+        const formattedContent = formatDoubleParenthesesForQuiz(articleContent);
+        console.log(`🎯 条文内容取得成功: ${inputText}`);
+        return formattedContent;
         
     } catch (error) {
         console.warn(`条文取得エラー (${lawName}${articleNumber}条): ${error.message}`);
-        // フォールバックとしてサンプル内容を返す
-        return generateArticleContentForQuiz(lawName, articleNumber, paragraph, item);
+        
+        // より詳細なエラーログ
+        console.log(`🔍 エラー詳細:`, {
+            lawName: lawName,
+            actualLawName: actualLawName,
+            articleNumber: articleNumber,
+            articleText: articleText,
+            inputText: inputText,
+            errorMessage: error.message
+        });
+        
+        // フォールバックとしてサンプル内容を返す（エラーを上位に投げない）
+        const fallbackContent = generateArticleContentForQuiz(lawName, articleNumber, paragraph, item);
+        console.log(`🔧 フォールバック内容を使用: ${fallbackContent.substring(0, 100)}...`);
+        return fallbackContent;
     }
 }
 
@@ -1059,9 +1594,23 @@ function generateArticleContentForQuiz(lawName, articleNumber, paragraph, item) 
             199: '人を殺した者は、死刑又は無期若しくは五年以上の懲役に処する。',
             204: '人の身体を傷害した者は、十五年以下の懲役又は五十万円以下の罰金に処する。',
             235: '他人の財物を窃取した者は、窃盗の罪とし、十年以下の懲役又は五十万円以下の罰金に処する。'
+        },
+        '会社法': {
+            1: '会社は、法人とする。',
+            2: '会社は、次の各号に掲げる会社の種類に従い、それぞれ当該各号に定める社員の責任の限度が定款に定められた額に限定される。１ 株式会社 社員（株主）の責任は、その有する株式の引受価額を限度とする。２ 合同会社 社員の責任は、その出資の価額を限度とする。',
+            3: '会社がその事業としてする行為及びその事業のためにする行為は、商行為とする。',
+            5: '商号の登記の効力については、会社法の他の規定において別段の定めがある場合を除き、商法（明治三十二年法律第四十八号）第十九条から第二十一条までの規定を準用する。',
+            295: '株主総会は、この法律に規定する事項及び株式会社の組織、運営、管理その他株式会社に関する一切の事項について決議をすることができる。２ 前項の規定にかかわらず、取締役会設置会社においては、株主総会は、この法律に規定する事項及び定款で定めた事項に限り、決議をすることができる。',
+            327: '株式会社は、取締役を置かなければならない。２ 監査役会設置会社においては、監査役は、三人以上で、そのうち半数以上は、社外監査役でなければならない。３ 公開会社でない株式会社は、第三百二十六条第二項の規定の適用がある場合を除き、会計参与及び監査役又は委員会を置くことを要しない。',
+            330: '株式会社と役員及び会計監査人との関係は、委任に関する規定に従う。',
+            331: '次に掲げる者は、取締役となることができない。１ 法人 ２ 成年被後見人若しくは被保佐人又は外国の法令上これらと同様に取り扱われている者 ３ この法律若しくは一般社団法人及び一般財団法人に関する法律（平成十八年法律第四十八号）の規定に違反し、又は金融商品取引法第百九十七条、第百九十七条の二第一号から第十号まで若しくは第十三号、第百九十八条第八号、第百九十九条、第二百条第一号から第十二号まで、第二百三条第三項若しくは第二百五条第一号から第六号まで、第十九号若しくは第二十号の罪、民事再生法第二百五十五条、第二百五十六条、第二百五十八条から第二百六十条まで若しくは第二百六十二条の罪、外国倒産処理手続の承認援助に関する法律第六十五条、第六十六条、第六十八条若しくは第六十九条の罪、会社更生法第二百六十六条、第二百六十七条、第二百六十九条から第二百七十一条まで若しくは第二百七十三条の罪若しくは破産法第二百六十五条、第二百六十六条、第二百六十八条から第二百七十二条まで若しくは第二百七十四条の罪を犯し、刑に処せられ、その執行を終わり、又はその執行を受けることがなくなった日から二年を経過しない者'
         }
     };
-      // 法律名から適切なセクションを取得
+    
+    // 基本的な条文フォーマットを正しいエンコーディングで修正
+    const basicContent = `${lawName}${articleNumber}条${paragraph ? `第${paragraph}項` : ''}${item ? `第${item}号` : ''}に関する規定です。\n\n※ この条文の正確な内容については、実際の法令をご確認ください。`;
+    
+    // 法律名から適切なセクションを取得
     let lawSection = null;
     if (lawName.includes('民法')) {
         lawSection = sampleContents['民法'];
@@ -1074,6 +1623,10 @@ function generateArticleContentForQuiz(lawName, articleNumber, paragraph, item) 
     else if (lawName.includes('刑法')) {
         lawSection = sampleContents['刑法'];
         console.log(`📚 刑法セクション選択: 条文番号="${articleNumber}"`);
+    }
+    else if (lawName.includes('会社法')) {
+        lawSection = sampleContents['会社法'];
+        console.log(`📚 会社法セクション選択: 条文番号="${articleNumber}"`);
     }
     else {
         console.log(`❓ 未対応の法令名: "${lawName}"`);
@@ -1142,7 +1695,10 @@ function generateArticleContentForQuiz(lawName, articleNumber, paragraph, item) 
         availableKeys: lawSection ? Object.keys(lawSection) : []
     });
     
-    return `📋 ${lawName}${articleNumber}条${paragraph ? `第${paragraph}項` : ''}${item ? `第${item}号` : ''}の条文内容が見つかりません。\n\n🔍 詳細情報:\n・法令名: ${lawName}\n・条文番号: ${articleNumber}\n・項: ${paragraph || 'なし'}\n・号: ${item || 'なし'}\n\n💡 この条文は実在するものですが、現在のサンプルデータには含まれていません。実際の条文内容を確認するには、条文表示ボタンをお使いください。`;
+    // 空の内容ではなく、基本的な条文フォーマットを返す
+    const fallbackContent = `${lawName}${articleNumber}条${paragraph ? `第${paragraph}項` : ''}${item ? `第${item}号` : ''}に関する規定です。\n\n※ この条文の正確な内容については、実際の法令をご確認ください。`;
+    
+    return fallbackContent;
 }
 
 /**
@@ -1156,204 +1712,590 @@ function formatDoubleParenthesesForQuiz(text) {
 }
 
 /**
- * レガシー関数（後方互換性のために残す）
+ * 条文ごとの正答率を記録・保存する機能
  */
-export function initializeSpeedQuiz(caseData) {
-    console.warn('⚠️ この関数は非推奨です。initializeSpeedQuizGame を使用してください。');
-}
 
-export function generateSpeedQuizHTML(caseData) {
-    console.warn('⚠️ この関数は非推奨です。initializeSpeedQuizGame を使用してください。');
-    return '<div>非推奨の関数が呼び出されました。</div>';
-}
-
-// スタイルを追加（赤色フェードアウトアニメーション用）
-const style = document.createElement('style');
-style.textContent = `
-    .incorrect-char-animation {
-        animation: incorrectCharFade 0.3s ease-out forwards;
-    }
-    
-    @keyframes incorrectCharFade {
-        0% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-            color: #ef4444;
-            background-color: #fecaca;
-        }
-        100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(1.2);
-            color: #ef4444;
-            background-color: transparent;
-        }
-    }
-`;
-document.head.appendChild(style);
+// 正答率データの構造：
+// {
+//   "民法": {
+//     "415": { "1": { answered: 5, correct: 3 }, "2": { answered: 2, correct: 1 } },
+//     "413": { "1": { answered: 3, correct: 2 } },
+//     "413の2": { "1": { answered: 1, correct: 1 } }
+//   },
+//   "憲法": {
+//     "9": { "1": { answered: 2, correct: 2 } }
+//   }
+// }
 
 /**
- * 条文番号の入力を処理
+ * 条文の正答率データを記録（自動保存対応）
  */
-function handleArticleInput(event) {
-    if (gameState.isProcessingAnswer) return;
-    
-    const input = event.target;
-    let inputValue = input.value;
-    
-    // 全角数字を半角に変換
-    inputValue = inputValue.replace(/[０-９]/g, function(s) {
-        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-    });
-    
-    // 数字と「の」のみを許可
-    inputValue = inputValue.replace(/[^0-9の]/g, '');
-    
-    // 入力フィールドを即座に更新（変換された値を反映）
-    input.value = inputValue;
-    
-    const currentArticle = gameState.articles[gameState.currentIndex];
-    if (!currentArticle) return;
-    
-    const correctArticleNumber = currentArticle.articleNumber.toString();
-    console.log('🔍 条文番号チェック:', { inputValue, correctArticleNumber });
-    
-    // 正解のパターンを段階的にチェック
-    let validInput = '';
-    let hasIncorrectInput = false;
-    
-    // 「413の2」のような場合の段階的処理
-    if (correctArticleNumber.includes('の')) {
-        const parts = correctArticleNumber.split('の');
-        const basePart = parts[0]; // 「413」
-        const suffixPart = parts[1]; // 「2」
+function recordArticleAnswer(lawName, articleNumber, paragraph, isCorrect) {
+    try {
+        // ローカルストレージから既存データを取得
+        const storageKey = 'speedQuizAnswerRates';
+        let answerRates = {};
         
-        // 段階1: 基本部分（「413」）の入力チェック
-        if (inputValue.length <= basePart.length) {
-            // 基本部分の入力中
-            for (let i = 0; i < inputValue.length; i++) {
-                if (i < basePart.length && inputValue[i] === basePart[i]) {
-                    validInput += inputValue[i];
-                } else {
-                    hasIncorrectInput = true;
-                    break;
-                }
-            }
-        } else if (inputValue.length === basePart.length + 1 && inputValue[basePart.length] === 'の') {
-            // 段階2: 「の」の入力
-            validInput = basePart + 'の';
-        } else if (inputValue.length > basePart.length + 1 && inputValue.substring(0, basePart.length + 1) === basePart + 'の') {
-            // 段階3: 「の」の後の数字部分の入力
-            const suffixInput = inputValue.substring(basePart.length + 1);
-            validInput = basePart + 'の';
-            
-            for (let i = 0; i < suffixInput.length; i++) {
-                if (i < suffixPart.length && suffixInput[i] === suffixPart[i]) {
-                    validInput += suffixInput[i];
-                } else {
-                    hasIncorrectInput = true;
-                    break;
-                }
-            }
-        } else {
-            hasIncorrectInput = true;
+        const existingData = localStorage.getItem(storageKey);
+               if (existingData) {
+            answerRates = JSON.parse(existingData);
         }
-    } else {
-        // 通常の条文番号（「の」が含まれない場合）
-        for (let i = 0; i < inputValue.length; i++) {
-            if (i < correctArticleNumber.length && inputValue[i] === correctArticleNumber[i]) {
-                validInput += inputValue[i];
-            } else {
-                hasIncorrectInput = true;
-                break;
-            }
+        
+        // 法令名の正規化
+        const normalizedLawName = normalizeLawName(lawName);
+        
+        // 条文番号の正規化
+        const normalizedArticleNumber = articleNumber.toString();
+        
+        // 項番号（デフォルトは1）
+        const paragraphKey = paragraph ? paragraph.toString() : '1';
+        
+        // データ構造を初期化
+        if (!answerRates[normalizedLawName]) {
+            answerRates[normalizedLawName] = {};
         }
-    }
-    
-    // 間違った入力があった場合、赤色フェードアウトアニメーション
-    if (hasIncorrectInput) {
-        showIncorrectInputAnimation(input, inputValue.slice(-1));
-        input.value = validInput;
-        // 表示を更新（正解部分を維持）
-        updateArticleDisplay(validInput, correctArticleNumber);
-        return;
-    }
-    
-    // 入力フィールドを更新
-    input.value = validInput;
-    
-    // 表示を更新
-    updateArticleDisplay(validInput, correctArticleNumber);
-    
-    // 条文番号が完成した場合
-    if (validInput === correctArticleNumber) {        // 項がある場合は項の入力に移行
-        if (currentArticle.paragraph) {
-            showParagraphSection();
-            setTimeout(() => {
-                document.getElementById('paragraph-number-input').focus();
-            }, 100);
-        } else {
-            // 項がない場合は完了
-            completeAnswer();
+        
+        if (!answerRates[normalizedLawName][normalizedArticleNumber]) {
+            answerRates[normalizedLawName][normalizedArticleNumber] = {};
         }
+        
+        if (!answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey]) {
+            answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey] = {
+                answered: 0,
+                correct: 0,
+                lastAnswered: Date.now()
+            };
+        }
+        
+        // 記録を更新
+        const record = answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey];
+        record.answered++;
+        record.lastAnswered = Date.now();
+        if (isCorrect) {
+            record.correct++;
+        }
+        
+        // ローカルストレージに保存
+        localStorage.setItem(storageKey, JSON.stringify(answerRates));
+        
+        // サーバーにも統計を送信
+        sendStatsToServer(normalizedLawName, normalizedArticleNumber, paragraphKey, isCorrect);
+        
+        // 自動バックアップ（5回答ごと）
+        if (getTotalAnsweredCount() % 5 === 0) {
+            autoBackupAnswerRates();
+        }
+        
+        console.log(`📊 正答率記録: ${normalizedLawName}${normalizedArticleNumber}条${paragraphKey}項 - ${isCorrect ? '正解' : '不正解'} (${record.correct}/${record.answered})`);
+        
+    } catch (error) {
+        console.error('❌ 正答率記録エラー:', error);
     }
 }
 
 /**
- * 項番号の入力を処理
+ * 総回答数を取得
  */
-function handleParagraphInput(event) {
-    if (gameState.isProcessingAnswer) return;
+function getTotalAnsweredCount() {
+    const answerRates = getAnswerRates();
+    let total = 0;
     
-    const input = event.target;
-    let inputValue = input.value;
-    
-    // 全角数字を半角に変換
-    inputValue = inputValue.replace(/[０-９]/g, function(s) {
-        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-    });
-    
-    // 数字のみを許可
-    inputValue = inputValue.replace(/[^0-9]/g, '');
-    
-    // 入力フィールドを即座に更新（変換された値を反映）
-    input.value = inputValue;
-    
-    const currentArticle = gameState.articles[gameState.currentIndex];
-    if (!currentArticle || !currentArticle.paragraph) return;
-    
-    const correctParagraphNumber = currentArticle.paragraph.toString();
-    
-    // 入力が正解の一部かチェック
-    let validInput = '';
-    let hasIncorrectInput = false;
-    
-    for (let i = 0; i < inputValue.length; i++) {
-        if (i < correctParagraphNumber.length && inputValue[i] === correctParagraphNumber[i]) {
-            validInput += inputValue[i];
-        } else {
-            hasIncorrectInput = true;
-            break;
+    for (const lawName in answerRates) {
+        for (const articleNumber in answerRates[lawName]) {
+            for (const paragraph in answerRates[lawName][articleNumber]) {
+                total += answerRates[lawName][articleNumber][paragraph].answered;
+            }
         }
     }
-      // 間違った入力があった場合、赤色フェードアウトアニメーション
-    if (hasIncorrectInput) {
-        showIncorrectInputAnimation(input, inputValue.slice(-1));
-        input.value = validInput;
-        // 表示を更新（正解部分を維持）
-        updateParagraphDisplay(validInput, correctParagraphNumber);
-        return;
+    
+    return total;
+}
+
+/**
+ * 正答率データの自動バックアップ
+ */
+function autoBackupAnswerRates() {
+    try {
+        const answerRates = getAnswerRates();
+        const backupKey = `speedQuizAnswerRates_backup_${new Date().toISOString().split('T')[0]}`;
+        localStorage.setItem(backupKey, JSON.stringify(answerRates));
+        
+        console.log('📁 正答率データを自動バックアップしました');
+        
+        // 古いバックアップを削除（7日以上前）
+        cleanupOldBackups();
+        
+    } catch (error) {
+        console.error('❌ 自動バックアップエラー:', error);
+    }
+}
+
+/**
+ * 古いバックアップファイルを削除
+ */
+function cleanupOldBackups() {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const keysToDelete = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('speedQuizAnswerRates_backup_')) {
+                const dateStr = key.split('_').pop();
+                const backupDate = new Date(dateStr);
+                if (backupDate < sevenDaysAgo) {
+                    keysToDelete.push(key);
+                }
+            }
+        }
+        
+        keysToDelete.forEach(key => localStorage.removeItem(key));
+        
+        if (keysToDelete.length > 0) {
+            console.log(`🗑️ 古いバックアップファイルを${keysToDelete.length}個削除しました`);
+        }
+        
+    } catch (error) {
+        console.error('❌ バックアップクリーンアップエラー:', error);
+    }
+}
+
+/**
+ * 法令名を正規化
+ */
+function normalizeLawName(lawName) {
+    if (!lawName) return 'その他';
+    
+    // 一般的な法令名の正規化
+    const normalizations = {
+        '日本国憲法': '憲法',
+        '憲法': '憲法',
+        '民法': '民法',
+        '刑法': '刑法',
+        '商法': '商法',
+        '会社法': '会社法',
+        '民事訴訟法': '民事訴訟法',
+        '刑事訴訟法': '刑事訴訟法',
+        '行政法': '行政法'
+    };
+    
+    // 部分一致で法令名を特定
+    for (const [key, value] of Object.entries(normalizations)) {
+        if (lawName.includes(key)) {
+            return value;
+        }
     }
     
-    // 入力フィールドを更新
-    input.value = validInput;
-    
-    // 表示を更新
-    updateParagraphDisplay(validInput, correctParagraphNumber);
-    
-    // 項番号が完成した場合
-    if (validInput === correctParagraphNumber) {
-        completeAnswer();
+    // 特定できない場合は元の名前を返す
+    return lawName;
+}
+
+/**
+ * 正答率データを取得
+ */
+function getAnswerRates(lawName = null) {
+    try {
+        const storageKey = 'speedQuizAnswerRates';
+        const existingData = localStorage.getItem(storageKey);
+        
+        if (!existingData) {
+            return {};
+        }
+        
+        const answerRates = JSON.parse(existingData);
+        
+        if (lawName) {
+            const normalizedLawName = normalizeLawName(lawName);
+            return answerRates[normalizedLawName] || {};
+        }
+        
+        return answerRates;
+    } catch (error) {
+        console.error('❌ 正答率取得エラー:', error);
+        return {};
     }
+}
+
+/**
+ * 正答率データをファイルとしてダウンロード
+ */
+function downloadAnswerRates() {
+    try {
+        const answerRates = getAnswerRates();
+        
+        if (Object.keys(answerRates).length === 0) {
+            alert('記録されたデータがありません。');
+            return;
+        }
+        
+        // 読みやすい形式に整形
+        let formattedData = '# スピード条文 正答率データ\n\n';
+        formattedData += `生成日時: ${new Date().toLocaleString('ja-JP')}\n\n`;
+        
+        for (const [lawName, articles] of Object.entries(answerRates)) {
+            formattedData += `## ${lawName}\n\n`;
+            
+            for (const [articleNumber, paragraphs] of Object.entries(articles)) {
+                for (const [paragraphKey, record] of Object.entries(paragraphs)) {
+                    const accuracy = record.answered > 0 ? (record.correct / record.answered * 100).toFixed(1) : '0.0';
+                    formattedData += `${articleNumber}条${paragraphKey}項: ${record.correct}/${record.answered} (${accuracy}%)\n`;
+                }
+            }
+            formattedData += '\n';
+        }
+        
+        // JSONデータも追加
+        formattedData += '---\n\n# 生データ (JSON)\n\n';
+        formattedData += JSON.stringify(answerRates, null, 2);
+        
+        // ファイルダウンロード
+        const blob = new Blob([formattedData], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `speed_quiz_answer_rates_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        console.log('📁 正答率データをダウンロードしました');
+        
+    } catch (error) {
+        console.error('❌ ファイルダウンロードエラー:', error);
+        alert('ファイルのダウンロードに失敗しました。');
+    }
+}
+
+/**
+ * フィルタリングされたスピードクイズを開始
+ */
+export function startFilteredSpeedQuiz(settings) {
+    console.log('🎯 フィルタリングされたクイズ開始:', settings);
+    
+    try {
+        // 全ての条文データから、設定に基づいてフィルタリング
+        const allArticles = window.speedQuizArticles || [];
+        let filteredArticles = [...allArticles];
+        
+        console.log(`📊 初期条文数: ${allArticles.length}`);
+        console.log(`📊 初期filteredArticles数: ${filteredArticles.length}`);
+        
+        // 初期データの詳細を表示
+        if (allArticles.length > 0) {
+            console.log('📄 初期条文データサンプル（最初の3件）:');
+            allArticles.slice(0, 3).forEach((article, index) => {
+                console.log(`  ${index + 1}. 法令名: "${article.lawName}", 条文番号: "${article.articleNumber}", 項: ${article.paragraph}`);
+            });
+        }
+        
+        // 設定の詳細を表示
+        console.log('⚙️ 設定詳細:');
+        console.log('  selectedLaws:', settings.selectedLaws);
+        console.log('  mode:', settings.mode);
+        console.log('  filterWeak:', settings.filterWeak);
+        console.log('  filterNoParagraph:', settings.filterNoParagraph);
+        console.log('  filterRecent:', settings.filterRecent);
+        console.log('  questionCount:', settings.questionCount);
+        
+        // 法令でフィルタリング
+        if (settings.selectedLaws && settings.selectedLaws.length > 0) {
+            console.log('🔍 法令フィルタリング開始:', settings.selectedLaws);
+            
+            // 利用可能な法令名をすべて表示
+            const availableLaws = [...new Set(allArticles.map(article => {
+                const original = article.lawName || '';
+                const normalized = normalizeLawName(original);
+                return `${original} → ${normalized}`;
+            }))];
+            console.log('📋 利用可能な法令名一覧:', availableLaws);
+            
+            filteredArticles = filteredArticles.filter(article => {
+                const normalizedLawName = normalizeLawName(article.lawName || '');
+                const isIncluded = settings.selectedLaws.includes(normalizedLawName);
+                if (!isIncluded) {
+                    console.log(`❌ 除外: ${article.lawName} (正規化: ${normalizedLawName})`);
+                }
+                return isIncluded;
+            });
+            console.log(`📊 法令フィルタリング後: ${filteredArticles.length}問`);
+        }
+        
+        // 弱点問題でフィルタリング（正答率60%未満）
+        if (settings.filterWeak || settings.mode === 'weak') {
+            console.log('🔍 弱点問題フィルタリング開始');
+            const answerRates = getAnswerRates();
+            console.log('📊 正答率データ:', answerRates);
+            
+            const beforeCount = filteredArticles.length;
+            
+            filteredArticles = filteredArticles.filter(article => {
+                const normalizedLawName = normalizeLawName(article.lawName || '');
+                const articleNumber = article.articleNumber.toString();
+                const paragraph = article.paragraph ? article.paragraph.toString() : '1';
+                
+                const record = answerRates[normalizedLawName]?.[articleNumber]?.[paragraph];
+                
+                // 回答データがない場合：初回なので弱点候補として含める
+                if (!record || record.answered === 0) {
+                    console.log(`✅ 含める（初回）: ${normalizedLawName} 第${articleNumber}条 第${paragraph}項`);
+                    return true;
+                }
+                
+                // 1回以上回答済みで正答率が60%未満の場合
+                const accuracy = (record.correct / record.answered) * 100;
+                const isWeak = accuracy < 60;
+                
+                if (isWeak) {
+                    console.log(`✅ 含める（弱点）: ${normalizedLawName} 第${articleNumber}条 第${paragraph}項 (正答率: ${accuracy.toFixed(1)}%)`);
+                } else {
+                    console.log(`❌ 除外（正答率高い）: ${normalizedLawName} 第${articleNumber}条 第${paragraph}項 (正答率: ${accuracy.toFixed(1)}%)`);
+                }
+                
+                return isWeak;
+            });
+            
+            console.log(`📊 弱点問題フィルタリング後: ${filteredArticles.length}問（${beforeCount}問から）`);
+        }
+        
+        // 項番号なしでフィルタリング
+        if (settings.filterNoParagraph || settings.mode === 'no-paragraph') {
+            console.log('🔍 項番号なしフィルタリング開始');
+            filteredArticles = filteredArticles.filter(article => !article.paragraph);
+            console.log(`📊 項番号なしフィルタリング後: ${filteredArticles.length}問`);
+        }
+        
+        // 最近間違えた問題でフィルタリング（過去7日間）
+        if (settings.filterRecent) {
+            console.log('🔍 最近間違えた問題フィルタリング開始');
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            const answerRates = getAnswerRates();
+            
+            filteredArticles = filteredArticles.filter(article => {
+                const normalizedLawName = normalizeLawName(article.lawName || '');
+                const articleNumber = article.articleNumber.toString();
+                const paragraph = article.paragraph ? article.paragraph.toString() : '1';
+                
+                const record = answerRates[normalizedLawName]?.[articleNumber]?.[paragraph];
+                if (!record || !record.lastAnswered) return false;
+                
+                return record.lastAnswered > sevenDaysAgo && record.correct < record.answered;
+            });
+            console.log(`📊 最近間違えた問題フィルタリング後: ${filteredArticles.length}問`);
+        }
+        
+        // 問題数を制限
+        if (settings.questionCount !== 'all') {
+            const count = parseInt(settings.questionCount);
+            if (filteredArticles.length > count) {
+                // ランダムに選択
+                filteredArticles = shuffleArray(filteredArticles).slice(0, count);
+            }
+        }
+        
+        console.log(`📚 フィルタリング結果: ${filteredArticles.length}問`);
+        
+        if (filteredArticles.length === 0) {
+            console.error('❌ フィルタリング結果が0件です');
+            console.log('📊 設定詳細:', {
+                selectedLaws: settings.selectedLaws,
+                filterWeak: settings.filterWeak,
+                filterNoParagraph: settings.filterNoParagraph,
+                filterRecent: settings.filterRecent,
+                mode: settings.mode,
+                questionCount: settings.questionCount
+            });
+            
+            // 弱点問題モードで結果が0件の場合、全問題に戻す
+            if (settings.mode === 'weak' || settings.filterWeak) {
+                console.log('🔄 弱点問題が見つからないため、全問題に変更します');
+                filteredArticles = [...allArticles];
+                
+                // 法令フィルタのみ再適用
+                if (settings.selectedLaws && settings.selectedLaws.length > 0) {
+                    filteredArticles = filteredArticles.filter(article => {
+                        const normalizedLawName = normalizeLawName(article.lawName || '');
+                        return settings.selectedLaws.includes(normalizedLawName);
+                    });
+                }
+                
+                console.log(`🔄 全問題に変更後: ${filteredArticles.length}問`);
+                
+                if (filteredArticles.length > 0) {
+                    alert('弱点問題が見つからないため、選択した法令の全問題でゲームを開始します。');
+                } else {
+                    // より詳細なエラーメッセージ
+                    let errorMessage = '選択した条件に一致する問題がありません。\n\n';
+                    errorMessage += `初期条文数: ${allArticles.length}問\n`;
+                    
+                    if (settings.selectedLaws && settings.selectedLaws.length > 0) {
+                        errorMessage += `選択法令: ${settings.selectedLaws.join(', ')}\n`;
+                    }
+                    if (settings.filterWeak || settings.mode === 'weak') {
+                        errorMessage += '弱点問題フィルタ: ON\n';
+                    }
+                    if (settings.filterNoParagraph || settings.mode === 'no-paragraph') {
+                        errorMessage += '項番号なしフィルタ: ON\n';
+                    }
+                    if (settings.filterRecent) {
+                        errorMessage += '最近間違えた問題フィルタ: ON\n';
+                    }
+                    
+                    errorMessage += '\n条件を緩和して再度お試しください。';
+                    alert(errorMessage);
+                    return;
+                }
+            } else {
+                // より詳細なエラーメッセージ
+                let errorMessage = '選択した条件に一致する問題がありません。\n\n';
+                errorMessage += `初期条文数: ${allArticles.length}問\n`;
+                
+                if (settings.selectedLaws && settings.selectedLaws.length > 0) {
+                    errorMessage += `選択法令: ${settings.selectedLaws.join(', ')}\n`;
+                }
+                if (settings.filterWeak || settings.mode === 'weak') {
+                    errorMessage += '弱点問題フィルタ: ON\n';
+                }
+                if (settings.filterNoParagraph || settings.mode === 'no-paragraph') {
+                    errorMessage += '項番号なしフィルタ: ON\n';
+                }
+                if (settings.filterRecent) {
+                    errorMessage += '最近間違えた問題フィルタ: ON\n';
+                }
+                
+                errorMessage += '\n条件を緩和して再度お試しください。';
+                alert(errorMessage);
+                return;
+            }
+        }
+        
+        // フィルタリングされた条文でゲームを開始
+        window.speedQuizArticles = filteredArticles;
+        
+        // ゲーム状態を初期化してタイマー制限を設定
+        gameState = {
+            articles: [...filteredArticles],
+            currentIndex: 0,
+            score: 0,
+            correctAnswers: 0,
+            timer: null,
+            timeLeft: settings.timeLimit || 10,
+            timeLimit: settings.timeLimit || 10, // 制限時間を設定
+            isWaitingForParagraph: false,
+            currentAnswerStage: 'article',
+            wrongAnswers: [],
+            isProcessingAnswer: false,
+            correctInput: '',
+            currentInput: ''
+        };
+        
+        // スピードクイズページに遷移する
+        // 現在のハッシュに法律名パラメータが含まれているか確認し、維持する
+        const currentHash = window.location.hash;
+        if (currentHash.includes('?law=')) {
+            // 既存のURLパラメータを維持
+            console.log('🔍 既存の法律パラメータを維持します:', currentHash);
+        } else {
+            // settings内に法律名が指定されていれば、それをURLに追加
+            if (settings && settings.specificLaw) {
+                window.location.hash = `#/speed-quiz?law=${encodeURIComponent(settings.specificLaw)}`;
+                console.log(`📚 特定法律のURLに遷移: ${settings.specificLaw}`);
+            } else {
+                window.location.hash = '#/speed-quiz';
+                console.log('🔍 通常のスピードクイズURLに遷移');
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ フィルタリングクイズ開始エラー:', error);
+        alert('クイズの開始に失敗しました。');
+    }
+}
+
+/**
+ * 正答率の低い条文を取得
+ */
+export function getWeakArticles(threshold = 60, minAnswered = 2) {
+    const answerRates = getAnswerRates();
+    const weakArticles = [];
+    
+    for (const lawName in answerRates) {
+        for (const articleNumber in answerRates[lawName]) {
+            for (const paragraph in answerRates[lawName][articleNumber]) {
+                const record = answerRates[lawName][articleNumber][paragraph];
+                
+                if (record.answered >= minAnswered) {
+                    const accuracy = (record.correct / record.answered) * 100;
+                    if (accuracy < threshold) {
+                        weakArticles.push({
+                            lawName,
+                            articleNumber,
+                            paragraph,
+                            accuracy: Math.round(accuracy),
+                            answered: record.answered,
+                            correct: record.correct
+                        });
+                    }
+                }
+            }
+        }
+    }
+    
+    // 正答率の低い順にソート
+    return weakArticles.sort((a, b) => a.accuracy - b.accuracy);
+}
+
+/**
+ * 法令別の統計を取得
+ */
+export function getLawStatistics() {
+    const answerRates = getAnswerRates();
+    const statistics = {};
+    
+    for (const lawName in answerRates) {
+        let totalAnswered = 0;
+        let totalCorrect = 0;
+        let articleCount = 0;
+        
+        for (const articleNumber in answerRates[lawName]) {
+            for (const paragraph in answerRates[lawName][articleNumber]) {
+                const record = answerRates[lawName][articleNumber][paragraph];
+                totalAnswered += record.answered;
+                totalCorrect += record.correct;
+                articleCount++;
+            }
+        }
+        
+        const accuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+        
+        statistics[lawName] = {
+            accuracy,
+            totalAnswered,
+            totalCorrect,
+            articleCount
+        };
+    }
+    
+    return statistics;
+}
+
+/**
+ * 入力値と正解番号から、正規化してどこまで一致しているか（validInput）を返す
+ */
+function extractValidInput(inputValue, correctArticleNumber) {
+    // 正規化して部分一致・順序一致で抽出
+    let validInput = '';
+    let correctIdx = 0;
+    for (let i = 0; i < inputValue.length && correctIdx < correctArticleNumber.length; i++) {
+        let c = inputValue[i];
+        let n = c.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 65248)).replace(/[のノ]/g, 'の');
+        if (n === correctArticleNumber[correctIdx]) {
+            validInput += n;
+            correctIdx++;
+        }
+    }
+    return validInput;
 }
 
 /**
@@ -1362,7 +2304,8 @@ function handleParagraphInput(event) {
 function showIncorrectInputAnimation(inputElement, incorrectChar) {
     const overlay = inputElement.nextElementSibling;
     if (!overlay) return;
-      // 間違った文字を赤色で表示（既存の内容は保持）
+    
+    // 間違った文字を赤色で表示（既存の内容は保持）
     const span = document.createElement('span');
     span.textContent = incorrectChar;
     span.className = 'incorrect-char-temp';
@@ -1418,42 +2361,24 @@ function completeAnswer() {
     const baseScore = 100;
     gameState.score += baseScore + timeBonus;
     
+    // 正答率記録
+    const currentArticle = gameState.articles[gameState.currentIndex];
+    if (currentArticle) {
+        recordArticleAnswer(
+            currentArticle.lawName || 'その他',
+            currentArticle.articleNumber,
+            currentArticle.paragraph || 1,
+            true  // 正解
+        );
+    }
+    
     showCorrectFeedback();
+    showCorrectCircleAnimation(); // ○付けアニメーションを表示
     stopTimer();
     setTimeout(() => {
         gameState.isProcessingAnswer = false;
         nextQuestion();
-    }, 1500);
-}
-
-/**
- * 条文番号のキーダウンイベントを処理
- */
-function handleArticleKeyDown(event) {
-    if (gameState.isProcessingAnswer) {
-        event.preventDefault();
-        return;
-    }
-    
-    // バックスペース、削除は無効
-    if (event.key === 'Backspace' || event.key === 'Delete') {
-        event.preventDefault();
-    }
-}
-
-/**
- * 項番号のキーダウンイベントを処理
- */
-function handleParagraphKeyDown(event) {
-    if (gameState.isProcessingAnswer) {
-        event.preventDefault();
-        return;
-    }
-    
-    // バックスペース、削除は無効
-    if (event.key === 'Backspace' || event.key === 'Delete') {
-        event.preventDefault();
-    }
+    }, 1200); // アニメーションの長さと同じ時間に調整
 }
 
 /**
@@ -1503,50 +2428,99 @@ function updateParagraphDisplay(inputValue, correctAnswer) {
 }
 
 /**
- * スピード条文データの事前読み込み
+ * ミスタイプ時の時間減少アニメーション
  */
-async function initializeSpeedQuizData(caseData) {
+function showMistypeTimePenalty() {
+    const progressBar = document.getElementById('time-progress');
+    const timeRemaining = document.getElementById('time-remaining');
+    
+    if (!progressBar || !timeRemaining) return;
+    
+    // 時間減少アニメーション
+    progressBar.style.transition = 'width 0.3s ease-out, background-color 0.3s ease-out';
+    progressBar.style.backgroundColor = '#ef4444'; // 赤色でペナルティを強調
+    
+    // 数字のカウントダウンアニメーション
+    timeRemaining.style.transition = 'transform 0.3s ease-out, color 0.3s ease-out';
+    timeRemaining.style.transform = 'scale(1.3)';
+    timeRemaining.style.color = '#ef4444';
+    
+    // 振動効果
+    progressBar.style.animation = 'shake 0.3s ease-out';
+    timeRemaining.style.animation = 'shake 0.3s ease-out';
+    
+    // アニメーション後にリセット
+    setTimeout(() => {
+        timeRemaining.style.transform = 'scale(1)';
+        timeRemaining.style.color = '#374151';
+        progressBar.style.animation = '';
+        timeRemaining.style.animation = '';
+        
+        // 通常の色に戻す
+        updateTimerBar();
+    }, 300);
+}
+
+/**
+ * エラー回復用：基本的な条文データを作成
+ */
+function createBasicArticleData(articleStr) {
     try {
-        console.log('📚 ケースデータからスピード条文用データを抽出中...');
+        // 簡単なパターンマッチングで最低限のデータを抽出
+        const simplePattern = /^(.+?)(\d+(?:の\d+)?条)(?:第?(\d+)項)?(?:第?(\d+)号)?/;
+        const match = articleStr.match(simplePattern);
         
-        // caseDataのnullチェック
-        if (!caseData) {
-            console.warn('⚠️ caseDataがnullまたはundefinedのため、スピード条文データの読み込みをスキップします');
-            return;
+        if (!match) {
+            return null;
         }
         
-        // 既にデータが読み込まれている場合はスキップ
-        if (window.speedQuizArticles && window.speedQuizArticles.length > 0) {
-            console.log('✅ スピード条文データは既に読み込み済み');
-            return;
-        }
+        const [fullMatch, lawName, articleWithJou, paragraph, item] = match;
+        const articleNumberStr = articleWithJou.replace(/条$/, '');
+        const paragraphNum = paragraph ? parseInt(paragraph) : null;
+        const itemNum = item ? parseInt(item) : null;
         
-        // 条文参照を抽出（extractAllArticles関数を使用）
-        const articles = await extractAllArticles(caseData);
-        
-        if (articles.length === 0) {
-            console.log('⚠️ ケースデータに条文参照が見つかりませんでした');
-            return;
-        }
-        
-        console.log(`📋 ${articles.length}件の条文を抽出完了`);        
-        // グローバル変数に保存
-        window.speedQuizArticles = articles;
-        
-        if (articles.length > 0) {
-            console.log(`✅ ${articles.length}件の条文データを事前読み込み完了`);
-        } else {
-            console.log('⚠️ 条文データの読み込みに失敗しました');
-        }        
+        return {
+            lawName: lawName.trim(),
+            fullText: articleStr,
+            articleNumber: articleNumberStr,
+            paragraph: paragraphNum,
+            item: itemNum,
+            displayText: `${lawName.trim()}${articleWithJou}${paragraph ? `第${paragraph}項` : ''}${item ? `第${item}号` : ''}`,
+            content: `${articleStr}の条文内容（詳細は条文表示で確認してください）`,
+            isBasicData: true // 基本データであることを示すフラグ
+        };
     } catch (error) {
-        console.error('❌ スピード条文データの事前読み込みでエラー:', error);
+        console.error(`基本データ作成エラー: ${error.message}`);
+        return null;
     }
 }
 
-// ★★★ グローバル関数として公開 ★★★
-window.initializeSpeedQuizData = initializeSpeedQuizData;
-window.initializeSpeedQuizData = initializeSpeedQuizData;
-window.initializeSpeedQuizGame = initializeSpeedQuizGame;
-window.extractAllArticles = extractAllArticles;
-window.initializeSpeedQuiz = initializeSpeedQuiz;
-window.generateSpeedQuizHTML = generateSpeedQuizHTML;
+/**
+ * ゲーム中に条文本文をオンデマンドで取得する関数
+ */
+export async function fetchArticleContentOnDemand(articleData) {
+    try {
+        console.log(`🔄 条文本文をオンデマンド取得中: ${articleData.displayText}`);
+        
+        const content = await fetchArticleContentForQuiz(
+            articleData.lawName, 
+            articleData.articleNumber, 
+            articleData.paragraph, 
+            articleData.item
+        );
+        
+        console.log(`✅ 条文本文取得成功: ${articleData.displayText}`);
+        return content;
+        
+    } catch (error) {
+        console.warn(`⚠️ 条文本文取得失敗、フォールバック使用: ${articleData.displayText} - ${error.message}`);
+        
+        // フォールバック内容を使用
+        return generateArticleContentForQuiz(
+            articleData.lawName, 
+            articleData.articleNumber, 
+            articleData.paragraph, 
+            articleData.item
+        );
+    }
+}

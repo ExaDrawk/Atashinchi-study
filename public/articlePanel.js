@@ -2,7 +2,14 @@
 
 // ★★★ 条文表示パネルの状態管理 ★★★
 let articlePanelVisible = false;
-let keyboardVisible = false; // デフォルトで閉じた状態
+
+// ★★★ 条文表示パネルのサイズ設定 ★★★
+const ARTICLE_PANEL_WIDTH = '29rem'; // 横幅を簡単に変更できる変数（例: '32rem'）
+const ARTICLE_PANEL_CONFIG = {
+    width: '', // Tailwindクラスは使わず、style属性で制御
+    maxWidth: 'max-w-[100vw]', // 最大幅: デフォルト100vw
+    maxHeight: 'max-h-[50vh]', // 最大高さ: 画面の上から半分で途切れる
+};
 
 // ★★★ 法令名マッピング（憲法対応） ★★★
 const LAW_NAME_MAPPING = {
@@ -17,60 +24,23 @@ function createArticlePanel(supportedLaws = []) {
     if (existingPanel) {
         existingPanel.remove();
     }      const panelHtml = `
-        <div id="article-panel" class="fixed top-4 left-4 w-96 max-w-[90vw] bg-white rounded-lg shadow-2xl border-2 border-blue-200 hidden transform transition-all duration-300 flex flex-col max-h-[90vh]" style="z-index:1100000;">
+        <div id="article-panel" class="fixed top-4 left-4 ${ARTICLE_PANEL_CONFIG.maxWidth} bg-white rounded-lg border-2 border-blue-200 hidden transform transition-all duration-300 flex flex-col" style="z-index:1100000;width:${ARTICLE_PANEL_WIDTH};max-height:50vh;">
             <div class="bg-blue-500 text-white p-3 rounded-t-lg flex justify-between items-center flex-shrink-0 sticky top-0 z-10">
                 <h3 class="font-bold text-lg">📖 条文表示</h3>
                 <button id="close-article-panel" class="text-white hover:text-gray-200 text-xl font-bold">×</button>
             </div>
             <div class="p-4 flex-1 overflow-y-auto min-h-0">
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">法令名</label>
                     <select id="law-select" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">法令を選択...</option>
                         ${supportedLaws.map(law => `<option value="${law}">${law}</option>`).join('')}
                     </select>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">条文番号</label>
                     <input type="text" id="article-input" placeholder="例: 465条の4第1項、110条、197条1項2号" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500" autocomplete="off" spellcheck="false">
-                    <div class="text-xs text-gray-500 mt-1">
-                        💡 PCキーボードで入力可能・コピー&ペースト対応・Enterキーで実行
-                    </div>
                 </div>
                 
-                <!-- ★★★ キーボード表示/非表示ボタン ★★★ -->
-                <div class="mb-4 text-center">
-                    <button id="toggle-keyboard-btn" class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold py-1 px-3 rounded transition-colors">⌨️ キーボードを表示</button>
-                </div>
-                
-                <!-- ★★★ バーチャルキーボード（デフォルトで非表示） ★★★ -->
-                <div id="virtual-keyboard" class="mb-4 bg-gray-50 p-3 rounded-lg border" style="display: none;">
-                    <div class="text-xs text-gray-600 mb-2 text-center">条文番号入力キーボード</div>
-                    <div class="grid grid-cols-3 gap-2 mb-3">
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="1">1</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="2">2</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="3">3</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="4">4</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="5">5</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="6">6</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="7">7</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="8">8</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="9">9</button>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 mb-3">
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-2 text-sm font-bold transition-colors" data-key="の">の</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-3 text-lg font-bold transition-colors" data-key="0">0</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-2 text-sm font-bold transition-colors" data-key="条">条</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-2 text-sm font-bold transition-colors" data-key="第">第</button>
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-2 text-sm font-bold transition-colors" data-key="項">項</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button class="virtual-key bg-white hover:bg-blue-100 border border-gray-300 rounded p-2 text-sm font-bold transition-colors" data-key="号">号</button>
-                        <button id="virtual-clear" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded p-2 text-sm font-bold transition-colors text-gray-700">🗑️ クリア</button>
-                    </div>
-                </div>
+                <!-- バーチャルキーボード削除 -->
                 
                 <div class="mb-4">
                     <button id="fetch-article-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">条文を取得</button>
@@ -94,10 +64,6 @@ function setupArticlePanelEvents() {
     const fetchBtn = document.getElementById('fetch-article-btn');
     const lawSelect = document.getElementById('law-select');
     const articleInput = document.getElementById('article-input');
-    const virtualKeys = document.querySelectorAll('.virtual-key');
-    const clearBtn = document.getElementById('virtual-clear');
-    const toggleKeyboardBtn = document.getElementById('toggle-keyboard-btn');
-    const virtualKeyboard = document.getElementById('virtual-keyboard');
     
     // 閉じるボタン
     closeBtn.addEventListener('click', hideArticlePanel);
@@ -105,17 +71,7 @@ function setupArticlePanelEvents() {
     // 条文取得ボタン
     fetchBtn.addEventListener('click', fetchAndDisplayArticle);
     
-    // ★★★ キーボード表示/非表示ボタン ★★★
-    toggleKeyboardBtn.addEventListener('click', function() {
-        keyboardVisible = !keyboardVisible;
-        if (keyboardVisible) {
-            virtualKeyboard.style.display = 'block';
-            this.textContent = '⌨️ キーボードを隠す';
-        } else {
-            virtualKeyboard.style.display = 'none';
-            this.textContent = '⌨️ キーボードを表示';
-        }
-    });
+    // キーボード表示/非表示ボタン削除
     
     // ★★★ PCキーボード対応 ★★★
     articleInput.addEventListener('keydown', function(e) {
@@ -173,35 +129,7 @@ function setupArticlePanelEvents() {
         this.select();
     });
     
-    // ★★★ バーチャルキーボードのイベントリスナー ★★★
-    virtualKeys.forEach(key => {
-        key.addEventListener('click', function() {
-            const keyValue = this.dataset.key;
-            const currentValue = articleInput.value;
-            const cursorPosition = articleInput.selectionStart;
-            
-            const newValue = currentValue.slice(0, cursorPosition) + keyValue + currentValue.slice(cursorPosition);
-            articleInput.value = newValue;
-            articleInput.setSelectionRange(cursorPosition + keyValue.length, cursorPosition + keyValue.length);
-            articleInput.focus();
-            
-            this.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                this.style.transform = 'scale(1)';
-            }, 100);
-        });
-    });
-    
-    // クリアボタン
-    clearBtn.addEventListener('click', function() {
-        articleInput.value = '';
-        articleInput.focus();
-        
-        this.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            this.style.transform = 'scale(1)';
-        }, 100);
-    });
+    // バーチャルキーボード関連のコードを削除
 }
 
 // ★★★ 条文取得と表示（シンプル版） ★★★
@@ -210,11 +138,9 @@ async function fetchAndDisplayArticle() {
     const articleInput = document.getElementById('article-input');
     const contentDiv = document.getElementById('article-content');
     const fetchBtn = document.getElementById('fetch-article-btn');
-    const toggleKeyboardBtn = document.getElementById('toggle-keyboard-btn');
-    const virtualKeyboard = document.getElementById('virtual-keyboard');
     
     const lawName = lawSelect ? lawSelect.value.trim() : '';
-    const articleText = articleInput ? articleInput.value.trim() : '';
+    let articleText = articleInput ? articleInput.value.trim() : '';
     
     if (!lawName) {
         contentDiv.innerHTML = '<p class="text-red-500">法令を選択してください</p>';
@@ -225,6 +151,36 @@ async function fetchAndDisplayArticle() {
         contentDiv.innerHTML = '<p class="text-red-500">条文番号を入力してください</p>';
         return;
     }
+    
+    // ★★★ 数字のみの入力時に「条」を自動付与 ★★★
+    console.log(`🔍 入力された条文テキスト: "${articleText}"`);
+    
+    // 全角数字を半角に変換
+    const normalizedText = articleText.replace(/[０-９]/g, function(char) {
+        return String.fromCharCode(char.charCodeAt(0) - 0xFEE0);
+    });
+    
+    console.log(`🔄 全角→半角変換後: "${normalizedText}"`);
+    
+    // 数字のみの場合（全角半角問わず）に「条」を付与
+    if (/^\d+$/.test(normalizedText)) {
+        articleText = normalizedText + '条';
+        console.log(`✅ 数字のみの入力を検出: "${articleInput.value}" → "${articleText}"`);
+        // 入力フィールドも更新して表示
+        if (articleInput) {
+            articleInput.value = articleText;
+        }
+    } else if (normalizedText !== articleText) {
+        // 全角数字が含まれていた場合は変換結果を使用（条文形式の場合）
+        articleText = normalizedText;
+        console.log(`🔄 全角数字を半角に変換: "${articleInput.value}" → "${articleText}"`);
+        if (articleInput) {
+            articleInput.value = articleText;
+        }
+    }
+    
+    console.log(`📤 最終的に送信する条文テキスト: "${articleText}"`);
+    
     
     // ローディング表示
     contentDiv.innerHTML = '<div class="text-center p-4"><div class="loader-small mx-auto"></div><p class="text-gray-500 mt-2">条文を取得中...</p></div>';
@@ -264,22 +220,20 @@ async function fetchAndDisplayArticle() {
         // ★★★ 二重カッコ内の強調デコレーション処理 ★★★
         const formattedContent = formatDoubleParentheses(articleContent);
         
+        // ★★★ ただし書きハイライト処理 ★★★
+        const finalFormattedContent = applyProvisoHighlight(formattedContent);
+        
           // ★★★ シンプルな条文内容表示（法令名・条文番号を非表示） ★★★
         contentDiv.innerHTML = `
             <div class="space-y-2">
                 <div class="flex justify-end items-center mb-2">
                     <button id="copy-article-btn" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition-colors">📋 コピー</button>
                 </div>
-                <div class="whitespace-pre-line text-gray-700 leading-relaxed">${formattedContent}</div>
+                <div class="whitespace-pre-line text-gray-700 leading-relaxed">${finalFormattedContent}</div>
             </div>
         `;
         
-        // ★★★ 条文が表示されたらキーボードを隠す ★★★
-        if (keyboardVisible) {
-            keyboardVisible = false;
-            virtualKeyboard.style.display = 'none';
-            toggleKeyboardBtn.textContent = '⌨️ キーボードを表示';
-        }
+        // キーボード関連のコード削除
           // コピーボタンのイベントリスナー
         const copyBtn = document.getElementById('copy-article-btn');
         if (copyBtn) {
@@ -368,13 +322,16 @@ function hideArticlePanel() {
 }
 
 // ★★★ 条文表示パネルを開いて条文をプリセット ★★★
-function showArticlePanelWithPreset(lawName, articleRef) {
-    console.log(`🎯 条文プリセット実行開始: 法令="${lawName}" 条文="${articleRef}"`);
+function showArticlePanelWithPreset(lawName, articleRef, provisoText = null) {
+    console.log(`🎯 条文プリセット実行開始: 法令="${lawName}" 条文="${articleRef}"${provisoText ? ` ただし書き="${provisoText}"` : ''}`);
     
     if (!lawName || !articleRef) {
-        console.error('❌ プリセット実行失敗: 無効なパラメータ', { lawName, articleRef });
+        console.error('❌ プリセット実行失敗: 無効なパラメータ', { lawName, articleRef, provisoText });
         return;
     }
+    
+    // ただし書き情報をグローバルに保存（条文表示時に使用）
+    window.currentProvisoText = provisoText;
     
     console.log(`📱 showArticlePanel呼び出し中...`);
     showArticlePanel();
@@ -484,6 +441,108 @@ function formatDoubleParentheses(text) {
     return text.replace(/（（([^）]+)））/g, '<span class="font-bold text-blue-700 bg-blue-50 px-1 rounded">$1</span>');
 }
 
+// ★★★ ただし書きハイライト処理機能 ★★★
+function applyProvisoHighlight(text) {
+    // 現在のただし書き情報を取得
+    const provisoText = window.currentProvisoText;
+    
+    if (!provisoText) {
+        console.log('📝 ただし書き情報なし - 通常の条文表示');
+        return text;
+    }
+    
+    console.log(`📝 ただし書きハイライト適用: "${provisoText}"`);
+    
+    // 「ただし」以降の部分を黄色くマークする
+    // 複数のパターンに対応：「ただし」「ただし、」「。ただし」など
+    const tadashiPatterns = [
+        /(\bただし\b[^。]*)/g,           // 「ただし」から文末まで
+        /(。\s*ただし[^。]*)/g,         // 「。ただし」から文末まで
+        /(、\s*ただし[^。]*)/g          // 「、ただし」から文末まで
+    ];
+    
+    let highlightedText = text;
+    let highlightCount = 0;
+    
+    tadashiPatterns.forEach(pattern => {
+        highlightedText = highlightedText.replace(pattern, (match) => {
+            highlightCount++;
+            console.log(`✅ ただし書きパターン ${highlightCount} 検出: "${match}"`);
+            
+            // 黄色いハイライトを適用
+            return `<span class="bg-yellow-200 text-yellow-900 px-1 py-0.5 rounded font-medium border-l-2 border-yellow-400">${match}</span>`;
+        });
+    });
+    
+    if (highlightCount > 0) {
+        console.log(`🎨 ただし書きハイライト完了: ${highlightCount}箇所をマーク`);
+    } else {
+        console.warn('⚠️ ただし書きパターンが見つかりませんでした。手動でハイライト処理を実行します。');
+        
+        // フォールバック：provisoTextに基づいて部分的にハイライト
+        if (provisoText.includes('ただし')) {
+            const escapedProvisoText = provisoText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const fallbackPattern = new RegExp(`(${escapedProvisoText})`, 'gi');
+            
+            highlightedText = highlightedText.replace(fallbackPattern, (match) => {
+                console.log(`🔄 フォールバックハイライト: "${match}"`);
+                return `<span class="bg-yellow-200 text-yellow-900 px-1 py-0.5 rounded font-medium border-l-2 border-yellow-400">${match}</span>`;
+            });
+        }
+    }
+    
+    // ただし書き情報をクリア（次回使用を防ぐ）
+    window.currentProvisoText = null;
+    
+    return highlightedText;
+}
+
+// ★★★ 条文パネルの位置情報を取得する関数 ★★★
+function getArticlePanelPosition() {
+    const panel = document.getElementById('article-panel');
+    if (!panel || !isArticlePanelVisible()) {
+        return {
+            top: '1rem',
+            left: '1rem',
+            width: ARTICLE_PANEL_WIDTH,
+            height: 'auto',
+            bottom: 'auto'
+        };
+    }
+    
+    const rect = panel.getBoundingClientRect();
+    return {
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        bottom: `${rect.bottom}px`,
+        right: `${rect.right}px`
+    };
+}
+
+// ★★★ 条文パネルの位置とサイズを調整する関数 ★★★
+function updateArticlePanelLayout() {
+    const panel = document.getElementById('article-panel');
+    if (!panel || !isArticlePanelVisible()) return;
+    
+    // Q&Aポップアップが表示されているかチェック（hiddenクラスがないもののみ）
+    const qaPopups = document.querySelectorAll('.qa-ref-popup:not(.hidden)');
+    const visibleQAPopups = Array.from(qaPopups).filter(popup => {
+        const computedStyle = window.getComputedStyle(popup);
+        return computedStyle.display !== 'none' && computedStyle.visibility !== 'hidden';
+    });
+    const hasQAPopup = visibleQAPopups.length > 0;
+    
+    if (hasQAPopup) {
+        // 両方表示：現在の挙動（50vh制限）
+        panel.style.maxHeight = '50vh';
+    } else {
+        // 条文タブのみ表示：一番下まで伸びる
+        panel.style.maxHeight = '100vh';
+    }
+}
+
 // ★★★ 単一のエクスポート文 ★★★
 export { 
     createArticlePanel,
@@ -492,10 +551,19 @@ export {
     showArticlePanelWithPreset,
     isArticlePanelVisible,
     updateLawSelectOptions,
-    debugArticlePanel
+    debugArticlePanel,
+    getArticlePanelPosition,
+    updateArticlePanelLayout,
+    ARTICLE_PANEL_WIDTH
 };
 
 // ★★★ グローバル関数として公開 ★★★
 window.showArticlePanelWithPreset = showArticlePanelWithPreset;
+
+// ★★★ ただし書き対応のグローバル関数も追加 ★★★
+window.showArticlePanelWithProviso = function(lawName, articleRef, provisoText) {
+    console.log(`📖 ただし書き付き条文表示: ${lawName}${articleRef} (${provisoText})`);
+    showArticlePanelWithPreset(lawName, articleRef, provisoText);
+};
 
 console.log('📦 articlePanel.js モジュール読み込み完了');

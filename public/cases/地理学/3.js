@@ -95,13 +95,22 @@ export default {
     { type: 'dialogue', speaker: 'みかん', expression: 'surprised', dialogue: 'うわっ！面積は15倍なのに、人口密度は10分の1になってる！これじゃあ、市って言ってもほとんど森なんじゃないの？' },
     { type: 'dialogue', speaker: '浅田', expression: 'serious', dialogue: 'その通り。だから、行政上の「市」というだけでは、都市の実態は分からない。そこで重要なのが他の基準よ。例えば「人口集中地区」、DIDね。【id:5】' },
     { type: 'dialogue', speaker: '梶井', expression: 'normal', dialogue: 'DIDは、人口密度が4,000人/km²以上の場所だけを「都市」と見る考え方。高山市のDIDは、市の面積のごく一部にしかないのよ。【id:2】' },
-    { type: 'embed', format: 'mermaid', title: '人口集中地区(DID)の定義フロー', description: 'DIDは人口密度を基準に市街地を客観的に画定する。', content: 'graph TD\n    A[国勢調査の最小エリア] --> B{人口密度が\\n4000人/km²以上？}\n    B --> |はい| C{隣接して合計人口が\\n5000人以上？}\n    C --> |はい| D[DIDとして設定]\n    B --> |いいえ| E[DIDではない]\n    C --> |いいえ| E' },
+    { type: 'embed', format: 'mermaid', title: '人口集中地区(DID)の定義フロー', description: 'DIDは人口密度を基準に市街地を客観的に画定する。', content: `graph TD
+    A[国勢調査の最小エリア] --> B{人口密度が4000人/km²以上？}
+    B --> |はい| C{隣接して合計人口が5000人以上？}
+    C --> |はい| D[DIDとして設定]
+    B --> |いいえ| E[DIDではない]
+    C --> |いいえ| E` },
     { type: 'dialogue', speaker: 'みかん', expression: 'impressed', dialogue: 'なるほどー。じゃあ、DIDを見れば本当の街の部分が分かるってことね！' },
     { type: 'dialogue', speaker: '浅田', expression: 'normal', dialogue: 'それだけじゃないわ。もう一つ、「大都市圏」という考え方もある。これは、人々の「動き」に注目した基準よ。【id:12】' },
     { type: 'dialogue', speaker: 'みかん', expression: 'thinking', dialogue: '動き…？' },
     { type: 'narration', text: '浅田は、ベア研の壁に貼ってある日本地図を指さした。' },
     { type: 'dialogue', speaker: '浅田', expression: 'cool', dialogue: '例えば、私たちが住んでるこの辺りの人は、東京に通勤や通学してる人が多いでしょ？そういう機能的なつながりで都市を捉えるのが「大都市圏」なの。【id:3】' },
-    { type: 'embed', format: 'mermaid', title: '大都市圏の基本構造', description: '中心市と周辺市町村の機能的な結びつきで定義される。', content: 'graph LR\n    subgraph 大都市圏\n        A(中心市\\n例：東京都区部) <--> B(周辺市町村\\n例：西東京市)\n    end\n    B -- 1.5%以上が通勤・通学 --> A' },
+    { type: 'embed', format: 'mermaid', title: '大都市圏の基本構造', description: '中心市と周辺市町村の機能的な結びつきで定義される。', content: `graph LR
+    subgraph 大都市圏
+        A[中心市<br/>例：東京都区部] <--> B[周辺市町村<br/>例：西東京市]
+    end
+    B -- 1.5%以上が通勤・通学 --> A` },
     { type: 'dialogue', speaker: '梶井', expression: 'normal', dialogue: 'つまり、「市部」「DID」「大都市圏」の3つのメガネを使い分けないと、都市の本当の姿は見えてこないってことね。' },
     { type: 'dialogue', speaker: 'みかん', expression: 'happy', dialogue: 'そっかー！なんかスッキリした！高山さるぼぼベアの企画書、書けそう！ありがとう、二人とも！' },
     { type: 'narration', text: 'みかんは3つの都市の定義を理解し、ご当地ベアのコンセプトを固めていくのだった。' }

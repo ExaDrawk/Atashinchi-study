@@ -90,11 +90,20 @@ export default {
     { type: 'dialogue', speaker: '浅田', expression: 'impressed', dialogue: 'みかん、良い点に気づいたね。それがまさに「階層性」の問題。デパートみたいな専門的なものを売ってるのが「高次中心地」、コンビニみたいな日常的なものを売ってるのが「低次中心地」。そして、高次中心地は低次中心地の機能を全部持っているのがポイントだよ。【id:6】' },
     { type: 'narration', text: '議論は、大きさの違うハチの巣（階層）をどう組み合わせるか、という核心に迫っていった。' },
     { type: 'dialogue', speaker: '理央', expression: 'normal', dialogue: 'クリスタラーはその組み合わせのルールを、3つの原理で説明しているの。まず基本は「市場原理」、K=3システム。これは、できるだけ少ない中心地で効率よく商売をするための配置よ。【id:8】' },
-    { type: 'embed', format: 'mermaid', title: 'K=3：市場原理', description: '商業的効率性を最大化する配置。', content: 'graph TD\n    A(市場原理 K=3) --> B(ねらい：商業的効率の最大化)\n    B --> C(配置：低次中心地は\\n高次中心地の市場圏の境界線上、\\n頂点に立地する)\n    C --> D(支配関係：高次は低次6つの\\n市場圏の各1/3を支配)' },
+    { type: 'embed', format: 'mermaid', title: 'K=3：市場原理', description: '商業的効率性を最大化する配置。', content: `graph TD
+    A[市場原理 K=3] --> B[ねらい：商業的効率の最大化]
+    B --> C[配置：低次中心地は高次中心地の市場圏の境界線上、頂点に立地する]
+    C --> D[支配関係：高次は低次6つの市場圏の各1/3を支配]` },
     { type: 'dialogue', speaker: '梶井', expression: 'cool', dialogue: 'でも、街の配置は交通の便も大事。そこで出てくるのが「交通原理」、K=4システム。これは、大きな街同士を結ぶ幹線道路沿いに、小さな街が発達するっていう考え方。【id:9】' },
-    { type: 'embed', format: 'mermaid', title: 'K=4：交通原理', description: '交通網の効率性を最大化する配置。', content: 'graph TD\n    A(交通原理 K=4) --> B(ねらい：交通の利便性の最大化)\n    B --> C(配置：低次中心地は\\n高次中心地を結ぶ交通路の\\n中間点に立地する)\n    C --> D(支配関係：高次は低次6つの\\n市場圏の各1/2を支配)' },
+    { type: 'embed', format: 'mermaid', title: 'K=4：交通原理', description: '交通網の効率性を最大化する配置。', content: `graph TD
+    A[交通原理 K=4] --> B[ねらい：交通の利便性の最大化]
+    B --> C[配置：低次中心地は高次中心地を結ぶ交通路の中間点に立地する]
+    C --> D[支配関係：高次は低次6つの市場圏の各1/2を支配]` },
     { type: 'dialogue', speaker: '浅田', expression: 'serious', dialogue: 'そして、行政の観点も忘れてはいけないよ。それが「行政原理」、K=7システム。これは、管理のしやすさが最優先。下位の街が、上位の街の行政区画にすっぽり収まるように配置されるんだ。【id:10】' },
-    { type: 'embed', format: 'mermaid', title: 'K=7：行政原理', description: '行政的効率性を最大化する配置。', content: 'graph TD\n    A(行政原理 K=7) --> B(ねらい：行政的効率の最大化)\n    B --> C(配置：低次中心地は\\n高次中心地の市場圏に\\n完全に内包される)\n    C --> D(支配関係：高次は低次6つを\\n完全に支配する)' },
+    { type: 'embed', format: 'mermaid', title: 'K=7：行政原理', description: '行政的効率性を最大化する配置。', content: `graph TD
+    A[行政原理 K=7] --> B[ねらい：行政的効率の最大化]
+    B --> C[配置：低次中心地は高次中心地の市場圏に完全に内包される]
+    C --> D[支配関係：高次は低次6つを完全に支配する]` },
     { type: 'dialogue', speaker: 'みかん', expression: 'excited', dialogue: 'すごーい！市場と交通と行政！3つの違うルールがあるんだ！私たちの「トシ・デベロップメント・クエスト」は、どのルールを採用しようかな！？' },
     { type: 'dialogue', speaker: '理央', expression: 'happy', dialogue: '基本は市場原理でハチの巣状に街を配置して、プレイヤーが鉄道や道路を建設したら交通原理のルールでボーナスポイント、とかどう？' },
     { type: 'dialogue', speaker: '浅田', expression: 'normal', dialogue: 'いいね。さらに「市町村合併」カードを引いたら、行政原理のルールで支配できるエリアが広がるとか。' },

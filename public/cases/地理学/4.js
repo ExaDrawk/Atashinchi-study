@@ -83,7 +83,10 @@ export default {
     { type: 'dialogue', speaker: '藤野', expression: 'annoyed', dialogue: 'うへぇ…見てみろよユズピ。これ、俺の地元と東京の人口ピラミッドなんだけど、形が全然ちげぇ…。なんでこんなことになるんだ？' },
     { type: 'dialogue', speaker: '須藤', expression: 'serious', dialogue: '本当ね。タチバナくん、見て。これは1990年と2020年の島根県の人口ピラミッド。高齢者の割合がすごく増えて、典型的な「つぼ型」になってる。【id:12】' },
     { type: 'dialogue', speaker: 'ユズヒコ', expression: 'cool', dialogue: '藤野、それは人口変動の要因を考えれば分かるよ。人口の変化には「自然増減」と「社会増減」があるけど、地域による差が生まれる一番の原因は「社会増減」、つまり人の移動なんだ。【id:3】' },
-    { type: 'embed', format: 'mermaid', title: '人口変動の2大要因', description: '地域差を生む最大の要因は社会増減である。', content: 'graph TD\n    A[人口の変動] --> B(自然増減\\n出生数 - 死亡数)\n    A --> C(社会増減\\n転入者数 - 転出者数)\n    C ==> D((地域差の\\n主な原因))' },
+    { type: 'embed', format: 'mermaid', title: '人口変動の2大要因', description: '地域差を生む最大の要因は社会増減である。', content: `graph TD
+    A[人口の変動] --> B[自然増減<br/>出生数 - 死亡数]
+    A --> C[社会増減<br/>転入者数 - 転出者数]
+    C ==> D[地域差の主な原因]` },
     { type: 'dialogue', speaker: '藤野', expression: 'thinking', dialogue: '人の移動か…。確かに、俺の兄ちゃんも東京の大学に行って、そのまま就職しちまったな。' },
     { type: 'dialogue', speaker: '須藤', expression: 'normal', dialogue: 'それは「ライフステージ」の変化に伴う典型的な人口移動のパターンよ。10代後半から20代にかけて、進学や就職で地方から大都市へ移動する人が多いから。【id:9】' },
     { type: 'dialogue', speaker: 'ユズヒコ', expression: 'normal', dialogue: 'そういう、一度都会に出た人が故郷に戻ることを「Uターン」、故郷の近くの別の街に移ることを「Jターン」、兄ちゃんみたいに都会に出たままの人を「Iターン」って言うんだ。【id:13】' },

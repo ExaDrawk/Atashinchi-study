@@ -86,7 +86,10 @@ export default {
     { type: 'dialogue', speaker: 'しみちゃん', expression: 'cool', dialogue: '「都市とは何か」、ね。それは面白いテーマよ。物事を多角的に捉えるいい訓練になるわ。' },
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'thinking', dialogue: 'たしかに、都会って言っても、ニューヨークみたいな大都会と、私たちの街とじゃ全然違うもんね。' },
     { type: 'dialogue', speaker: 'しみちゃん', expression: 'serious', dialogue: 'その通り。まず、都市を分析するための基本的な視点があるの。ホールとヘイっていう学者が提唱した考え方よ。【id:4】' },
-    { type: 'embed', format: 'mermaid', title: '都市を分析する「3つの側面」', description: 'ホールとヘイが提唱した、都市を多角的に捉えるための分析視点。', content: 'graph TD\n    A(都市とは？) --> B(物理的な側面\\nビルや道路など目に見える形)\n    A --> C(機能的な側面\\n経済活動や人々の動き)\n    A --> D(行政的な側面\\n「市」や「区」といった制度上の区分)' },
+    { type: 'embed', format: 'mermaid', title: '都市を分析する「3つの側面」', description: 'ホールとヘイが提唱した、都市を多角的に捉えるための分析視点。', content: `graph TD
+    A[都市とは？] --> B[物理的な側面<br/>ビルや道路など目に見える形]
+    A --> C[機能的な側面<br/>経済活動や人々の動き]
+    A --> D[行政的な側面<br/>「市」や「区」といった制度上の区分]` },
     { type: 'dialogue', speaker: 'みかん', expression: 'surprised', dialogue: 'へぇー！物理的、機能的、行政的…言われてみれば、私の街もこの3つの側面から見れるかも。行政的には「西東京市」で、物理的には駅前のビル群があって、機能的にはみんな西武新宿線で都心に通勤してるし…。' },
     { type: 'dialogue', speaker: 'しみちゃん', expression: 'impressed', dialogue: '理解が早いわね、みかん。その通りよ。だから、一つの場所でも、どの側面から見るかで「都市」としての性格は変わってくるの。' },
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'normal', dialogue: '教科書には、世界的に見ても、この定義はバラバラだって書いてあるね。【id:5】国によって全然違うみたい。' },

@@ -1,6 +1,7 @@
 // articleProcessor.js - 条文自動検出・ボタン化処理モジュール（憲法対応強化版）
 
 import { showArticlePanelWithPreset } from './articlePanel.js';
+import { createQAPopupHTML, setupQAPopupEvents } from './qaPopup.js';
 
 // ★★★ 法令名マッピング（憲法対応強化） ★★★
 const LAW_NAME_MAPPING = {
@@ -17,8 +18,16 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
     
     console.log('🔍 条文検出開始:', htmlContent.substring(0, 100) + '...');
     
+    // ★★★ 全角数字を半角数字に変換 ★★★
+    const normalizedContent = convertFullWidthToHalfWidth(htmlContent);
+    if (normalizedContent !== htmlContent) {
+        console.log('🔄 全角数字を半角数字に変換しました');
+        console.log('変換前:', htmlContent.substring(0, 100) + '...');
+        console.log('変換後:', normalizedContent.substring(0, 100) + '...');
+    }
+    
     // ★★★ {{}}内の【】を一時的に保護 ★★★
-    const protectedContent = htmlContent.replace(/\{\{([^}]+)\}\}/g, (match, content) => {
+    const protectedContent = normalizedContent.replace(/\{\{([^}]+)\}\}/g, (match, content) => {
         // {{}}内の【】を一時的に特殊文字に置換
         const protectedInnerContent = content.replace(/【([^】]+)】/g, '〖$1〗');
         return `{{${protectedInnerContent}}}`;
@@ -54,18 +63,34 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
         
         console.log(`🔄 法令名変換: "${lawName}" → "${actualLawName}"`);
         
+        // ★★★ ただし書き対応：条文参照から「ただし書」部分を分離 ★★★
+        let baseArticleRef = articleRef;
+        let tadashiPart = '';
+        let hasProviso = false;
+        
+        // 「ただし書」「ただし書き」を検出
+        const tadashiMatch = articleRef.match(/^(.+?)(ただし書き?.*?)$/);
+        if (tadashiMatch) {
+            baseArticleRef = tadashiMatch[1]; // 「714条1項」
+            tadashiPart = tadashiMatch[2];    // 「ただし書」
+            hasProviso = true;
+            console.log(`📝 ただし書き検出: ベース="${baseArticleRef}", ただし部分="${tadashiPart}"`);
+        }
+        
         // 条文参照をボタンに変換
         const buttonId = `article-ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const buttonHtml = `<button 
             id="${buttonId}" 
             class="article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm font-semibold border border-blue-300 transition-colors cursor-pointer mx-1" 
             data-law-name="${actualLawName}" 
-            data-article-ref="${articleRef}"
+            data-article-ref="${baseArticleRef}"
+            data-has-proviso="${hasProviso}"
+            data-proviso-text="${tadashiPart}"
             data-display-name="${displayLawName}"
-            title="クリックして条文を表示"
+            title="クリックして条文を表示${hasProviso ? ' (ただし書きを含む)' : ''}"
         >${displayLawName}${articleRef}</button>`;
         
-        console.log(`🔧 ボタン生成: ${buttonId} (${actualLawName} → ${displayLawName})`);
+        console.log(`🔧 ボタン生成: ${buttonId} (${actualLawName} → ${displayLawName})${hasProviso ? ' [ただし書き対応]' : ''}`);
         return buttonHtml;
     });
     
@@ -220,21 +245,29 @@ function handleArticleButtonClick(e) {
     
     const lawName = this.dataset.lawName;
     const articleRef = this.dataset.articleRef;
+    const hasProviso = this.dataset.hasProviso === 'true';
+    const provisoText = this.dataset.provisoText || '';
     
     console.log(`🖱️ 条文ボタンクリック: ${lawName}${articleRef}`);
     console.log(`🔍 ボタンデータ:`, this.dataset);
+    
+    if (hasProviso) {
+        console.log(`📝 ただし書き付き条文: ベース="${articleRef}", ただし="${provisoText}"`);
+    }
     
     // データ属性が正しく設定されているかチェック
     if (!lawName || !articleRef) {
         console.error('❌ 条文ボタンのデータ属性が不完全です', {
             lawName,
             articleRef,
+            hasProviso,
+            provisoText,
             allData: this.dataset
         });
         return;
     }
-      // 条文表示パネルを開いて、該当する条文をセット
-    showArticlePanelWithPreset(lawName, articleRef);
+      // 条文表示パネルを開いて、該当する条文をセット（ただし書き情報も含む）
+    showArticlePanelWithPreset(lawName, articleRef, hasProviso ? provisoText : null);
 }
 
 // ★★★ Q&Aボタンクリックハンドラー ★★★
@@ -321,7 +354,18 @@ function showQAPopup(qaIndex, qNumber, quizIndex, subIndex) {
     
     // ポップアップHTMLを生成
     console.log(`🔥 ポップアップHTML生成開始`);
-    const popupHtml = createQAPopupHTML(popupId, qa, qNumber, qaIndex);
+    
+    // 条文参照ボタン化処理
+    let qaQuestion = qa.question.replace(/(【[^】]+】)/g, match => {
+        const lawText = match.replace(/[【】]/g, '');
+        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}'>${lawText}</button>`;
+    });
+    
+    // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
+    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer);
+    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-popup-${qaIndex}`);
+    
+    const popupHtml = createQAPopupHTML(popupId, qNumber, qaQuestion, qaAnswer);
     console.log(`🔥 生成されたHTML (最初の200文字):`, popupHtml.substring(0, 200));
     
     // グローバルポップアップコンテナに追加
@@ -337,93 +381,91 @@ function showQAPopup(qaIndex, qNumber, quizIndex, subIndex) {
     // ポップアップの状態を保存
     window.qaPopupState.savePopup(popupId, qaIndex, qNumber, quizIndex, subIndex);
     
-    // ポップアップ内のイベントリスナーを設定
+    // ポップアップ内のイベントリスナーを設定（qaPopup.jsの関数を使用）
     setupQAPopupEvents(popupId);
     
     console.log(`✅ Q&Aポップアップ表示完了: ${popupId}`);
 }
 
-// ★★★ Q&AポップアップHTML生成 ★★★
-function createQAPopupHTML(popupId, qa, qNumber, qaIndex) {
-    // 条文参照ボタン化処理
-    let qaQuestion = qa.question.replace(/(【[^】]+】)/g, match => {
-        const lawText = match.replace(/[【】]/g, '');
-        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}'>${lawText}</button>`;
+// ★★★ 空欄表示切り替え関数（グローバル関数） ★★★
+window.toggleBlankReveal = function(blankElement) {
+    console.log('🔄 空欄表示切り替え:', blankElement);
+    
+    if (!blankElement) {
+        console.error('❌ 空欄要素が無効です');
+        return;
+    }
+    
+    const isRevealed = blankElement.dataset.revealed === 'true';
+    const answer = blankElement.dataset.answer;
+    const displayContent = blankElement.dataset.displayContent || answer;
+    
+    console.log('🔍 空欄データ:', {
+        isRevealed,
+        answer,
+        displayContent,
+        element: blankElement
     });
     
-    // 先にanswerの{{}}の外の【】を条文参照ボタン化してから、空欄化処理を行う
-    let qaAnswerWithArticleRefs = processArticleReferences(qa.answer);
-    let qaAnswer = processBlankFillText(qaAnswerWithArticleRefs, `qa-popup-${qaIndex}`);
-
-    return `
-        <div id="${popupId}" class="qa-ref-popup fixed z-40 bg-white border border-yellow-400 rounded-lg shadow-lg p-4 max-w-md" style="top: 50%; right: 2.5rem; transform: translateY(-50%);">
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
-                <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
-            </div>
-            <div class="mb-2"><span class="font-bold">問題：</span>${qaQuestion}</div>
-            <div class="mb-2">
-                <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
-                <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
-                    <div class="flex gap-2 mb-2">
-                        <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">🔍 全て表示</button>
-                        <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
-                    </div>
-                    <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ★★★ Q&Aポップアップ内のイベントリスナー設定 ★★★
-function setupQAPopupEvents(popupId) {
-    const popup = document.getElementById(popupId);
-    if (!popup) return;
-      // 閉じるボタン
-    const closeBtn = popup.querySelector('.qa-ref-close-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            console.log(`🗑️ 閉じるボタンクリック: ${popupId}`);
-            popup.remove();
-            window.qaPopupState.removePopup(popupId);
-        });
-    }
-    
-    // 解答表示ボタン
-    const answerToggleBtn = popup.querySelector('.toggle-qa-answer-btn');
-    const answerContent = popup.querySelector('.qa-answer-content');
-    if (answerToggleBtn && answerContent) {
-        // デフォルトで解答が表示されているので、条文参照ボタンを有効にする
-        setupArticleRefButtons(answerContent);
+    if (isRevealed) {
+        // 答えを隠す
+        const blankLength = Math.max(4, Math.floor(answer.length * 0.9));
+        const underscores = '＿'.repeat(blankLength);
+        blankElement.innerHTML = underscores;
+        blankElement.dataset.revealed = 'false';
+        blankElement.title = 'クリックして答えを表示';
+        console.log('🙈 答えを隠しました');
+    } else {
+        // 答えを表示
+        blankElement.innerHTML = displayContent;
+        blankElement.dataset.revealed = 'true';
+        blankElement.title = 'クリックして答えを隠す';
+        console.log('👁️ 答えを表示しました');
         
-        answerToggleBtn.addEventListener('click', function() {
-            const isHidden = answerContent.classList.toggle('hidden');
-            this.textContent = isHidden ? '💡 解答を表示' : '💡 解答を隠す';
-            
-            // 解答内の条文参照ボタンも有効にする
-            if (!isHidden) {
-                setupArticleRefButtons(answerContent);
-            }
-        });
+        // 答えの中に条文参照ボタンがある場合、イベントリスナーを設定
+        setupArticleRefButtons(blankElement);
+    }
+};
+
+// ★★★ 条文表示パネル関数（グローバル関数） ★★★
+window.showArticlePanel = function(lawText) {
+    console.log('📖 条文表示パネル呼び出し:', lawText);
+    
+    // ★★★ 全角数字を半角数字に変換 ★★★
+    const normalizedLawText = convertFullWidthToHalfWidth(lawText);
+    if (normalizedLawText !== lawText) {
+        console.log('🔄 条文表示パネル: 全角数字を半角数字に変換');
+        console.log('変換前:', lawText);
+        console.log('変換後:', normalizedLawText);
     }
     
-    // 空欄一括操作ボタン
-    const showAllBlanksBtn = popup.querySelector('.show-all-blanks-btn');
-    const hideAllBlanksBtn = popup.querySelector('.hide-all-blanks-btn');
+    // ★★★ ただし書き対応：条文テキストからただし書きを分離 ★★★
+    let provisoText = null;
+    let processedLawText = normalizedLawText;
     
-    if (showAllBlanksBtn && answerContent) {
-        showAllBlanksBtn.addEventListener('click', function() {
-            toggleAllBlanks(answerContent, true);
-        });
+    // 「ただし書」を検出
+    const tadashiMatch = normalizedLawText.match(/^(.+?)(ただし書き?.*)$/);
+    if (tadashiMatch) {
+        processedLawText = tadashiMatch[1]; // ただし書きを除いた部分
+        provisoText = tadashiMatch[2];      // ただし書き部分
+        console.log(`📝 ただし書き検出: ベース="${processedLawText}", ただし="${provisoText}"`);
     }
     
-    if (hideAllBlanksBtn && answerContent) {
-        hideAllBlanksBtn.addEventListener('click', function() {
-            toggleAllBlanks(answerContent, false);
-        });
+    // processedLawTextから法令名と条文番号を分離
+    // 例: "憲法21条" → 法令名: "憲法", 条文: "21条"
+    // 例: "民法719条1項前段" → 法令名: "民法", 条文: "719条1項前段"
+    const match = processedLawText.match(/^(.+?)(\d+.*)$/);
+    if (match) {
+        const lawName = match[1];
+        const articleRef = match[2];
+        console.log(`📖 分離結果: 法令名="${lawName}", 条文="${articleRef}"`);
+        showArticlePanelWithPreset(lawName, articleRef, provisoText);
+    } else {
+        console.warn('⚠️ 条文テキストの解析に失敗しました:', processedLawText);
+        // フォールバック: 全体を法令名として扱う
+        showArticlePanelWithPreset(processedLawText, '', provisoText);
     }
-}
+};
 
 // ★★★ 空欄一括操作関数（casePage.jsから移動） ★★★
 function toggleAllBlanks(container, reveal) {
@@ -442,18 +484,24 @@ function toggleAllBlanks(container, reveal) {
 export function processBlankFillText(text, uniqueId = '') {
     if (!text) return text;
     
+    // ★★★ 全角数字を半角数字に変換 ★★★
+    const normalizedText = convertFullWidthToHalfWidth(text);
+    if (normalizedText !== text) {
+        console.log('🔄 空欄化処理: 全角数字を半角数字に変換');
+    }
+    
     // {{}}で囲まれた部分を検出する正規表現
     const blankPattern = /\{\{([^}]+)\}\}/g;
     let blankCounter = 0;
-    let processedText = text;
+    let processedText = normalizedText;
     
     // まず、{{}}の外側にある【】を条文参照ボタン化
-    let outsideBlankText = text;
+    let outsideBlankText = normalizedText;
     let blankMatches = [];
     let match;
     
     // {{}}の内容を一時的にプレースホルダーに置換
-    while ((match = blankPattern.exec(text)) !== null) {
+    while ((match = blankPattern.exec(normalizedText)) !== null) {
         blankMatches.push(match[1]);
         const placeholder = `__BLANK_${blankMatches.length - 1}__`;
         outsideBlankText = outsideBlankText.replace(match[0], placeholder);
@@ -494,7 +542,7 @@ export function processBlankFillText(text, uniqueId = '') {
         
         const blankHtml = `<span class="blank-container inline-block">
             <span id="${blankId}" class="blank-text cursor-pointer ${bgClass} px-2 py-1 rounded border-b-2 font-bold transition-all duration-200" 
-                  data-answer="${dataAnswer.replace(/"/g, '&quot;')}" data-display-content="${displayContent.replace(/"/g, '&quot;')}" data-blank-id="${blankId}" onclick="toggleBlankReveal(this)" title="クリックして答えを表示">
+                  data-answer="${dataAnswer.replace(/"/g, '&quot;')}" data-display-content="${displayContent.replace(/"/g, '&quot;')}" data-blank-id="${blankId}" onclick="window.toggleBlankReveal(this)" title="クリックして答えを表示">
                 ${underscores}
             </span>
         </span>`;
@@ -505,7 +553,7 @@ export function processBlankFillText(text, uniqueId = '') {
     return outsideBlankText;
 }
 
-// ★★★ デバッグ用：条文検出テスト関数（強化版） ★★★
+// ★★★ デバッグ用：条文検出テスト関数（強化版・ただし書き対応） ★★★
 export function testArticleDetection() {
     console.log('🧪 条文検出テスト開始');
     
@@ -514,7 +562,12 @@ export function testArticleDetection() {
         '【日本国憲法21条】の表現の自由',
         '【民事訴訟法197条1項2号】の職業の秘密',
         '【刑法199条】の殺人罪',
-        '【麻薬及び向精神薬取締法】違反'
+        '【麻薬及び向精神薬取締法】違反',
+        '【民法７１９条１項前段】の共同不法行為', // 全角数字テスト
+        '【会社法８２８条２項３号】の株主代表訴訟', // 全角数字テスト
+        '【民法714条1項ただし書】の監督義務者の免責', // ただし書きテスト
+        '【民法709条ただし書き】の過失責任', // ただし書きテスト
+        '【民法415条1項ただし書】の債務不履行責任' // ただし書きテスト
     ];
     
     testTexts.forEach((text, index) => {
@@ -525,9 +578,48 @@ export function testArticleDetection() {
         // ボタンが生成されたかチェック
         const hasButton = result.includes('article-ref-btn');
         console.log(`ボタン生成: ${hasButton ? '✅' : '❌'}`);
+        
+        // ただし書きが検出されたかチェック
+        const hasProviso = result.includes('data-has-proviso="true"');
+        if (hasProviso) {
+            console.log(`ただし書き検出: ✅`);
+        }
+        
+        // 全角数字が含まれていた場合の変換チェック
+        const hasFullWidthNumbers = /[０-９]/.test(text);
+        if (hasFullWidthNumbers) {
+            console.log(`全角数字検出: ✅ (自動変換されました)`);
+        }
     });
     
     console.log('🧪 条文検出テスト完了');
+}
+
+// ★★★ ただし書きテスト専用関数 ★★★
+export function testProvisoDetection() {
+    console.log('🧪 ただし書き検出テスト開始');
+    
+    const testTexts = [
+        '民法714条1項ただし書',
+        '民法709条ただし書き',
+        '民法415条1項ただし書',
+        '会社法362条4項ただし書き',
+        '民法９０条ただし書'
+    ];
+    
+    testTexts.forEach((text, index) => {
+        console.log(`\nただし書きテスト ${index + 1}: "${text}"`);
+        
+        // showArticlePanelを呼び出してテスト
+        try {
+            window.showArticlePanel(text);
+            console.log(`✅ showArticlePanel呼び出し成功`);
+        } catch (error) {
+            console.error(`❌ showArticlePanel呼び出し失敗:`, error);
+        }
+    });
+    
+    console.log('🧪 ただし書き検出テスト完了');
 }
 
 // ★★★ 強制的に条文ボタンを再処理する関数 ★★★
@@ -609,4 +701,24 @@ function closeAllQAPopups() {
     }
     
     console.log(`✅ 全Q&Aポップアップ閉じる処理完了`);
+}
+
+// ★★★ 全角数字を半角数字に変換する関数 ★★★
+function convertFullWidthToHalfWidth(text) {
+    if (!text || typeof text !== 'string') {
+        return text;
+    }
+    
+    // 全角数字を半角数字に変換
+    const fullWidthDigits = '０１２３４５６７８９';
+    const halfWidthDigits = '0123456789';
+    
+    let convertedText = text;
+    for (let i = 0; i < fullWidthDigits.length; i++) {
+        const fullWidthChar = fullWidthDigits[i];
+        const halfWidthChar = halfWidthDigits[i];
+        convertedText = convertedText.replace(new RegExp(fullWidthChar, 'g'), halfWidthChar);
+    }
+    
+    return convertedText;
 }
