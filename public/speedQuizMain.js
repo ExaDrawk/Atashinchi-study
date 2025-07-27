@@ -32,99 +32,27 @@ export function createSpeedQuizMainSection() {
                     <div class="text-2xl font-bold" id="weak-articles">0</div>
                 </div>
             </div>
-            
+
             <!-- クイックスタートボタン -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <button id="start-all-quiz" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-all">
                     🎯 全問題
                 </button>
                 <button id="start-weak-quiz" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-all">
-                    📉 弱点問題
+                    📊 弱点問題
                 </button>
-                <button id="start-no-paragraph-quiz" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-all">
-                    📝 条文のみ
-                </button>
-                <button id="start-custom-quiz" class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-all">
-                    🎛️ カスタム
+                <button id="start-recent-wrong-quiz" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-all">
+                    🕒 最近間違えた問題
                 </button>
             </div>
             
-            <!-- 設定パネル -->
-            <div id="speed-quiz-settings-panel" class="hidden bg-gray-50 rounded-lg p-4 mb-4 text-black">
-                <h3 class="text-lg font-bold mb-4 text-black">🎛️ クイズ設定</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- 法令選択 -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">📚 法令選択</label>
-                        <div id="law-selection" class="space-y-2 max-h-32 overflow-y-auto">
-                            <!-- 動的に生成 -->
-                        </div>
-                    </div>
-                    
-                    <!-- 難易度・フィルタ -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">🎯 難易度・フィルタ</label>
-                        <div class="space-y-2">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="filter-weak" class="mr-2">
-                                <span class="text-sm">正答率60%未満のみ</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="filter-no-paragraph" class="mr-2">
-                                <span class="text-sm">項番号なしのみ</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" id="filter-recent" class="mr-2">
-                                <span class="text-sm">最近間違えた問題</span>
-                            </label>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">⏰ 制限時間</label>
-                            <select id="time-limit" class="w-full p-2 border border-gray-300 rounded-md">
-                                <option value="5">5秒</option>
-                                <option value="10" selected>10秒</option>
-                                <option value="15">15秒</option>
-                                <option value="20">20秒</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">📊 問題数</label>
-                            <select id="question-count" class="w-full p-2 border border-gray-300 rounded-md">
-                                <option value="10">10問</option>
-                                <option value="20" selected>20問</option>
-                                <option value="30">30問</option>
-                                <option value="50">50問</option>
-                                <option value="all">全問題</option>
-                            </select>
-                        </div>
-                    </div>
+            <!-- 条文一覧表示 -->
+            <div id="article-list-section" class="mt-6">
+                <h3 class="text-lg font-bold mb-4 text-black">📋 条文一覧（法律・条文番号順）</h3>
+                <div class="mb-4 text-sm text-gray-600">
+                    表示中の条文数: <span id="displayed-article-count">0</span>件
                 </div>
-                
-                <div class="mt-6 flex justify-end space-x-4">
-                    <button id="cancel-settings" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                        キャンセル
-                    </button>
-                    <button id="start-custom-quiz-final" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
-                        🎯 開始
-                    </button>
-                </div>
-            </div>
-            
-            <!-- 法令別正答率表示 -->
-            <div id="law-accuracy-section" class="mt-6">
-                <h3 class="text-lg font-bold mb-4 text-black">📊 法令別正答率</h3>
-                <div id="law-accuracy-list" class="space-y-2">
-                    <!-- 動的に生成 -->
-                </div>
-            </div>
-            
-            <!-- 弱点条文表示 -->
-            <div id="weak-articles-section" class="mt-6">
-                <h3 class="text-lg font-bold mb-4 text-black">📉 弱点条文（正答率60%未満）</h3>
-                <div id="weak-articles-list" class="space-y-2">
+                <div id="article-list" class="space-y-2 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
                     <!-- 動的に生成 -->
                 </div>
             </div>
@@ -136,6 +64,7 @@ export function createSpeedQuizMainSection() {
 
 /**
  * トップページ用スピード条文セクションを初期化
+ * 回答済み問題のデータのみを使用
  */
 export async function initializeSpeedQuizMainSection(containerId) {
     const container = document.getElementById(containerId);
@@ -143,33 +72,239 @@ export async function initializeSpeedQuizMainSection(containerId) {
         console.error('❌ コンテナが見つかりません:', containerId);
         return;
     }
-    
-    // HTML挿入
+    // セクションHTMLを挿入
     container.innerHTML = createSpeedQuizMainSection();
-    
-    console.log('🎮 トップページ用スピード条文セクション初期化開始');
-    
-    // 条文メタデータを読み込み
-    console.log('📚 全条文メタデータを読み込み中...');
+    // 回答済み条文データを読み込み
     window.speedQuizArticles = await loadAllArticlesForSpeedQuiz();
-    console.log(`✅ 条文メタデータ読み込み完了: ${window.speedQuizArticles?.length || 0}件`);
-    
     // 統計情報を更新
     updateSpeedQuizStats();
-    
-    // 法令別正答率を表示
-    updateLawAccuracyDisplay();
-    
-    // 弱点条文を表示
-    updateWeakArticlesDisplay();
-    
-    // 法令選択チェックボックスを生成
-    generateLawSelection();
-    
+    // フィルターUIが利用可能になるまで簡易的に待機
+    await new Promise(resolve => setTimeout(resolve, 100));
+    // 条文一覧を初回表示
+    updateArticleList();
     // イベントリスナーを設定
     setupSpeedQuizMainEvents();
+}
+
+/**
+ * 条文一覧を表示（既存のフォルダ選択UIと連携）
+ */
+function updateArticleList() {
+    const filteredArticles = getFilteredArticles();
+    const articleList = document.getElementById('article-list');
+    const articleCount = document.getElementById('displayed-article-count');
     
-    console.log('✅ トップページ用スピード条文セクション初期化完了');
+    if (!articleList) {
+        console.error('❌ article-list要素が見つかりません - HTMLが正しく生成されていない可能性があります');
+        // HTMLを再生成してみる
+        const container = document.getElementById('speed-quiz-main-section');
+        if (container) {
+            container.innerHTML = createSpeedQuizMainSection();
+            setTimeout(() => updateArticleList(), 100); // 少し遅延後に再試行
+        }
+        return;
+    }
+    
+    // 法律名と条文番号でソート
+    filteredArticles.sort((a, b) => {
+        // まず法律名でソート
+        const lawCompare = a.lawName.localeCompare(b.lawName);
+        if (lawCompare !== 0) return lawCompare;
+        
+        // 次に条文番号でソート
+        const aNum = parseInt(a.articleNumber) || 0;
+        const bNum = parseInt(b.articleNumber) || 0;
+        if (aNum !== bNum) return aNum - bNum;
+        
+        // 最後に項番号でソート
+        const aPara = parseInt(a.paragraph) || 1;
+        const bPara = parseInt(b.paragraph) || 1;
+        return aPara - bPara;
+    });
+    
+    // 条文数を表示
+    if (articleCount) {
+        articleCount.textContent = filteredArticles.length;
+    }
+    
+    if (filteredArticles.length === 0) {
+        const selectedFolder = document.getElementById('category-filter')?.value || '';
+        const selectedSubfolder = document.getElementById('subfolder-filter')?.value || '';
+        const totalArticles = window.speedQuizArticles ? window.speedQuizArticles.length : 0;
+        
+        let message = '';
+        if (totalArticles === 0) {
+            message = '条文データが読み込まれていません。ページを再読み込みしてください。';
+        } else if (!selectedFolder) {
+            message = '該当する条文がありません。フォルダを選択してください。';
+        } else {
+            message = `選択されたフォルダ "${selectedFolder}"${selectedSubfolder ? ` / "${selectedSubfolder}"` : ''} には条文がありません。`;
+        }
+        
+        articleList.innerHTML = `
+            <div class="text-gray-500 text-center py-4">
+                <p>${message}</p>
+                <div class="text-xs mt-2 text-gray-400">
+                    デバッグ情報: 総条文数=${totalArticles}, フォルダ="${selectedFolder}", サブフォルダ="${selectedSubfolder}"
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // 条文一覧を表示
+    articleList.innerHTML = filteredArticles.map(article => {
+        const displayName = `${article.lawName}${article.articleNumber}条${article.paragraph !== '1' ? `第${article.paragraph}項` : ''}`;
+        const answerRates = getAnswerRates();
+        const record = answerRates[article.lawName]?.[article.articleNumber]?.[article.paragraph];
+        
+        let statsHtml = '';
+        if (record && record.answered > 0) {
+            const correctRate = Math.round((record.correct / record.answered) * 100);
+            const rateColor = correctRate >= 80 ? 'text-green-600' : correctRate >= 60 ? 'text-yellow-600' : 'text-red-600';
+            statsHtml = `
+                <div class="text-xs text-gray-500">
+                    正答率: <span class="${rateColor} font-medium">${correctRate}%</span> (${record.correct}/${record.answered})
+                </div>
+            `;
+        } else {
+            statsHtml = '<div class="text-xs text-gray-400">未回答</div>';
+        }
+        
+        return `
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border text-black hover:bg-blue-50 cursor-pointer transition-colors" 
+                 onclick="openArticleDetail('${article.lawName}', '${article.articleNumber}', '${article.paragraph}')">
+                <div class="flex items-center flex-1">
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm mr-3 transition-colors"
+                            onclick="event.stopPropagation(); startSingleArticleQuiz('${article.lawName}', '${article.articleNumber}', '${article.paragraph}')">
+                        ${displayName}
+                    </button>
+                    <div class="flex flex-col">
+                        <div class="text-xs text-gray-600">${article.sourceCase || '不明なモジュール'}</div>
+                        ${statsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * 既存のフォルダ選択UIと連携して条文をフィルタ
+ */
+function getFilteredArticles() {
+    if (!window.speedQuizArticles) {
+        console.warn('⚠️ speedQuizArticles が存在しません');
+        return [];
+    }
+    
+    // 既存のフォルダ選択UIから選択状態を取得
+    const selectedFolder = document.getElementById('category-filter')?.value || '';
+    const selectedSubfolder = document.getElementById('subfolder-filter')?.value || '';
+    
+    console.log(`🔍 フィルタリング開始:`, {
+        selectedFolder,
+        selectedSubfolder,
+        totalArticles: window.speedQuizArticles.length,
+        sampleArticles: window.speedQuizArticles.slice(0, 3).map(a => ({
+            lawName: a.lawName,
+            articleNumber: a.articleNumber,
+            category: a.category,
+            sourceCaseId: a.sourceCaseId
+        }))
+    });
+    
+    let filteredArticles = window.speedQuizArticles;
+    
+    // フォルダによるフィルタリング
+    if (selectedFolder) {
+        filteredArticles = filteredArticles.filter(article => {
+            // caseSummariesから対応するケースを検索
+            const caseSummaries = window.caseSummaries || [];
+            const caseData = caseSummaries.find(c => c.title === article.sourceCase || c.id === article.sourceCaseId);
+            
+            if (!caseData) {
+                console.warn(`⚠️ ケースが見つかりません: ${article.sourceCase || article.sourceCaseId}`);
+                return false;
+            }
+            
+            // フォルダ名とカテゴリのマッピングを確認
+            // 選択されたフォルダ名が実際のカテゴリ名と一致するか、またはファイルパスに含まれるかチェック
+            let matchesCategory = false;
+            
+            // 1. 直接的なカテゴリマッチ
+            if (caseData.category === selectedFolder) {
+                matchesCategory = true;
+            }
+            
+            // 2. ファイルパスベースのマッチ（フォルダ名が含まれる場合）
+            if (caseData.filePath && caseData.filePath.includes(selectedFolder + '/')) {
+                matchesCategory = true;
+            }
+            
+            // 3. ケースIDベースのマッチ
+            if (caseData.id && caseData.id.startsWith(selectedFolder + '/')) {
+                matchesCategory = true;
+            }
+            
+            // 4. 特別なマッピング（商法 -> kaishaho など）
+            const folderCategoryMapping = {
+                '商法': 'kaishaho',
+                '刑法': '刑法',
+                '民法': '民法',
+                '憲法': '憲法'
+            };
+            
+            if (folderCategoryMapping[selectedFolder] && caseData.category === folderCategoryMapping[selectedFolder]) {
+                matchesCategory = true;
+            }
+            
+            if (!matchesCategory) {
+                return false;
+            }
+            
+            // サブフォルダでフィルタリング
+            if (selectedSubfolder) {
+                // ケースIDからサブフォルダを推定
+                if (caseData.id && caseData.id.includes('/')) {
+                    const pathParts = caseData.id.split('/');
+                    if (pathParts.length >= 2) {
+                        const caseSubfolder = pathParts[1];
+                        return caseSubfolder === selectedSubfolder;
+                    }
+                }
+                
+                // または、明示的なsubfolderプロパティをチェック
+                if (caseData.subfolder) {
+                    return caseData.subfolder === selectedSubfolder;
+                }
+                
+                // またはファイルパスからサブフォルダを抽出
+                if (caseData.filePath && caseData.filePath.includes('/')) {
+                    const pathParts = caseData.filePath.split('/');
+                    if (pathParts.length >= 2) {
+                        const fileSubfolder = pathParts[1];
+                        return fileSubfolder === selectedSubfolder;
+                    }
+                }
+                
+                // サブフォルダが指定されているが、ケースにサブフォルダ情報がない場合は除外
+                return false;
+            }
+            
+            return true;
+        });
+    }
+    
+    console.log(`📂 フィルタ結果:`, {
+        selectedFolder,
+        selectedSubfolder,
+        beforeFilter: window.speedQuizArticles.length,
+        afterFilter: filteredArticles.length,
+        sampleFiltered: filteredArticles.slice(0, 5).map(a => `${a.lawName}${a.articleNumber}条 (${a.sourceCase})`)
+    });
+    
+    return filteredArticles;
 }
 
 /**
@@ -208,398 +343,289 @@ function updateSpeedQuizStats() {
 }
 
 /**
- * 法令別正答率を表示
- */
-function updateLawAccuracyDisplay() {
-    const answerRates = getAnswerRates();
-    const lawAccuracyList = document.getElementById('law-accuracy-list');
-    
-    if (!lawAccuracyList) return;
-    
-    const lawStats = [];
-    
-    for (const lawName in answerRates) {
-        let lawAnswered = 0;
-        let lawCorrect = 0;
-        
-        for (const articleNumber in answerRates[lawName]) {
-            for (const paragraph in answerRates[lawName][articleNumber]) {
-                const record = answerRates[lawName][articleNumber][paragraph];
-                lawAnswered += record.answered;
-                lawCorrect += record.correct;
-            }
-        }
-        
-        const accuracy = lawAnswered > 0 ? Math.round((lawCorrect / lawAnswered) * 100) : 0;
-        lawStats.push({ lawName, accuracy, answered: lawAnswered, correct: lawCorrect });
-    }
-    
-    // 正答率でソート
-    lawStats.sort((a, b) => b.accuracy - a.accuracy);
-    
-    lawAccuracyList.innerHTML = lawStats.map(stat => `
-        <div class="flex items-center justify-between p-3 bg-white rounded-lg border text-black hover:bg-blue-50 cursor-pointer transition-colors" data-law-name="${stat.lawName}" onclick="startLawSpecificQuiz('${stat.lawName}')">
-            <div class="flex items-center">
-                <span class="font-medium text-black">${stat.lawName}</span>
-                <span class="text-sm text-gray-500 ml-2">${stat.correct}/${stat.answered}</span>
-                <span class="text-xs text-blue-600 ml-2">📚 クリックでクイズ</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
-                    <div class="bg-${stat.accuracy >= 80 ? 'green' : stat.accuracy >= 60 ? 'yellow' : 'red'}-500 h-2 rounded-full" style="width: ${stat.accuracy}%"></div>
-                </div>
-                <span class="text-sm font-medium text-black">${stat.accuracy}%</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-/**
- * 弱点条文を表示
- */
-function updateWeakArticlesDisplay() {
-    const answerRates = getAnswerRates();
-    const weakArticlesList = document.getElementById('weak-articles-list');
-    
-    if (!weakArticlesList) return;
-    
-    const weakArticles = [];
-    
-    for (const lawName in answerRates) {
-        for (const articleNumber in answerRates[lawName]) {
-            for (const paragraph in answerRates[lawName][articleNumber]) {
-                const record = answerRates[lawName][articleNumber][paragraph];
-                const accuracy = record.answered > 0 ? (record.correct / record.answered) * 100 : 0;
-                
-                if (accuracy < 60 && record.answered >= 2) {
-                    weakArticles.push({
-                        lawName,
-                        articleNumber,
-                        paragraph,
-                        accuracy: Math.round(accuracy),
-                        answered: record.answered,
-                        correct: record.correct
-                    });
-                }
-            }
-        }
-    }
-    
-    // 正答率でソート（低い順）
-    weakArticles.sort((a, b) => a.accuracy - b.accuracy);
-    
-    if (weakArticles.length === 0) {
-        weakArticlesList.innerHTML = '<p class="text-gray-500 text-center py-4">弱点条文はありません！</p>';
-        return;
-    }
-    
-    weakArticlesList.innerHTML = weakArticles.slice(0, 10).map(article => `
-        <div class="flex items-center justify-between p-3 bg-white rounded-lg border text-black">
-            <div class="flex items-center">
-                <span class="font-medium text-black">${article.lawName}${article.articleNumber}条${article.paragraph !== '1' ? `第${article.paragraph}項` : ''}</span>
-                <span class="text-sm text-gray-500 ml-2">${article.correct}/${article.answered}</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-16 bg-gray-200 rounded-full h-2 mr-3">
-                    <div class="bg-red-500 h-2 rounded-full" style="width: ${article.accuracy}%"></div>
-                </div>
-                <span class="text-sm font-medium text-red-600">${article.accuracy}%</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-/**
- * 法令選択チェックボックスを生成
- */
-function generateLawSelection() {
-    const answerRates = getAnswerRates();
-    const lawSelection = document.getElementById('law-selection');
-    
-    if (!lawSelection) return;
-    
-    const availableLaws = Object.keys(answerRates);
-    
-    if (availableLaws.length === 0) {
-        lawSelection.innerHTML = '<p class="text-gray-500 text-sm">まだ学習データがありません</p>';
-        return;
-    }
-    
-    lawSelection.innerHTML = availableLaws.map(lawName => `
-        <label class="flex items-center">
-            <input type="checkbox" class="law-checkbox mr-2" value="${lawName}" checked>
-            <span class="text-sm">${lawName}</span>
-        </label>
-    `).join('');
-}
-
-/**
  * イベントリスナーを設定
  */
 function setupSpeedQuizMainEvents() {
     // 設定ボタン
-    document.getElementById('speed-quiz-settings').addEventListener('click', () => {
+    document.getElementById('speed-quiz-settings')?.addEventListener('click', () => {
         const panel = document.getElementById('speed-quiz-settings-panel');
-        panel.classList.toggle('hidden');
-    });
-    
-    // 設定キャンセル
-    document.getElementById('cancel-settings').addEventListener('click', () => {
-        document.getElementById('speed-quiz-settings-panel').classList.add('hidden');
+        panel?.classList.toggle('hidden');
     });
     
     // クイックスタートボタン
-    document.getElementById('start-all-quiz').addEventListener('click', () => startQuizWithSettings('all'));
-    document.getElementById('start-weak-quiz').addEventListener('click', () => startQuizWithSettings('weak'));
-    document.getElementById('start-no-paragraph-quiz').addEventListener('click', () => startQuizWithSettings('no-paragraph'));
-    document.getElementById('start-custom-quiz').addEventListener('click', () => {
-        document.getElementById('speed-quiz-settings-panel').classList.remove('hidden');
+    document.getElementById('start-all-quiz')?.addEventListener('click', () => startQuizWithSettings('all'));
+    document.getElementById('start-weak-quiz')?.addEventListener('click', () => startQuizWithSettings('weak'));
+    document.getElementById('start-recent-wrong-quiz')?.addEventListener('click', () => startQuizWithSettings('recent-wrong'));
+    
+    // 既存のフォルダ選択UIと連携
+    // category-filterとsubfolder-filterの変更を監視して条文リストを更新
+    const categoryFilter = document.getElementById('category-filter');
+    const subfolderFilter = document.getElementById('subfolder-filter');
+    
+    console.log('🔗 既存フィルターとの連携を設定:', {
+        categoryFilter: !!categoryFilter,
+        subfolderFilter: !!subfolderFilter
     });
-    document.getElementById('start-custom-quiz-final').addEventListener('click', () => startQuizWithSettings('custom'));
+    
+    if (categoryFilter) {
+        // 既存のイベントリスナーに追加で条文リスト更新を設定
+        categoryFilter.addEventListener('change', () => {
+            console.log('📁 フォルダ選択変更:', categoryFilter.value);
+            updateArticleList();
+        });
+    }
+    
+    if (subfolderFilter) {
+        // 既存のイベントリスナーに追加でアーticleリスト更新を設定
+        subfolderFilter.addEventListener('change', () => {
+            console.log('📂 サブフォルダ選択変更:', subfolderFilter.value);
+            updateArticleList();
+        });
+    }
+    
+    // MutationObserverでフィルターUIの変更を監視
+    setupFilterUIObserver();
+}
+
+/**
+ * フィルターUIの動的変更を監視
+ */
+function setupFilterUIObserver() {
+    // MutationObserverでDOM変更を監視
+    const observer = new MutationObserver((mutations) => {
+        let shouldUpdate = false;
+        
+        mutations.forEach((mutation) => {
+            // フィルター関連の要素が変更された場合
+            if (mutation.type === 'childList' || mutation.type === 'attributes') {
+                const target = mutation.target;
+                if (target.id === 'category-filter' || 
+                    target.id === 'subfolder-filter' ||
+                    target.id === 'subfolder-filter-container') {
+                    shouldUpdate = true;
+                }
+            }
+        });
+        
+        if (shouldUpdate) {
+            console.log('🔄 フィルターUI変更を検知、条文リストを更新');
+            setTimeout(updateArticleList, 100); // 少し遅延させて確実に更新
+        }
+    });
+    
+    // フィルター関連の要素を監視対象に追加
+    const filterContainer = document.querySelector('[data-testid="filter-grid"], #filter-grid');
+    if (filterContainer) {
+        observer.observe(filterContainer, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['value', 'selected']
+        });
+        console.log('🔍 フィルターUI変更監視を開始');
+    }
 }
 
 /**
  * 設定に基づいてクイズを開始
  */
 function startQuizWithSettings(mode) {
-    let settings = {
-        mode: mode,
-        timeLimit: parseInt(document.getElementById('time-limit')?.value || '10'),
-        questionCount: document.getElementById('question-count')?.value || '20',
-        filterWeak: false,
-        filterNoParagraph: false,
-        filterRecent: false,
-        selectedLaws: []
-    };
+    const filteredArticles = getFilteredArticles();
     
-    // モード別の設定調整
-    if (mode === 'all') {
-        // 全問題モード：すべてのフィルタを無効化
-        settings.filterWeak = false;
-        settings.filterNoParagraph = false;
-        settings.filterRecent = false;
-        settings.selectedLaws = []; // 法令フィルタも無効化
-    } else if (mode === 'weak') {
-        // 弱点問題モード
-        settings.filterWeak = true;
-        settings.selectedLaws = Array.from(document.querySelectorAll('.law-checkbox:checked')).map(cb => cb.value);
-    } else if (mode === 'no-paragraph') {
-        // 条文のみモード
-        settings.filterNoParagraph = true;
-        settings.selectedLaws = Array.from(document.querySelectorAll('.law-checkbox:checked')).map(cb => cb.value);
-    } else if (mode === 'custom') {
-        // カスタムモード：設定パネルの値を使用
-        settings.filterWeak = document.getElementById('filter-weak')?.checked || false;
-        settings.filterNoParagraph = document.getElementById('filter-no-paragraph')?.checked || false;
-        settings.filterRecent = document.getElementById('filter-recent')?.checked || false;
-        settings.selectedLaws = Array.from(document.querySelectorAll('.law-checkbox:checked')).map(cb => cb.value);
+    console.log(`🎮 クイズ開始: モード=${mode}, フィルタ済み条文数=${filteredArticles.length}`);
+    
+    if (filteredArticles.length === 0) {
+        const selectedFolder = document.getElementById('category-filter')?.value || '';
+        const selectedSubfolder = document.getElementById('subfolder-filter')?.value || '';
+        const totalArticles = window.speedQuizArticles ? window.speedQuizArticles.length : 0;
+        
+        let message = '';
+        if (totalArticles === 0) {
+            message = '条文データが読み込まれていません。ページを再読み込みしてください。';
+        } else if (!selectedFolder) {
+            message = '該当する条文がありません。フォルダを選択してください。';
+        } else {
+            message = `選択されたフォルダ "${selectedFolder}"${selectedSubfolder ? ` / "${selectedSubfolder}"` : ''} には条文がありません。他のフォルダを選択してください。`;
+        }
+        
+        alert(message);
+        return;
     }
     
-    // 設定を適用してクイズを開始
-    console.log('🎯 クイズ開始設定:', settings);
+    let targetArticles = [];
+    const answerRates = getAnswerRates();
     
-    // 設定パネルを閉じる
-    document.getElementById('speed-quiz-settings-panel').classList.add('hidden');
+    switch (mode) {
+        case 'all':
+            targetArticles = filteredArticles;
+            break;
+        case 'weak':
+            targetArticles = filteredArticles.filter(article => {
+                const record = answerRates[article.lawName]?.[article.articleNumber]?.[article.paragraph];
+                if (!record || record.answered === 0) return true; // 未回答も弱点として扱う
+                return (record.correct / record.answered) < 0.6; // 60%未満
+            });
+            break;
+        case 'recent-wrong':
+            // 最近間違えた問題のロジック（簡易版）
+            targetArticles = filteredArticles.filter(article => {
+                const record = answerRates[article.lawName]?.[article.articleNumber]?.[article.paragraph];
+                return record && record.answered > 0 && (record.correct / record.answered) < 1.0;
+            });
+            break;
+    }
     
-    // クイズページに遷移（実装は別途）
-    startFilteredSpeedQuiz(settings);
+    if (targetArticles.length === 0) {
+        const modeNames = {
+            'weak': '弱点',
+            'recent-wrong': '最近間違えた',
+            'all': '該当する'
+        };
+        alert(`${modeNames[mode] || '該当する'}条文がありません。`);
+        return;
+    }
+    
+    console.log(`✅ クイズ開始: ${targetArticles.length}問の条文クイズ`);
+    
+    // クイズを開始
+    startSpeedQuiz(targetArticles);
 }
 
 /**
- * 正答率データを取得（speedQuiz.jsから）
+ * 単一条文のクイズを開始
  */
-function getAnswerRates(lawName = null) {
+function startSingleArticleQuiz(lawName, articleNumber, paragraph) {
+    const article = window.speedQuizArticles?.find(a => 
+        a.lawName === lawName && 
+        a.articleNumber === articleNumber && 
+        a.paragraph === paragraph
+    );
+    
+    if (!article) {
+        alert('条文が見つかりません。');
+        return;
+    }
+    
+    startSpeedQuiz([article]);
+}
+
+/**
+ * 条文詳細を表示
+ */
+function openArticleDetail(lawName, articleNumber, paragraph) {
+    if (window.showArticlePanelWithPreset) {
+        window.showArticlePanelWithPreset(lawName, articleNumber, paragraph);
+    } else {
+        console.error('❌ showArticlePanelWithPreset関数が見つかりません');
+        alert('条文詳細表示機能が利用できません。');
+    }
+}
+
+/**
+ * スピードクイズを開始
+ */
+function startSpeedQuiz(articles) {
+    if (!window.startQuiz) {
+        console.error('❌ startQuiz関数が見つかりません');
+        alert('クイズ機能が利用できません。');
+        return;
+    }
+    
+    // 条文問題を作成
+    const questions = articles.map(article => ({
+        type: '条文',
+        question: `${article.lawName}${article.articleNumber}条${article.paragraph !== '1' ? `第${article.paragraph}項` : ''}の内容は？`,
+        article: article,
+        lawName: article.lawName,
+        articleNumber: article.articleNumber,
+        paragraph: article.paragraph
+    }));
+    
+    // クイズを開始
+    window.startQuiz(questions, {
+        mode: 'speed-quiz',
+        title: `⚡ スピード条文クイズ (${articles.length}問)`
+    });
+}
+
+/**
+ * 全条文メタデータを読み込み（回答済み問題のみ）
+ */
+async function loadAllArticlesForSpeedQuiz() {
+    // APIから全法令分まとめて取得
+    console.log('📚 APIから法律ごとの条文リストを取得中...');
+    const SUPPORTED_LAWS = [
+        '日本国憲法','日本国憲法の改正手続に関する法律','国会法','内閣法','国家行政組織法','裁判所法','検察庁法','弁護士法','公職選挙法','行政手続法','行政機関の保有する情報の公開に関する法律','行政代執行法','行政不服審査法','行政事件訴訟法','国家賠償法','個人情報の保護に関する法律','地方自治法','民法','民法施行法','一般社団法人及び一般財団法人に関する法律','不動産登記法','動産及び債権の譲渡の対抗要件に関する民法の特例等に関する法律','建物の区分所有等に関する法律','仮登記担保契約に関する法律','身元保証ニ関スル法律','消費者契約法','電子消費者契約に関する民法の特例に関する法律','割賦販売法','特定商取引に関する法律','利息制限法','借地借家法','住宅の品質確保の促進等に関する法律','住宅の品質確保の促進等に関する法律施行令','信託法','失火ノ責任ニ関スル法律','製造物責任法','自動車損害賠償保障法','戸籍法','任意後見契約に関する法律','後見登記等に関する法律','法務局における遺言書の保管等に関する法律','商法','会社法','会社法施行規則','会社計算規則','社債、株式等の振替に関する法律','手形法','小切手法','民事訴訟法','民事訴訟規則','人事訴訟法','人事訴訟規則','民事執行法','民事保全法','刑法','自動車の運転により人を死傷させる行為等の処罰に関する法律','刑事訴訟法','刑事訴訟規則','犯罪捜査のための通信傍受に関する法律','裁判員の参加する刑事裁判に関する法律','検察審査会法','犯罪被害者等の権利利益の保護を図るための刑事手続に付随する措置に関する法律','少年法','刑事収容施設及び被収容者等の処遇に関する法律','警察官職務執行法','破産法','破産規則','民事再生法','民事再生規則','特許法','著作権法'
+    ];
+    let allArticles = [];
+    for (const lawName of SUPPORTED_LAWS) {
+        try {
+            const res = await fetch(`/api/law-articles/${encodeURIComponent(lawName)}`);
+            if (res.ok) {
+                const list = await res.json();
+                if (Array.isArray(list)) {
+                    allArticles = allArticles.concat(list.map(a => ({ ...a, lawName })));
+                }
+            }
+        } catch (e) {
+            console.warn(`⚠️ ${lawName} のAPI取得に失敗`, e);
+        }
+    }
+    console.log(`✅ API取得完了: ${allArticles.length}件`);
+    return allArticles;
+}
+
+/**
+ * テキストから条文参照を抽出
+ */
+function extractArticleReferences(text) {
+    const references = [];
+    
+    // 条文参照パターンを検索
+    // 【会社法106条】、【民法264条】、【刑法66条】のようなパターン
+    const patterns = [
+        /【([^【】]+法)(?:第)?(\d+)条(?:第(\d+)項)?(?:第(\d+)号)?】/g,
+        /【([^【】]+法律)(?:第)?(\d+)条(?:第(\d+)項)?(?:第(\d+)号)?】/g,
+        /([^\s【】]+法)(?:第)?(\d+)条(?:第(\d+)項)?(?:第(\d+)号)?/g,
+        /([^\s【】]+法律)(?:第)?(\d+)条(?:第(\d+)項)?(?:第(\d+)号)?/g
+    ];
+    
+    for (const pattern of patterns) {
+        let match;
+        while ((match = pattern.exec(text)) !== null) {
+            const lawName = match[1];
+            const articleNumber = match[2];
+            const paragraph = match[3] || '1';
+            const fullMatch = match[0];
+            
+            // 法律名が適切かチェック（「法」または「法律」で終わる）
+            if (lawName && (lawName.endsWith('法') || lawName.endsWith('法律'))) {
+                references.push({
+                    lawName,
+                    articleNumber,
+                    paragraph,
+                    fullMatch
+                });
+            }
+        }
+    }
+    
+    return references;
+}
+
+/**
+ * 回答率データを取得
+ */
+function getAnswerRates() {
     try {
-        const storageKey = 'speedQuizAnswerRates';
-        const existingData = localStorage.getItem(storageKey);
-        
-        if (!existingData) {
-            return {};
-        }
-        
-        const answerRates = JSON.parse(existingData);
-        
-        if (lawName) {
-            const normalizedLawName = normalizeLawName(lawName);
-            return answerRates[normalizedLawName] || {};
-        }
-        
-        return answerRates;
-    } catch (error) {
-        console.error('❌ 正答率取得エラー:', error);
+        return JSON.parse(localStorage.getItem('speedQuizAnswerRates') || '{}');
+    } catch (e) {
+        console.error('❌ 回答率データの読み込みに失敗:', e);
         return {};
     }
 }
 
-/**
- * 法令名を正規化（speedQuiz.jsから）
- */
-function normalizeLawName(lawName) {
-    if (!lawName) return 'その他';
-    
-    const normalizations = {
-        '日本国憲法': '憲法',
-        '憲法': '憲法',
-        '民法': '民法',
-        '刑法': '刑法',
-        '商法': '商法',
-        '会社法': '会社法',
-        '民事訴訟法': '民事訴訟法',
-        '刑事訴訟法': '刑事訴訟法',
-        '行政法': '行政法'
-    };
-    
-    for (const [key, value] of Object.entries(normalizations)) {
-        if (lawName.includes(key)) {
-            return value;
-        }
-    }
-    
-    return lawName;
-}
-
-/**
- * フィルタリングされたスピードクイズを開始
- */
-function startFilteredSpeedQuiz(settings) {
-    // この関数をspeedQuiz.jsから動的にインポート
-    import('./speedQuiz.js').then(module => {
-        if (module.startFilteredSpeedQuiz) {
-            module.startFilteredSpeedQuiz(settings);
-        } else {
-            console.error('❌ startFilteredSpeedQuiz関数が見つかりません');
-            alert('スピードクイズ機能の読み込みに失敗しました。');
-        }
-    }).catch(error => {
-        console.error('❌ speedQuiz.jsのインポートエラー:', error);
-        alert('スピードクイズ機能の読み込みに失敗しました。');
-    });
-}
-
-/**
- * 特定の法律のみでスピードクイズを開始
- * @param {string} lawName - 法律名
- */
-window.startLawSpecificQuiz = function(lawName) {
-    console.log(`📚 ${lawName}専用スピードクイズを開始`);
-    console.log('🔍 現在のURL:', window.location.href);
-    console.log('🔍 現在のhash:', window.location.hash);
-    
-    // 確認ダイアログ
-    if (!confirm(`${lawName}の条文のみでスピードクイズを開始しますか？`)) {
-        console.log('❌ ユーザーがキャンセルしました');
-        return;
-    }
-    
-    // 法律名を含む設定オブジェクトを作成
-    const settings = {
-        specificLaw: lawName,
-        timeLimit: 10,
-        questionCount: 20
-    };
-    
-    // スピードクイズページに遷移し、法律名をパラメータとして渡す
-    const newHash = `#/speed-quiz?law=${encodeURIComponent(lawName)}`;
-    console.log('🔄 新しいURLに遷移:', newHash);
-    
-    try {
-        // 一度URLを変更してから関数を呼び出す
-        window.location.hash = newHash;
-        console.log('✅ URL変更完了');
-        
-        // 少し遅延させてからspeedQuizを開始する（URLの変更が適用されるのを待つ）
-        setTimeout(() => {
-            // フィルタリングされた設定でスピードクイズを開始
-            startFilteredSpeedQuiz(settings);
-        }, 200);
-    } catch (error) {
-        console.error('❌ URL変更エラー:', error);
-    }
-};
-
-/**
- * 特定の法律の条文のみをフィルタリング
- * @param {string} lawName - 法律名
- * @returns {Array} フィルタリングされた条文
- */
-export function filterArticlesByLaw(lawName) {
-    if (!window.speedQuizArticles || !Array.isArray(window.speedQuizArticles)) {
-        console.warn('⚠️ 条文データが利用できません');
-        return [];
-    }
-    
-    const filteredArticles = window.speedQuizArticles.filter(article => {
-        return article.lawName === lawName;
-    });
-    
-    console.log(`📊 ${lawName}の条文: ${filteredArticles.length}件`);
-    return filteredArticles;
-}
-
-/**
- * 全ケースから条文メタデータを抽出してスピードクイズ用データを作成
- * 注意: 条文の本文は事前に取得せず、ゲーム中にオンデマンドで取得する
- */
-export async function loadAllArticlesForSpeedQuiz() {
-    console.log('🔄 全ケースから条文メタデータを読み込み中...');
-    
-    try {
-        // ケース一覧を取得
-        const { caseSummaries } = await import('./cases/index.js');
-        console.log(`📚 読み込み対象ケース: ${caseSummaries.length}件`);
-        
-        const allArticles = [];
-        let processedCases = 0;
-        let extractedArticles = 0;
-        
-        // 各ケースから条文を抽出
-        for (const caseSummary of caseSummaries) {
-            try {
-                console.log(`🔍 ケース処理中: ${caseSummary.title}`);
-                
-                // ケースデータを動的にインポート
-                const caseModule = await import(`./cases/${caseSummary.filePath}`);
-                const caseData = caseModule.default;
-                
-                if (caseData) {
-                    // 条文メタデータを抽出（本文は取得しない）
-                    const { extractAllArticles } = await import('./speedQuiz.js');
-                    const articles = await extractAllArticles(caseData);
-                    
-                    if (articles && articles.length > 0) {
-                        // 重複除去のため、displayTextをキーとして使用
-                        for (const article of articles) {
-                            const existing = allArticles.find(a => a.displayText === article.displayText);
-                            if (!existing) {
-                                allArticles.push({
-                                    ...article,
-                                    sourceCase: caseSummary.title, // 出典ケースを記録
-                                    sourceCaseId: caseSummary.id
-                                });
-                                extractedArticles++;
-                            }
-                        }
-                    }
-                }
-                processedCases++;
-                
-                // 進捗表示（10件ごと）
-                if (processedCases % 10 === 0) {
-                    console.log(`📊 進捗: ${processedCases}/${caseSummaries.length}件処理済み`);
-                }
-                
-            } catch (error) {
-                console.warn(`⚠️ ケース処理エラー: ${caseSummary.title} - ${error.message}`);
-            }
-        }
-        
-        console.log(`✅ 条文メタデータ読み込み完了: ${allArticles.length}件の条文を${processedCases}件のケースから抽出`);
-        console.log(`📊 詳細: 処理ケース=${processedCases}, 抽出条文=${extractedArticles}, 重複除去後=${allArticles.length}`);
-        
-        return allArticles;
-        
-    } catch (error) {
-        console.error('❌ 全条文メタデータ読み込みエラー:', error);
-        return [];
-    }
-}
+// グローバル関数として公開
+window.updateSpeedQuizArticleList = updateArticleList;
+window.startSingleArticleQuiz = startSingleArticleQuiz;
+window.openArticleDetail = openArticleDetail;

@@ -1,6 +1,8 @@
 // server.js - Render.com対応版
 
 import express from 'express';
+// 法律ごとの条文リストAPI
+import lawArticleListApi from './lawArticleListApi.js';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import path from 'path';
@@ -10,6 +12,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import session from 'express-session';
+import bodyParser from 'body-parser';
 import { 
     getFormattedArticle, 
     parseAndGetArticle, 
@@ -21,6 +24,8 @@ import {
 dotenv.config();
 
 // ★★★ 対応法令一覧（lawLoader.jsと同期） ★★★
+const app = express();
+
 const SUPPORTED_LAWS = [
     // ★★★ 憲法・国家組織法 ★★★
     '日本国憲法',
@@ -31,6 +36,7 @@ const SUPPORTED_LAWS = [
     '裁判所法',
     '検察庁法',
     '弁護士法',
+
     '公職選挙法',
     
     // ★★★ 行政法 ★★★
@@ -39,6 +45,8 @@ const SUPPORTED_LAWS = [
     '行政代執行法',
     '行政不服審査法',
     '行政事件訴訟法',
+
+// APIルーターを組み込み
     '国家賠償法',
     '個人情報の保護に関する法律',
     '地方自治法',
@@ -110,7 +118,43 @@ const SUPPORTED_LAWS = [
     '著作権法'
 ];
 
-const app = express();
+// APIルーターを組み込み
+app.use(lawArticleListApi);
+
+// ★★★ 条文統計データ保存API: /api/article-stats/update ★★★
+const __dirname2 = path.dirname(new URL(import.meta.url).pathname.replace(/^\/+([A-Za-z]:)/, '$1'));
+const ARTICLE_STATS_DIR = path.join(__dirname2, 'laws-article-list');
+if (!fssync.existsSync(ARTICLE_STATS_DIR)) fssync.mkdirSync(ARTICLE_STATS_DIR);
+
+app.use(bodyParser.json({ limit: '1mb' }));
+
+// POST /api/article-stats/update
+app.post('/api/article-stats/update', async (req, res) => {
+    try {
+        const { lawName, articleNumber, paragraph, stats } = req.body;
+        if (!lawName || !articleNumber || !paragraph || !stats) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        const filePath = path.join(ARTICLE_STATS_DIR, `${encodeURIComponent(lawName)}-stats.json`);
+        let data = [];
+        if (fssync.existsSync(filePath)) {
+            data = JSON.parse(fssync.readFileSync(filePath, 'utf8'));
+        }
+        // 既存データを更新または追加
+        const idx = data.findIndex(a => a.articleNumber === articleNumber && a.paragraph === paragraph);
+        if (idx >= 0) {
+            data[idx] = { ...data[idx], ...stats };
+        } else {
+            data.push({ articleNumber, paragraph, ...stats });
+        }
+        fssync.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+        res.json({ success: true });
+    } catch (e) {
+        console.error('❌ /api/article-stats/update エラー:', e);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 const port = process.env.PORT || 3000;
 
 // ★★★ Render.com対応ミドルウェア ★★★

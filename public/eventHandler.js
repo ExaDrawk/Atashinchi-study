@@ -19,7 +19,52 @@ export function setupGlobalEventDelegation() {
 }
 
 function handleGlobalClick(event) {
-    console.log('クリックイベント検出:', event.target);
+    // console.log('クリックイベント検出:', event.target); // デバッグログを減らす
+    
+    // ★★★ 条文参照ボタンの処理 ★★★
+    const articleRefBtn = event.target.closest('.article-ref-btn');
+    if (articleRefBtn) {
+        console.log('✅ 条文参照ボタンを検出（イベント委任）');
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const lawName = articleRefBtn.dataset.lawName;
+        const articleRef = articleRefBtn.dataset.articleRef;
+        const displayName = articleRefBtn.dataset.displayName || lawName;
+        
+        console.log('条文参照データ:', { lawName, articleRef, displayName });
+        
+        // 条文の自動入力機能付きパネルを表示
+        if (window.showArticlePanelWithPreset) {
+            window.showArticlePanelWithPreset(lawName, articleRef);
+        } else {
+            console.error('❌ showArticlePanelWithPreset関数が見つかりません');
+        }
+        return;
+    }
+    
+    // ★★★ Q&A参照ボタンの処理 ★★★
+    const qaRefBtn = event.target.closest('.qa-ref-btn');
+    if (qaRefBtn) {
+        console.log('✅ Q&A参照ボタンを検出（イベント委任）');
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const qaIndex = parseInt(qaRefBtn.dataset.qaIndex);
+        const qNumber = qaRefBtn.dataset.qNumber;
+        const quizIndex = qaRefBtn.dataset.quizIndex || 'global';
+        const subIndex = qaRefBtn.dataset.subIndex || '0';
+        
+        console.log('Q&A参照データ:', { qaIndex, qNumber, quizIndex, subIndex });
+        
+        // Q&Aポップアップを表示（articleProcessor.jsの関数を使用）
+        if (window.showQAPopup) {
+            window.showQAPopup(qaIndex, qNumber, quizIndex, subIndex);
+        } else {
+            console.error('❌ showQAPopup関数が見つかりません');
+        }
+        return;
+    }
     
     // ★★★ 条文表示ボタンの処理 ★★★
     if (event.target.closest('.show-article-btn')) {
@@ -135,9 +180,15 @@ function handleGlobalClick(event) {
     // ★★★ タブボタンの処理 ★★★
     if (event.target.classList.contains('tab-button')) {
         event.preventDefault();
+        
+        // アクティブ状態の更新
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
+        
+        // タブコンテンツをレンダリング（内部でタブ状態も保存される）
         renderTabContent(event.target.dataset.tab);
+        
+        console.log(`✅ タブ切り替え完了: ${event.target.dataset.tab}`);
         return;
     }
 }

@@ -2,6 +2,10 @@
 
 import { processArticleReferences, processBlankFillText, processAllReferences, setupArticleRefButtons } from './articleProcessor.js';
 import { getArticlePanelPosition, isArticlePanelVisible, updateArticlePanelLayout, ARTICLE_PANEL_WIDTH } from './articlePanel.js';
+import { QAStatusSystem } from './qaStatusSystem.js';
+
+// QAStatusSystemのインスタンス作成
+const qaStatusSystem = new QAStatusSystem();
 
 // ★★★ Q&Aポップアップのグローバル状態管理 ★★★
 window.qaPopupState = {
@@ -111,19 +115,30 @@ function createQAPopupHTML(popupId, qNumber, qaQuestion, qaAnswer) {
         maxHeightStyle = `max-height: calc(100vh - 2rem);`;
     }
     
+    // Q&Aステータスボタンを生成
+    const qaId = `qa-${qNumber}`;
+    const statusButtons = qaStatusSystem.generateStatusButtons(qaId);
+    
     return `
         <div id="${popupId}" class="qa-ref-popup fixed bg-white border border-yellow-400 rounded-lg shadow-lg p-4" style="${positionStyle} ${maxHeightStyle} overflow-y: auto; z-index: 1100001;">
             <div class="flex justify-between items-center mb-2 sticky top-0 bg-white z-10 border-b border-yellow-200 pb-2">
                 <span class="font-bold text-yellow-900">Q${qNumber} 参照</span>
                 <button type="button" class="qa-ref-close-btn text-gray-400 hover:text-gray-700 ml-2" style="font-size:1.2em;">×</button>
             </div>
-            <div class="mb-2"><span class="font-bold">問題：</span>${qaQuestion}</div>
+            <div class="mb-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold">問題：</span>
+                    <div class="qa-status-buttons">${statusButtons}</div>
+                </div>
+                <div class="qa-question-text">${qaQuestion}</div>
+            </div>
             <div class="mb-2">
                 <button type="button" class="toggle-qa-answer-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-1 px-3 rounded border border-green-300 text-sm mb-2">💡 解答を隠す</button>
                 <div class="qa-answer-content bg-green-50 p-3 rounded-lg border border-green-200">
                     <div class="flex gap-2 mb-2">
                         <button type="button" class="show-all-blanks-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-1 px-2 rounded border border-blue-300 text-xs">🔍 全て表示</button>
                         <button type="button" class="hide-all-blanks-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-1 px-2 rounded border border-gray-300 text-xs">👁️ 全て隠す</button>
+                        <button type="button" class="copy-qa-btn bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold py-1 px-2 rounded border border-yellow-400 text-xs" title="問題文と解答をコピー">📋 コピー</button>
                     </div>
                     <div><span class="font-bold text-green-800">解答：</span>${qaAnswer}</div>
                 </div>
@@ -173,6 +188,96 @@ function setupQAPopupEvents(popupId) {
     const recreatedPopup = document.getElementById(popupId);
     if (!recreatedPopup) return;
 
+    // コピーボタンのイベントリスナーを設定
+    const copyBtn = recreatedPopup.querySelector('.copy-qa-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            // 問題文と解答を取得
+            const questionElem = recreatedPopup.querySelector('.qa-question-text');
+            const answerElem = recreatedPopup.querySelector('.qa-answer-content');
+            let questionText = questionElem ? questionElem.textContent || '' : '';
+            let answerText = '';
+            if (answerElem) {
+                // ボタン群を除外し、解答テキストのみ抽出
+                const answerDivs = answerElem.querySelectorAll('div');
+                let found = false;
+                for (const div of answerDivs) {
+                    // 「解答：」ラベルが含まれるdivを探す
+                    const label = div.querySelector('span.font-bold.text-green-800');
+                    if (label) {
+                        let text = '';
+                        for (let node of div.childNodes) {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                text += node.textContent;
+                            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                if (node.matches('span.font-bold.text-green-800')) {
+                                    continue; // ラベルはスキップ
+                                } else if (node.classList && node.classList.contains('blank-text')) {
+                                    // すべてのdata-*属性を優先してコピー
+                                    let blankText = '';
+                                    for (const attr of node.attributes) {
+                                        if (attr.name.startsWith('data-') && attr.value && attr.value.trim() !== '') {
+                                            blankText = attr.value;
+                                            break;
+                                        }
+                                    }
+                                    if (!blankText || blankText.trim() === '') {
+                                        blankText = node.textContent;
+                                    }
+                                    text += blankText;
+                                } else {
+                                    text += node.textContent;
+                                }
+                            }
+                        }
+                        // 余計な改行・空白を1つにまとめる
+                        answerText = text.replace(/[\r\n]+/g, '').replace(/\s{2,}/g, ' ');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    // フォールバック: すべてのテキストから「解答：」を除去
+                    answerText = answerElem.textContent.replace(/^解答：/, '').trim();
+                }
+            }
+            // 空欄用のかっこや空欄部分（___や（）など）を除去
+            questionText = questionText.replace(/[（）\(\)＿_]+/g, '');
+            answerText = answerText.replace(/[（）\(\)＿_]+/g, '');
+            // 前後空白除去
+            questionText = questionText.trim();
+            answerText = answerText.trim();
+            // コピーするテキスト
+            const copyText = `Q: ${questionText}\nA: ${answerText}`;
+            // クリップボードにコピー
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(copyText).then(() => {
+                    copyBtn.textContent = '✅ コピー完了';
+                    setTimeout(() => { copyBtn.textContent = '📋 コピー'; }, 1200);
+                }).catch(() => {
+                    copyBtn.textContent = '⚠️ 失敗';
+                    setTimeout(() => { copyBtn.textContent = '📋 コピー'; }, 1200);
+                });
+            } else {
+                // Fallback for HTTP or古いブラウザ
+                const textarea = document.createElement('textarea');
+                textarea.value = copyText;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    copyBtn.textContent = '✅ コピー完了';
+                } catch (err) {
+                    copyBtn.textContent = '⚠️ 失敗';
+                }
+                document.body.removeChild(textarea);
+                setTimeout(() => { copyBtn.textContent = '📋 コピー'; }, 1200);
+            }
+        });
+    }
     // 解答表示ボタンのイベントリスナーを設定
     const answerToggleBtn = recreatedPopup.querySelector('.toggle-qa-answer-btn');
     const answerContent = recreatedPopup.querySelector('.qa-answer-content');
@@ -215,10 +320,28 @@ function setupQAPopupEvents(popupId) {
             window.qaPopupState.removePopup(popupId);
             
             // 条文パネルのレイアウトを更新
-            setTimeout(() => {
-                updateArticlePanelLayout();
-            }, 10);
+            updateArticlePanelLayout();
         });
+    }
+
+    // ★★★ Q&Aステータスボタンのイベントリスナー設定 ★★★
+    const statusButtons = recreatedPopup.querySelectorAll('.qa-status-btn');
+    statusButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const status = this.dataset.status;
+            const qaId = this.dataset.qaId;
+            qaStatusSystem.setStatus('default', qaId, status);
+            
+            // ボタンの表示状態を更新（qaStatusSystemで自動的に行われる）
+        });
+    });
+
+    // 条文参照ボタンを有効にする
+    setupArticleRefButtons(recreatedPopup);
+    
+    // ポップアップ表示後にQ&Aリンクボタンの色を更新
+    if (window.qaStatusSystem) {
+        window.qaStatusSystem.updateAllQALinkColors();
     }
 }
 

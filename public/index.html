@@ -12,21 +12,35 @@
     <meta name="msapplication-TileColor" content="#FEF3C7">
     <meta name="theme-color" content="#FEF3C7">
       <script src="https://cdn.tailwindcss.com"></script>
+      <script>
+        // Tailwind CSS の本番環境警告を抑制（開発中のため）
+        const originalWarn = console.warn;
+        console.warn = function(message) {
+          if (typeof message === 'string' && message.includes('should not be used in production')) {
+            return;
+          }
+          originalWarn.apply(console, arguments);
+        };
+      </script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
     
     <!-- 答案オーバーレイのCSS -->
     <link rel="stylesheet" href="css/answerOverlay.css">
     
+    <!-- 現代的なデザインCSS -->
+    <link rel="stylesheet" href="css/modern-design.css">
+    
     <style>
         /* 基本スタイル */
         body { 
             font-family: 'M PLUS Rounded 1c', sans-serif; 
-            background-color: #FFFBEB; 
+            /* 背景は modern-design.css で管理 */
         }
         .main-container { 
             max-width: 1000px; 
             margin: 0 auto; 
+            /* その他のスタイルは modern-design.css で管理 */
         }
 
         /* カードとタブのスタイル */
@@ -1208,10 +1222,20 @@
 </head>
 <body class="text-gray-800">
     
+    <!-- 雲のアニメーションレイヤー（JavaScriptで動的に大量生成） -->
+    <div class="cloud-layer">
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+    </div>
+    
     <div id="app" class="main-container p-4 md:p-8">
         <!-- コンテンツはJSによってここに描画されます -->
-    </div>    <script src="app.js" type="module" defer></script>
+    </div>
+    
+    <script src="app.js" type="module" defer></script>
     <script src="speedQuiz.js" type="module" defer></script>
+    <script src="cloudSystem.js" type="module" defer></script>
     <script src="pages/answerOverlay.js" type="module" defer></script>
 
 </body>

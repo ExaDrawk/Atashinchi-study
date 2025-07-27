@@ -9,6 +9,24 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// 🔥 【最終セーフティネット】表示直前のハイフン完全除去関数
+function sanitizeDisplayText(text) {
+    if (!text) return text;
+    
+    return text
+        .replace(/---+/g, '')  // 3個以上の連続ハイフンを完全除去
+        .replace(/\s*---\s*/g, ' ')  // 前後にスペースがある「---」を空白1個に置換
+        .replace(/。---/g, '。')  // 句点の後の「---」を除去
+        .replace(/！---/g, '！')  // 感嘆符の後の「---」を除去
+        .replace(/？---/g, '？')  // 疑問符の後の「---」を除去
+        .replace(/([あ-ん])---/g, '$1')  // ひらがなの後の「---」を除去
+        .replace(/([ア-ン])---/g, '$1')  // カタカナの後の「---」を除去
+        .replace(/([一-龠])---/g, '$1')  // 漢字の後の「---」を除去
+        .replace(/\n---+\n/g, '\n')  // 改行で囲まれた「---」行を除去
+        .replace(/^---+$/gm, '')  // 「---」のみの行を完全除去
+        .trim();  // 前後の空白を除去
+}
+
 // ★★★ キャラクター回答の条文・Q&A参照処理（新機能） ★★★
 function processCharacterDialogue(dialogueText, supportedLaws = [], questionsAndAnswers = []) {
     // ★★★ キャラクターの回答で条文を【】で囲む処理を最初に実行 ★★★
@@ -25,6 +43,21 @@ function processCharacterDialogue(dialogueText, supportedLaws = [], questionsAnd
     
     let processedText = dialogueText.replace(unbracketed, '【$1$2】');
     
+    // 🔥 【緊急】セカンダリ「---」除去処理（プロンプト禁止の限界対策）
+    // キャラクター対話の最終段階でも「---」を完全除去
+    processedText = processedText
+        .replace(/---+/g, '')  // 3個以上の連続ハイフンを完全除去
+        .replace(/\s*---\s*/g, ' ')  // 前後にスペースがある「---」を空白1個に置換
+        .replace(/。---/g, '。')  // 句点の後の「---」を除去
+        .replace(/！---/g, '！')  // 感嘆符の後の「---」を除去
+        .replace(/？---/g, '？')  // 疑問符の後の「---」を除去
+        .replace(/([あ-ん])---/g, '$1')  // ひらがなの後の「---」を除去
+        .replace(/([ア-ン])---/g, '$1')  // カタカナの後の「---」を除去
+        .replace(/([一-龠])---/g, '$1')  // 漢字の後の「---」を除去
+        .replace(/\n---+\n/g, '\n')  // 改行で囲まれた「---」行を除去
+        .replace(/^---+$/gm, '')  // 「---」のみの行を完全除去
+        .trim();  // 前後の空白を除去
+    
     // 【】で囲んだ後に、一度だけ統合処理を実行
     processedText = processAllReferences(processedText, supportedLaws, questionsAndAnswers);
     
@@ -35,23 +68,10 @@ function processCharacterDialogue(dialogueText, supportedLaws = [], questionsAnd
 export async function startChatSession(button, currentCaseData) {
     console.log('=== startChatSession開始（story/explanation対応） ===');
     
-    // AI応答の重複防止チェック（即座に強制リセット）
-    if (window.isCharacterDialogueInProgress) {
-        console.warn('⚠️ チャットセッションが既に進行中です - 即座に強制リセット');
-        // 2秒経過していれば強制的にフラグをリセット（短縮）
-        if (!window.lastDialogueStartTime || (Date.now() - window.lastDialogueStartTime) > 2000) {
-            console.log('🔄 進行中フラグを強制リセット');
-            window.isCharacterDialogueInProgress = false;
-            window.lastDialogueStartTime = null;
-        } else {
-            console.log('🔄 フラグを即座に強制リセット（緊急処理）');
-            window.isCharacterDialogueInProgress = false;
-            window.lastDialogueStartTime = null;
-        }
-    }
+    // AI応答の重複防止チェック無効化（自然な会話を優先）
+    console.log('� 重複防止チェックを無効化し、自然な会話を優先します');
     
-    window.isCharacterDialogueInProgress = true;
-    window.lastDialogueStartTime = Date.now(); // 開始時間を記録
+    let container, inputForm, inputElement, chatArea; // 変数宣言を先頭に移動
     
     try {
         // buttonがDOM要素でない場合の処理
@@ -61,7 +81,6 @@ export async function startChatSession(button, currentCaseData) {
         }
         
         const type = button.dataset?.type;
-        let container, inputForm, inputElement, chatArea;
     
     // タイプに応じて適切な要素を取得
     if (type === 'story') {
@@ -191,14 +210,14 @@ export async function startChatSession(button, currentCaseData) {
             chatTitle = '📝 ミニ論文添削';
         } else if (type === 'story') {
             problemText = `ストーリー内容：${currentCaseData.story.map(s => s.type === 'dialogue' ? `${s.speaker}: ${s.dialogue}` : s.text).join('\n')}`;
-            modelAnswer = currentCaseData.knowledgeBox || '';
+            modelAnswer = '';
             hintText = '';
-            chatTitle = '💬 ストーリーQ&A';
+            chatTitle = '💬 ストーリーについて話そう';
         } else if (type === 'explanation') {
             problemText = `解説内容：${currentCaseData.explanation}`;
-            modelAnswer = currentCaseData.knowledgeBox || '';
+            modelAnswer = '';
             hintText = '';
-            chatTitle = '🤔 解説Q&A';
+            chatTitle = '🤔 解説について話そう';
         } else {
             problemText = currentCaseData.essay.question;
             modelAnswer = currentCaseData.essay.points.join('、');
@@ -218,25 +237,14 @@ export async function startChatSession(button, currentCaseData) {
             </div>        `;
         
         let initialPrompt;
-        if (type === 'story' || type === 'explanation') {
-            // ストーリー・解説Q&A用のプロンプト（簡易版）
-            initialPrompt = generateInitialPrompt(userInput, problemText, modelAnswer, currentCaseData);
-        } else {
-            // 従来の添削用プロンプト
-            const characterNames = [...new Set(currentCaseData.story.filter(s => s.type === 'dialogue').map(s => s.speaker))];
-            const locationNarration = generateLocationNarration(characterNames);
-            
-            // 基本のプロンプトを取得
-            const basePrompt = generateInitialPrompt(userInput, problemText, modelAnswer, currentCaseData);
-            // ナレーションを統合（簡易版）
-            initialPrompt = basePrompt + '\n\n' + locationNarration;
-        }
+        // ストーリー・解説会話用のプロンプト
+        initialPrompt = generateInitialPrompt(userInput, type, currentCaseData);
 
         if (!window.conversationHistories) window.conversationHistories = {};
         
         let initialMessage;
         if (type === 'story' || type === 'explanation') {
-            initialMessage = { role: 'user', parts: [{ text: `次の質問に答えてください。質問：${userInput}` }] };
+            initialMessage = { role: 'user', parts: [{ text: `${userInput}` }] };
         } else {
             initialMessage = { role: 'user', parts: [{ text: `答案を添削してください。答案：${userInput}` }] };
         }
@@ -295,61 +303,28 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
         }
         
         const result = await response.json();
-        const aiResponse = result.reply || result.text || result.message || '';
-        console.log('✅ AI応答取得:', { responseLength: aiResponse.length });
+        let aiResponse = result.reply || result.text || result.message || '';
+        
+        // 🔥 【緊急】「---」強制除去処理（プロンプト禁止の限界対策）
+        // セリフの末尾や任意の場所に含まれる「---」を完全除去
+        aiResponse = aiResponse
+            .replace(/---+/g, '')  // 3個以上の連続ハイフンを完全除去
+            .replace(/\s*---\s*/g, ' ')  // 前後にスペースがある「---」を空白1個に置換
+            .replace(/。---/g, '。')  // 句点の後の「---」を除去
+            .replace(/！---/g, '！')  // 感嘆符の後の「---」を除去
+            .replace(/？---/g, '？')  // 疑問符の後の「---」を除去
+            .replace(/([あ-ん])---/g, '$1')  // ひらがなの後の「---」を除去
+            .replace(/([ア-ン])---/g, '$1')  // カタカナの後の「---」を除去
+            .replace(/([一-龠])---/g, '$1')  // 漢字の後の「---」を除去
+            .replace(/\n---+\n/g, '\n')  // 改行で囲まれた「---」行を除去
+            .replace(/^---+$/gm, '')  // 「---」のみの行を完全除去
+            .trim();  // 前後の空白を除去
+        
+        console.log('✅ AI応答取得（ハイフン除去後）:', { responseLength: aiResponse.length });
 
-        // 🔥 AI応答レベルでの完全な重複チェック（最強版）
-        if (dialogueArea) {
-            // 1. 履歴ベースの重複チェック
-            if (window.conversationHistories[sessionId]) {
-                const lastResponses = window.conversationHistories[sessionId]
-                    .filter(msg => msg.role === 'model')
-                    .slice(-5) // 直近5回の応答をチェック
-                    .map(msg => msg.parts[0].text.trim());
-                
-                if (lastResponses.includes(aiResponse.trim())) {
-                    console.warn('🚫 履歴ベースでAI応答の重複を検出、処理をスキップ:', aiResponse.substring(0, 100));
-                    return;
-                }
-            }
-            
-            // 2. 表示済み内容ベースの重複チェック
-            const existingMessages = Array.from(dialogueArea.querySelectorAll('.dialogue-message, .original-content'))
-                .map(el => el.textContent?.trim() || '')
-                .filter(text => text.length > 10);
-            
-            const responseToCheck = aiResponse.trim();
-            for (const existing of existingMessages) {
-                if (existing === responseToCheck) {
-                    console.warn('🚫 表示済み内容でAI応答の重複を検出、処理をスキップ:', responseToCheck.substring(0, 100));
-                    return;
-                }
-                
-                // 部分的な重複もチェック（80%以上一致）
-                if (existing.length > 50 && responseToCheck.length > 50) {
-                    const similarity = calculateSimilarity(existing, responseToCheck);
-                    if (similarity > 0.8) {
-                        console.warn('🚫 高い類似度でAI応答の重複を検出、処理をスキップ:', `類似度: ${(similarity * 100).toFixed(1)}%`);
-                        return;
-                    }
-                }
-            }
-            
-            // 3. 特定のキャラクター発言の重複チェック
-            const speakerMatches = responseToCheck.match(/([^@:：]+)[@:]([^:：]*?)[:：]/g);
-            if (speakerMatches) {
-                for (const match of speakerMatches) {
-                    const existingSpeakers = Array.from(dialogueArea.querySelectorAll('.dialogue-speaker'))
-                        .map(el => el.textContent?.trim() || '');
-                    
-                    const currentSpeaker = match.split(/[@:：]/)[0].trim();
-                    if (existingSpeakers.filter(s => s === currentSpeaker).length >= 2) {
-                        console.warn('🚫 同一キャラクターの過度な重複発言を検出:', currentSpeaker);
-                        return;
-                    }
-                }
-            }
-        }
+        // 🔥 AI応答レベルでの重複チェック完全無効化
+        // 自然な会話のため、AI応答の重複を完全に許可
+        console.log('� AI応答レベルでの重複チェックを無効化し、自然な会話を優先します');
 
         // 文字列類似度計算関数
         function calculateSimilarity(str1, str2) {
@@ -471,13 +446,35 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
         for (const dialogue of finalDialogues) {
             await sleep(1500);
             
-            // ナレーション特別処理
-            if (dialogue.startsWith('NARRATION:')) {
+            // ナレーション特別処理（より厳密なチェック）
+            if (dialogue.startsWith('---NARRATION:') && dialogue.endsWith('---')) {
+                const narrationText = dialogue.replace('---NARRATION:', '').replace('---', '').trim();
+                displayNarration(narrationText, sessionId);
+            } else if (dialogue.startsWith('NARRATION:')) {
                 const narrationText = dialogue.replace('NARRATION:', '').trim();
                 displayNarration(narrationText, sessionId);
             } else {
-                // 通常の対話処理（ナレーション処理を迂回）
-                displaySingleDialogue(dialogue, sessionId, true); // skipNarrationフラグを追加
+                // 通常の対話処理（ナレーション混在をチェック）
+                if (dialogue.includes('---NARRATION:')) {
+                    // ナレーションと対話が混在している場合の分離処理
+                    const parts = dialogue.split('---NARRATION:');
+                    if (parts.length > 1) {
+                        // 対話部分
+                        if (parts[0].trim()) {
+                            displaySingleDialogue(parts[0].trim(), sessionId, true);
+                            await sleep(1000);
+                        }
+                        // ナレーション部分
+                        const narrationPart = parts[1].replace('---', '').trim();
+                        if (narrationPart) {
+                            displayNarration(narrationPart, sessionId);
+                        }
+                    } else {
+                        displaySingleDialogue(dialogue, sessionId, true);
+                    }
+                } else {
+                    displaySingleDialogue(dialogue, sessionId, true);
+                }
             }
         }
         
@@ -488,41 +485,32 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
             }
         }, 500); // 最後の対話表示を待つ
         
-        // ★★★ 改良されたスコア抽出とデバッグ ★★★
-        console.log('🔍 AIレスポンス（スコア検索用）:', aiResponse.substring(0, 500));
-        
-        // より柔軟なスコア抽出パターン
-        const scorePatterns = [
-            /\*\*(\d+)点\*\*/,  // 元のパターン
-            /(\d+)点/,           // シンプルなパターン
-            /点数[：:]\s*(\d+)/,  // 「点数：XX」形式
-            /スコア[：:]\s*(\d+)/, // 「スコア：XX」形式
-            /評価[：:]\s*(\d+)点/ // 「評価：XX点」形式
-        ];
-        
-        let score = null;
-        for (const pattern of scorePatterns) {
-            const match = aiResponse.match(pattern);
-            if (match) {
-                score = parseInt(match[1], 10);
-                console.log(`✅ スコア検出成功: ${score}点 (パターン: ${pattern})`);
-                break;
+        // スコア抽出は quiz タイプのみで実行
+        if (sessionId.includes('quiz')) {
+            // より柔軟なスコア抽出パターン
+            const scorePatterns = [
+                /\*\*(\d+)点\*\*/,  // 元のパターン
+                /(\d+)点/,           // シンプルなパターン
+                /点数[：:]\s*(\d+)/,  // 「点数：XX」形式
+                /スコア[：:]\s*(\d+)/, // 「スコア：XX」形式
+                /評価[：:]\s*(\d+)点/ // 「評価：XX点」形式
+            ];
+            
+            let score = null;
+            for (const pattern of scorePatterns) {
+                const match = aiResponse.match(pattern);
+                if (match) {
+                    score = parseInt(match[1], 10);
+                    break;
+                }
             }
-        }
-        
-        if (score !== null) {
-            console.log(`📊 検出されたスコア: ${score}点`);
-            // 保存条件を緩和：10点以上で保存
-            if (score >= 10) {
-                console.log(`💾 保存条件を満たしています (${score}点 >= 10点)`);
+            
+            if (score !== null && score >= 10) {
                 await saveUserAnswer(sessionId, userInput, score, problemText);
-            } else {
-                console.log(`⚠️ 保存条件を満たしていません (${score}点 < 10点)`);
+            } else if (score === null) {
+                // スコアが検出できない場合は50点として保存
+                await saveUserAnswer(sessionId, userInput, 50, problemText);
             }
-        } else {
-            console.log('⚠️ スコアが検出されませんでした。手動で平均スコア(50点)で保存します。');
-            // スコアが検出できない場合は50点として保存
-            await saveUserAnswer(sessionId, userInput, 50, problemText);
         }
 
     } catch (error) {
@@ -606,7 +594,7 @@ function processNarration(text, sessionId) {
                 </div>
             </div>
         `);
-        dialogueArea.scrollTop = dialogueArea.scrollHeight;
+        // ナレーション表示時は自動スクロールしない
         return { processed: true, remainingDialogue: null };
     }
     
@@ -644,7 +632,7 @@ function processNarration(text, sessionId) {
                 </div>
             </div>
         `);
-        dialogueArea.scrollTop = dialogueArea.scrollHeight;
+        // ナレーション表示時は自動スクロールしない
         return { processed: true, remainingDialogue: null };
     }
     
@@ -665,7 +653,7 @@ function displayNarration(narrationText, sessionId) {
             </div>
         </div>
     `);
-    dialogueArea.scrollTop = dialogueArea.scrollHeight;
+    // ナレーション表示時は自動スクロールしない
 }
 
 // ★★★ 単一対話の表示（キャラクター回答の条文処理対応＋重複排除強化） ★★★
@@ -682,37 +670,13 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
         return;
     }
 
-    // 🔥 重複チェック強化: 複数の条件で重複を防止
-    const existingOriginals = dialogueArea.querySelectorAll('.original-content');
-    const existingVisibleText = dialogueArea.querySelectorAll('.dialogue-message, .dialogue-speaker, h5');
+    // 🔥 重複チェック無効化: 自然な会話のため重複を完全に許可
+    // 同じキャラクターの連続発言や類似内容の繰り返しを自然な会話として許可
+    // const existingOriginals = dialogueArea.querySelectorAll('.original-content');
+    // const existingVisibleText = dialogueArea.querySelectorAll('.dialogue-message, .dialogue-speaker, h5');
     
-    // 1. 原文ベースの重複チェック
-    for (const existing of existingOriginals) {
-        if (existing.textContent.trim() === trimmedDialogue.trim()) {
-            console.warn('🚫 重複した対話をスキップ（原文一致）:', trimmedDialogue.substring(0, 50));
-            return;
-        }
-    }
-    
-    // 2. 表示テキストベースの重複チェック
-    for (const existing of existingVisibleText) {
-        const existingText = existing.textContent.trim();
-        if (existingText && existingText === trimmedDialogue.trim()) {
-            console.warn('🚫 重複した対話をスキップ（表示一致）:', trimmedDialogue.substring(0, 50));
-            return;
-        }
-    }
-    
-    // 3. 話者名の重複チェック（連続する同じ話者の発言）
-    const lastSpeaker = dialogueArea.querySelector('.dialogue-speaker:last-child');
-    const speakerMatch = trimmedDialogue.match(/^([^：\n]+)[:：]/);
-    if (lastSpeaker && speakerMatch) {
-        const currentSpeaker = speakerMatch[1].trim();
-        if (lastSpeaker.textContent.trim() === currentSpeaker) {
-            console.warn('🚫 連続する同じ話者の発言をスキップ:', currentSpeaker);
-            return;
-        }
-    }
+    // 重複チェック機能を完全に無効化
+    console.log('� 重複チェックを無効化し、自然な会話を優先します');
 
     // skipNarrationフラグがfalseの場合のみナレーション処理を実行
     if (!skipNarration) {
@@ -856,6 +820,9 @@ function displaySingleDialogue(dialogue, sessionId, skipNarration = false) {
     const iconTransform = isRightSide ? 'transform: scaleX(-1);' : '';
     const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;    // ★★★ キャラクターのセリフ内の条文・Q&A参照もボタン化＋太字デコレーション（強化版） ★★★
     let processedDialogueText = processCharacterDialogue(dialogueText, window.SUPPORTED_LAWS || [], window.currentCaseData?.questionsAndAnswers || []);
+    
+    // 🔥 【最終セーフティネット】表示直前の「---」完全除去処理
+    processedDialogueText = sanitizeDisplayText(processedDialogueText);
     
     // ★★★ Mermaidグラフの処理を追加 ★★★
     if (typeof processMermaidInDialogue === 'function') {

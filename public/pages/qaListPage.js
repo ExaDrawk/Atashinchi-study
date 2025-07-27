@@ -1,6 +1,10 @@
 // qaListPage.js - 全モジュール横断Q&Aリストページ
 import { caseSummaries, caseLoaders } from '../cases/index.js';
 import { processArticleReferences, processBlankFillText } from '../articleProcessor.js';
+import { QAStatusSystem } from '../qaStatusSystem.js';
+
+// QAStatusSystemのインスタンス作成
+const qaStatusSystem = new QAStatusSystem();
 
 const RANK_CONFIG = {
     'S': { text: 'text-cyan-700', bg: 'bg-cyan-100', border: 'border-cyan-400' },
@@ -54,8 +58,18 @@ export async function renderQaListPage() {
         const rankBadge = `<span class="inline-block px-2 py-0.5 rounded text-xs font-bold border mr-2 ${RANK_CONFIG[rank]?.bg || ''} ${RANK_CONFIG[rank]?.text || ''} ${RANK_CONFIG[rank]?.border || ''}">${rank}</span>`;
         const question = processArticleReferences(qa.question);
         const answer = processBlankFillText(processArticleReferences(qa.answer), `qa-list-${i}`);
+        
+        // Q&Aステータスボタンを生成
+        const qaId = `qa-${qa.id}`;
+        const statusButtons = qaStatusSystem.generateStatusButtons(qaId);
+        
         qaListHtml += `<div class="p-4 bg-white rounded-lg shadow border flex flex-col gap-2 qa-item" data-rank="${rank}" data-module="${qa.moduleId}">
-            <div class="flex items-center gap-2">${rankBadge}<span class="font-bold">Q${qa.id}.</span> <span>${question}</span> <span class="ml-4 text-xs text-gray-500">[${qa.moduleTitle}]</span></div>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    ${rankBadge}<span class="font-bold">Q${qa.id}.</span> <span>${question}</span> <span class="ml-4 text-xs text-gray-500">[${qa.moduleTitle}]</span>
+                </div>
+                <div class="qa-status-buttons flex-shrink-0">${statusButtons}</div>
+            </div>
             <div class="ml-8"><span class="font-bold">答：</span>${answer}</div>
         </div>`;
     });
@@ -94,4 +108,21 @@ export async function renderQaListPage() {
             });
         });
     });
+
+    // ★★★ Q&Aステータスボタンのイベントリスナー設定 ★★★
+    document.querySelectorAll('.qa-status-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const status = this.dataset.status;
+            const qaId = this.dataset.qaId;
+            qaStatusSystem.setStatus('default', qaId, status);
+            
+            // ボタンの表示状態を更新
+            qaStatusSystem.updateButtonStates(qaId);
+        });
+    });
+    
+    // 初期読み込み時にQ&Aリンクボタンの色を更新
+    if (window.qaStatusSystem) {
+        window.qaStatusSystem.updateAllQALinkColors();
+    }
 }

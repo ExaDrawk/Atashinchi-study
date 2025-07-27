@@ -558,6 +558,7 @@ export {
 };
 
 // ★★★ グローバル関数として公開 ★★★
+window.showArticlePanel = showArticlePanel;
 window.showArticlePanelWithPreset = showArticlePanelWithPreset;
 
 // ★★★ ただし書き対応のグローバル関数も追加 ★★★

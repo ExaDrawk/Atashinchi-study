@@ -1,7 +1,81 @@
-// pages/homePage.js - ホームページ専用モジュール（タグ複数選択 + ランク絞り込み対応）
+// pages/homePage.js - ホームページ専用モジュール（グローバル検索機能付き）
 
 import { caseSummaries, caseLoaders } from '../cases/index.js';
-import { processBlankFillText, processArticleReferences } from '../articleProcessor.js';
+import { processArticleReferences, processBlankFillText } from '../articleProcessor.js';
+import { characters } from '../data/characters.js';
+import { QAStatusSystem } from '../qaStatusSystem.js';
+
+// 法令設定が利用可能になるまで待機
+function waitForLawSettings() {
+    return new Promise((resolve) => {
+        if (window.getLawSettings) {
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.getLawSettings) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
+}
+
+// QAStatusSystemのインスタンス作成
+const qaStatusSystem = new QAStatusSystem();
+
+// ★★★ Q&A完了割合を計算する関数 ★★★
+function calculateQACompletionRatio(caseData) {
+    if (!caseData.questionsAndAnswers || caseData.questionsAndAnswers.length === 0) {
+        return null; // Q&Aがない場合
+    }
+    
+    const totalQAs = caseData.questionsAndAnswers.length;
+    let completedQAs = 0;
+    
+    console.log(`🔍 Q&A完了割合計算開始: ${caseData.title || caseData.id}`);
+    console.log(`📊 総Q&A数: ${totalQAs}`);
+    
+    // デバッグ: ローカルストレージの内容を確認
+    console.log('🔍 ローカルストレージのQ&Aステータス:');
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('qa_status_')) {
+            console.log(`  ${key}: ${localStorage.getItem(key)}`);
+        }
+    }
+    
+    // 各Q&Aの完了状況をチェック
+    caseData.questionsAndAnswers.forEach(qa => {
+        console.log(`🔍 Q&A確認中: ID=${qa.id}, タイプ=${typeof qa.id}, モジュール=${caseData.id}`);
+        if (qa.id) {
+            // モジュール固有のステータスを取得
+            const status = qaStatusSystem.getStatus(caseData.id, qa.id);
+            console.log(`📋 Q&A ${qa.id} (${caseData.id}) ステータス: ${status}`);
+            if (status === 'completed' || status === '済') {
+                completedQAs++;
+            }
+        }
+    });
+    
+    console.log(`✅ 完了Q&A数: ${completedQAs}/${totalQAs}`);
+    
+    return {
+        completed: completedQAs,
+        total: totalQAs,
+        ratio: totalQAs > 0 ? (completedQAs / totalQAs) : 0
+    };
+}
+
+// ★★★ デバッグ用：フォルダカラーテスト ★★★
+async function testFolderColor() {
+    console.log('🧪 フォルダカラーのテストを開始');
+    const color = await getFolderColor('民法');
+    console.log('🧪 民法のフォルダカラー:', color);
+}
+
+// グローバルでテスト関数を使用可能にする
+window.testFolderColor = testFolderColor;
 
 // ★★★ サブフォルダ情報を取得する関数 ★★★
 async function getSubfoldersForCategory(category) {
@@ -60,8 +134,9 @@ async function loadCaseWithRank(caseId) {
 /**
  * ホーム画面を表示する（タグ複数選択 + ランク絞り込み対応）
  * @param {boolean} updateHistory - URL履歴を更新するかどうか
+ * @param {string} mode - 表示モード ('qa': Q&Aリスト, 'speed': スピード条文)
  */
-export function renderHome(updateHistory = true) {
+export async function renderHome(updateHistory = true, mode = null) {
     document.title = 'あたしンちスタディ';
     window.currentCaseData = null;
     
@@ -164,26 +239,38 @@ export function renderHome(updateHistory = true) {
             }
             
             .app-title {
-                background: linear-gradient(45deg, #ffd700, #ffed4e, #fff59d, #ffd700, #ffb300, #ffd700);
-                background-size: 200% 200%;
-                animation: title-shimmer 3s ease-in-out infinite, title-float 2s ease-in-out infinite;
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
+                color: #2c5530;
+                font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
+                font-weight: 800;
                 text-shadow: 
-                    1px 1px 2px rgba(0, 0, 0, 0.4),
-                    0 0 5px rgba(255, 215, 0, 0.3);
+                    2px 2px 0px #ffffff,
+                    -2px -2px 0px #ffffff,
+                    2px -2px 0px #ffffff,
+                    -2px 2px 0px #ffffff,
+                    1px 1px 0px #ffffff,
+                    -1px -1px 0px #ffffff,
+                    1px -1px 0px #ffffff,
+                    -1px 1px 0px #ffffff,
+                    3px 3px 6px rgba(44, 85, 48, 0.2);
                 position: relative;
-                font-weight: 900;
-                filter: contrast(1.2) brightness(1.0);
                 transition: all 0.3s ease;
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
             }
             
             .app-title:hover {
-                animation: title-shimmer 1s ease-in-out infinite, title-float 1s ease-in-out infinite, pulse 0.8s ease-in-out infinite;
-                filter: contrast(1.3) brightness(1.1) hue-rotate(30deg);
+                color: #1a3c1f;
+                text-shadow: 
+                    2px 2px 0px #ffffff,
+                    -2px -2px 0px #ffffff,
+                    2px -2px 0px #ffffff,
+                    -2px 2px 0px #ffffff,
+                    1px 1px 0px #ffffff,
+                    -1px -1px 0px #ffffff,
+                    1px -1px 0px #ffffff,
+                    -1px 1px 0px #ffffff,
+                    4px 4px 8px rgba(26, 60, 31, 0.3);
+                transform: translateY(-1px);
             }
             
             @media (min-width: 768px) {
@@ -271,45 +358,47 @@ export function renderHome(updateHistory = true) {
             
             .study-text {
                 font-size: var(--study-text-size);
-                background: linear-gradient(45deg, #0066ff, #0099ff, #00ccff, #00ffff, #33ffff, #66ffff);
-                background-size: 300% 300%;
-                animation: rainbow 1.5s ease infinite, glow 1s ease infinite, float 2.5s ease infinite, pulse 1.8s ease infinite;
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
+                color: #2c5530;
+                font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
+                font-weight: 700;
+                letter-spacing: 3px;
+                text-shadow: 
+                    3px 3px 0px #ffffff,
+                    -3px -3px 0px #ffffff,
+                    3px -3px 0px #ffffff,
+                    -3px 3px 0px #ffffff,
+                    2px 2px 0px #ffffff,
+                    -2px -2px 0px #ffffff,
+                    2px -2px 0px #ffffff,
+                    -2px 2px 0px #ffffff,
+                    1px 1px 0px #ffffff,
+                    -1px -1px 0px #ffffff,
+                    1px -1px 0px #ffffff,
+                    -1px 1px 0px #ffffff,
+                    4px 4px 8px rgba(44, 85, 48, 0.2);
                 position: relative;
-                font-family: 'Impact', 'Arial Black', sans-serif;
-                letter-spacing: 4px;
-                transform: perspective(300px) rotateX(3deg);
-                filter: contrast(1.4) brightness(1.1) saturate(1.2);
-                font-weight: 900;
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
+                transition: all 0.3s ease;
             }
             
-            .study-text::before {
-                content: attr(data-text);
-                position: absolute;
-                top: 0;
-                left: 0;
-                background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3);
-                background-size: 400% 400%;
-                animation: rainbow 3s ease infinite;
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-                z-index: -1;
-                transform: translate(2px, 2px);
-                opacity: 0.7;
-            }
-            
-            .study-text::after {
-                content: '✨⭐✨';
-                position: absolute;
-                top: -20px;
-                right: -20px;
-                font-size: 24px;
-                animation: bounce 1s ease infinite;
+            .study-text:hover {
+                color: #1a3c1f;
+                text-shadow: 
+                    3px 3px 0px #ffffff,
+                    -3px -3px 0px #ffffff,
+                    3px -3px 0px #ffffff,
+                    -3px 3px 0px #ffffff,
+                    2px 2px 0px #ffffff,
+                    -2px -2px 0px #ffffff,
+                    2px -2px 0px #ffffff,
+                    -2px 2px 0px #ffffff,
+                    1px 1px 0px #ffffff,
+                    -1px -1px 0px #ffffff,
+                    1px -1px 0px #ffffff,
+                    -1px 1px 0px #ffffff,
+                    5px 5px 10px rgba(26, 60, 31, 0.3);
+                transform: translateY(-2px);
             }
         </style>
         
@@ -328,14 +417,14 @@ export function renderHome(updateHistory = true) {
                 <div class="text-sm text-gray-600" id="user-info">
                     ログイン中...
                 </div>
-                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105 shadow-md">
+                <button id="logout-btn" class="btn bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105 shadow-md gentle-rotate-on-hover">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                     </svg>
                     ログアウト
                 </button>
-                <button id="show-qa-list-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all">Q&A一覧</button>
-                <button id="show-speed-quiz-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-all">
+                <button id="show-qa-list-btn" class="btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all heartbeat">Q&A一覧</button>
+                <button id="show-speed-quiz-btn" class="btn btn-primary bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-all sparkle-effect">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
@@ -344,39 +433,58 @@ export function renderHome(updateHistory = true) {
             </div>
         </div>
         
-        <!-- ★★★ フィルタリングパネル（タグ複数選択 + ランク絞り込み + サブフォルダ絞り込み対応） ★★★ -->
+        <!-- ★★★ フィルタリングパネル（タグ複数選択 + ランク絞り込み + サブフォルダ絞り込み + ステータス絞り込み対応） ★★★ -->
         <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
             <h3 class="text-lg font-bold text-gray-800 mb-3">📂 モジュール検索・絞り込み</h3>
             <div id="filter-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-3">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">📁 所属フォルダ</label>
-                    <select id="category-filter" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500">
+                    <select id="category-filter" class="form-input w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500">
                         <option value="">すべてのフォルダ</option>
                         ${allCategories.map(cat => `<option value="${cat}">${cat.charAt(0).toUpperCase() + cat.slice(1)}</option>`).join('')}
                     </select>
                 </div>
                 <div id="subfolder-filter-container" style="display: none;">
                     <label class="block text-sm font-bold text-gray-700 mb-2">📂 サブフォルダ</label>
-                    <select id="subfolder-filter" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500" disabled>
+                    <select id="subfolder-filter" class="form-input w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500" disabled>
                         <option value="">フォルダを選択してください</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">🎖️ ランク（複数選択可能）</label>
-                    <div class="border rounded-lg p-3 bg-gray-50" id="rank-filter-container">
-                        <!-- ランクチェックボックスが動的に生成される -->
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">🏷️ タグ（複数選択可能）</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">️ タグ（複数選択可能）</label>
                     <div class="border rounded-lg p-3 max-h-48 overflow-y-auto bg-gray-50" id="tag-filter-container">
                         <!-- タグチェックボックスが動的に生成される -->
                     </div>
                 </div>
+                <div id="status-filter-container" style="display: none;">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">📊 Q&Aステータス（複数選択可能）</label>
+                    <div class="border rounded-lg p-3 bg-gray-50">
+                        <div class="grid grid-cols-1 gap-2">
+                            <label class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                <input type="checkbox" value="未" class="status-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="inline-block px-2 py-1 rounded text-sm font-bold border bg-gray-100 text-gray-600 border-gray-300">未</span>
+                            </label>
+                            <label class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                <input type="checkbox" value="済" class="status-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="inline-block px-2 py-1 rounded text-sm font-bold border bg-green-100 text-green-700 border-green-400">済</span>
+                            </label>
+                            <label class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                <input type="checkbox" value="要" class="status-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="inline-block px-2 py-1 rounded text-sm font-bold border bg-red-100 text-red-700 border-red-400">要</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div id="qa-rank-filter-container" style="display: none;">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">🎖️ Q&Aランク（複数選択可能）</label>
+                    <div class="border rounded-lg p-3 bg-gray-50" id="qa-rank-checkboxes">
+                        <!-- Q&Aランクチェックボックスが動的に生成される -->
+                    </div>
+                </div>
             </div>            <div class="flex flex-wrap justify-between items-center gap-4">
                 <div class="flex gap-2">
-                    <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">🗑️ フィルタクリア</button>
-                    <button id="regenerate-index" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">🔄 目次再生成</button>
+                    <button id="clear-filters" class="btn bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg breathe-on-hover">🗑️ フィルタクリア</button>
+                    <button id="regenerate-index" class="btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg rainbow-glow-on-hover">🔄 目次再生成</button>
                 </div>
                 <div class="flex items-center gap-4">
                     <label class="flex items-center gap-2">
@@ -425,27 +533,74 @@ export function renderHome(updateHistory = true) {
     let showQAListMode = false;
     let showSpeedQuizMode = false;
     
-    // 表示モード設定を読み込み
-    try {
-        const savedModeJSON = localStorage.getItem('atashinchi_display_mode');
-        if (savedModeJSON) {
-            const savedMode = JSON.parse(savedModeJSON);
-            showQAListMode = savedMode.showQAListMode || false;
-            showSpeedQuizMode = savedMode.showSpeedQuizMode || false;
-            console.log('📺 表示モード設定を復元:', { QAリスト: showQAListMode, スピード条文: showSpeedQuizMode });
+    // modeパラメータがある場合は優先
+    if (mode === 'qa') {
+        showQAListMode = true;
+        showSpeedQuizMode = false;
+    } else if (mode === 'speed') {
+        showQAListMode = false;
+        showSpeedQuizMode = true;
+    } else {
+        // 表示モード設定を読み込み
+        try {
+            const savedModeJSON = localStorage.getItem('atashinchi_display_mode');
+            if (savedModeJSON) {
+                const savedMode = JSON.parse(savedModeJSON);
+                showQAListMode = savedMode.showQAListMode || false;
+                showSpeedQuizMode = savedMode.showSpeedQuizMode || false;
+                console.log('📺 表示モード設定を復元:', { QAリスト: showQAListMode, スピード条文: showSpeedQuizMode });
+            }
+        } catch (e) {
+            console.error('表示モード設定の読み込みエラー:', e);
         }
-    } catch (e) {
-        console.error('表示モード設定の読み込みエラー:', e);
     }
 
     // Q&A/モジュール切り替え用グローバル関数を先に宣言してwindowに登録
-    window.renderFilteredModulesOrQAs = function() {
+    window.renderFilteredModulesOrQAs = async function() {
+        // フィルタパネル全体の表示/非表示を制御
+        const filterPanel = document.querySelector('.bg-white.rounded-xl.shadow-lg.p-4.mb-4');
+        const statusFilterContainer = document.getElementById('status-filter-container');
+        const qaRankFilterContainer = document.getElementById('qa-rank-filter-container');
+        
         if (showSpeedQuizMode) {
-            renderSpeedQuizSection();
-        } else if (showQAListMode) {
-            renderFilteredQAs();
+            // スピード条文モード時もフィルタパネルを表示（フィルタリング機能を共有）
+            if (filterPanel) {
+                filterPanel.style.display = 'block';
+            }
         } else {
-            renderFilteredModules();
+            // モジュール一覧またはQ&Aモード時はフィルタパネルを表示
+            if (filterPanel) {
+                filterPanel.style.display = 'block';
+            }
+            
+            // ステータスフィルタとQ&Aランクフィルタの表示/非表示を切り替え
+            if (statusFilterContainer && qaRankFilterContainer) {
+                if (showQAListMode) {
+                    statusFilterContainer.style.display = 'block';
+                    qaRankFilterContainer.style.display = 'block';
+                    // グリッドを5列に拡張（カテゴリ、サブフォルダ、タグ、ステータス、Q&Aランク）
+                    const filterGrid = document.getElementById('filter-grid');
+                    if (filterGrid) {
+                        filterGrid.className = 'grid grid-cols-1 lg:grid-cols-5 gap-4 mb-3';
+                    }
+                } else {
+                    statusFilterContainer.style.display = 'none';
+                    qaRankFilterContainer.style.display = 'none';
+                    // グリッドを3列に戻す（カテゴリ、サブフォルダ、タグ）
+                    const filterGrid = document.getElementById('filter-grid');
+                    if (filterGrid) {
+                        filterGrid.className = 'grid grid-cols-1 lg:grid-cols-3 gap-4 mb-3';
+                    }
+                }
+            }
+        }
+        
+        if (showSpeedQuizMode) {
+            await renderSpeedQuizSection();
+        } else if (showQAListMode) {
+            await renderFilteredQAs({ showFilter: true }); // フィルタリングを有効化
+        } else {
+            await renderFilteredModules();
         }
         updateToggleButton(); // 切り替え時にボタンの見た目も更新
         
@@ -467,22 +622,22 @@ export function renderHome(updateHistory = true) {
     // Q&A/モジュール切り替えボタン生成
     if (qaListBtn) {
         qaListBtn.style.display = '';
-        qaListBtn.onclick = () => {
+        qaListBtn.onclick = async () => {
             showQAListMode = !showQAListMode;
             showSpeedQuizMode = false; // スピード条文モードを無効化
             updateToggleButton();
-            renderFilteredModulesOrQAs();
+            await renderFilteredModulesOrQAs();
         };
     }
     
     // ★★★ スピード条文ボタンの初期化 ★★★
     if (speedQuizBtn) {
         speedQuizBtn.style.display = '';
-        speedQuizBtn.onclick = () => {
+        speedQuizBtn.onclick = async () => {
             showSpeedQuizMode = !showSpeedQuizMode;
             showQAListMode = false; // Q&Aモードを無効化
             updateToggleButton();
-            renderFilteredModulesOrQAs();
+            await renderFilteredModulesOrQAs();
         };
     }
     
@@ -511,17 +666,17 @@ export function renderHome(updateHistory = true) {
     // 初期状態でボタンの見た目を設定（両方のボタンが取得された後）
     updateToggleButton();
 
-    // フィルタリング機能を初期化
-    initializeFiltering();
+    // フィルタリング機能を初期化（フィルタ設定の復元も含む）
+    await initializeFiltering();
     
     // ★★★ ログアウト機能の初期化 ★★★
     initializeLogout();
 
-    // 初期表示
-    renderFilteredModules();
+    // フィルタ復元後に初期表示を実行
+    await renderFilteredModulesOrQAs();
 }
 
-function initializeFiltering() {
+async function initializeFiltering() {
     const categoryFilter = document.getElementById('category-filter');
     const subfolderFilter = document.getElementById('subfolder-filter');
     const clearFilters = document.getElementById('clear-filters');
@@ -531,26 +686,36 @@ function initializeFiltering() {
 
     // カテゴリフィルタの変更時
     categoryFilter.addEventListener('change', async function() {
-        updateTagFilter();
+        await updateTagFilter();
         await updateSubfolderFilter(); // サブフォルダフィルタも更新
-        renderFilteredModulesOrQAs();
+        await renderFilteredModulesOrQAs();
         saveFilterSettings(); // フィルター設定を保存
+        
+        // スピード条文の条文リストも更新
+        if (window.updateSpeedQuizArticleList) {
+            window.updateSpeedQuizArticleList();
+        }
     });
 
     // サブフォルダフィルタの変更時
-    subfolderFilter.addEventListener('change', function() {
-        renderFilteredModulesOrQAs();
+    subfolderFilter.addEventListener('change', async function() {
+        await renderFilteredModulesOrQAs();
         saveFilterSettings(); // フィルター設定を保存
+        
+        // スピード条文の条文リストも更新
+        if (window.updateSpeedQuizArticleList) {
+            window.updateSpeedQuizArticleList();
+        }
     });
 
     // 並び替えの変更時
-    sortBy.addEventListener('change', function() {
-        renderFilteredModulesOrQAs();
+    sortBy.addEventListener('change', async function() {
+        await renderFilteredModulesOrQAs();
         saveFilterSettings(); // フィルター設定を保存
     });
     
-    sortOrder.addEventListener('change', function() {
-        renderFilteredModulesOrQAs();
+    sortOrder.addEventListener('change', async function() {
+        await renderFilteredModulesOrQAs();
         saveFilterSettings(); // フィルター設定を保存
     });
 
@@ -563,11 +728,13 @@ function initializeFiltering() {
         }
         document.querySelectorAll('.rank-checkbox').forEach(cb => cb.checked = false);
         document.querySelectorAll('.tag-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.status-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.qa-rank-checkbox').forEach(cb => cb.checked = false);
         sortBy.value = 'default';
         sortOrder.value = 'asc';
-        updateTagFilter();
+        await updateTagFilter();
         await updateSubfolderFilter(); // サブフォルダフィルタもクリア
-        renderFilteredModulesOrQAs();
+        await renderFilteredModulesOrQAs();
         saveFilterSettings(); // フィルター設定を保存（クリア状態）
     });
 
@@ -576,13 +743,14 @@ function initializeFiltering() {
         await handleIndexRegeneration();
     });
 
-    // 初期タグフィルタとランクフィルタを生成
-    updateRankFilter();
-    updateTagFilter();
-    updateSubfolderFilter(); // サブフォルダフィルタも初期化（非同期で処理される）
+    // 初期タグフィルタを生成
+    await updateTagFilter();
+    await updateSubfolderFilter(); // サブフォルダフィルタも初期化（非同期で処理される）
+    updateStatusFilter(); // ステータスフィルタも初期化
+    updateQARankFilter(); // Q&Aランクフィルタも初期化
     
     // 保存されたフィルター設定を読み込む
-    loadFilterSettings();
+    await loadFilterSettings();
 }
 
 // ★★★ サブフォルダフィルターを更新する関数 ★★★
@@ -659,7 +827,7 @@ async function updateSubfolderFilter(triggerRender = true) {
     }
 }
 
-function updateTagFilter(triggerRender = true) {
+async function updateTagFilter(triggerRender = true) {
     const categoryFilter = document.getElementById('category-filter');
     const tagFilterContainer = document.getElementById('tag-filter-container');
     const selectedCategory = categoryFilter.value;
@@ -706,44 +874,76 @@ function updateTagFilter(triggerRender = true) {
     
     // チェックボックスにイベントリスナーを付与
     tagFilterContainer.querySelectorAll('.tag-checkbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-            renderFilteredModulesOrQAs();
+        cb.addEventListener('change', async function() {
+            await renderFilteredModulesOrQAs();
             saveFilterSettings(); // タグ変更時も設定を保存
         });
     });
     
     // 必要に応じてレンダリングを実行
     if (triggerRender) {
-        renderFilteredModulesOrQAs();
+        await renderFilteredModulesOrQAs();
     }
 }
 
-function updateRankFilter() {
-    const rankFilterContainer = document.getElementById('rank-filter-container');
+// Q&A専用ランクフィルタを更新する関数
+async function updateQARankFilter() {
+    const qaRankContainer = document.getElementById('qa-rank-checkboxes');
+    if (!qaRankContainer) return;
     
-    // 利用可能なランク一覧（S, A, B, C の順序で表示）
-    const availableRanks = ['S', 'A', 'B', 'C'];
+    // 全Q&Aから実際に使用されているランクを収集
+    const currentSummaries = window.caseSummaries || caseSummaries;
+    const qaRanks = new Set();
     
-    // 保存されたランクフィルター設定を取得
-    let savedRanks = [];
+    for (const summary of currentSummaries) {
+        try {
+            const loader = (window.caseLoaders || caseLoaders)[summary.id];
+            if (!loader) continue;
+            const mod = await loader();
+            const caseData = mod.default;
+            (caseData.questionsAndAnswers || []).forEach(qa => {
+                const qaRank = qa.rank || qa.difficulty || '';
+                if (qaRank) {
+                    const cleanRank = qaRank.replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
+                    if (cleanRank) qaRanks.add(cleanRank);
+                }
+            });
+        } catch (e) { /* skip error */ }
+    }
+    
+    // 標準的なランク一覧も追加（S, A, B, C の順序で表示）
+    const standardRanks = ['S', 'A', 'B', 'C'];
+    standardRanks.forEach(rank => qaRanks.add(rank));
+    
+    // ランクを適切な順序でソート
+    const availableQARanks = standardRanks.filter(rank => qaRanks.has(rank));
+    
+    // 保存されたQ&Aランクフィルター設定を取得
+    let savedQARanks = [];
     try {
         const savedSettingsJSON = localStorage.getItem('atashinchi_filter_settings');
         if (savedSettingsJSON) {
             const savedSettings = JSON.parse(savedSettingsJSON);
-            if (savedSettings.ranks) {
-                savedRanks = savedSettings.ranks;
+            if (savedSettings.qaRanks) {
+                // savedSettings.qaRanksが配列の場合はそのまま使用、オブジェクトの場合は空配列
+                if (Array.isArray(savedSettings.qaRanks)) {
+                    savedQARanks = savedSettings.qaRanks;
+                } else if (typeof savedSettings.qaRanks === 'object') {
+                    // オブジェクト形式の場合、trueの値を持つキーを配列に変換
+                    savedQARanks = Object.keys(savedSettings.qaRanks).filter(key => savedSettings.qaRanks[key]);
+                }
             }
         }
     } catch (e) { /* エラー無視 */ }
     
-    // ランクチェックボックス生成
-    rankFilterContainer.innerHTML = `
+    // Q&Aランクチェックボックス生成
+    qaRankContainer.innerHTML = `
         <div class="grid grid-cols-2 gap-2">
-            ${availableRanks.map(rank => {
+            ${availableQARanks.map(rank => {
                 const diffClass = getDifficultyClass(rank);
                 return `
                     <label class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
-                        <input type="checkbox" value="${rank}" class="rank-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" ${savedRanks.includes(rank) ? 'checked' : ''}>
+                        <input type="checkbox" value="${rank}" class="qa-rank-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" ${savedQARanks.includes(rank) ? 'checked' : ''}>
                         <span class="inline-block px-2 py-1 rounded-full text-sm font-bold border ${diffClass.text} ${diffClass.bg} ${diffClass.border}">${rank}</span>
                     </label>
                 `;
@@ -752,12 +952,37 @@ function updateRankFilter() {
     `;
     
     // チェックボックスにイベントリスナーを付与
-    rankFilterContainer.querySelectorAll('.rank-checkbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-            renderFilteredModulesOrQAs();
-            saveFilterSettings(); // ランク変更時も設定を保存
+    qaRankContainer.querySelectorAll('.qa-rank-checkbox').forEach(cb => {
+        cb.addEventListener('change', async function() {
+            await renderFilteredModulesOrQAs();
+            saveFilterSettings(); // Q&Aランク変更時も設定を保存
         });
     });
+}
+
+function updateStatusFilter() {
+    // ステータスチェックボックスにイベントリスナーを付与
+    document.querySelectorAll('.status-checkbox').forEach(cb => {
+        cb.addEventListener('change', async function() {
+            await renderFilteredModulesOrQAs();
+            saveFilterSettings(); // ステータス変更時も設定を保存
+        });
+    });
+}
+
+function getSelectedStatuses() {
+    const checkboxes = document.querySelectorAll('.status-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function getSelectedQARanks() {
+    const checkboxes = document.querySelectorAll('.qa-rank-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function getSelectedRanks() {
+    // モジュールランクフィルター用（削除されたため空配列を返す）
+    return [];
 }
 
 function getSelectedTags() {
@@ -765,9 +990,22 @@ function getSelectedTags() {
     return Array.from(checkboxes).map(cb => cb.value);
 }
 
-function getSelectedRanks() {
-    const checkboxes = document.querySelectorAll('.rank-checkbox:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
+function getDifficultyClass(rank) {
+    // 難易度に応じたクラスを返す関数を修正
+    // "ランク"文字や空白を除去し、S/A/B/Cのみで判定
+    const cleanRank = (rank || '').replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
+    switch(cleanRank) {
+        case 'S':
+            return { text: 'text-cyan-700', bg: 'bg-cyan-100', border: 'border-cyan-400', display: 'S' };
+        case 'A':
+            return { text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-400', display: 'A' };
+        case 'B':
+            return { text: 'text-blue-700', bg: 'bg-blue-100', border: 'border-blue-400', display: 'B' };
+        case 'C':
+            return { text: 'text-green-700', bg: 'bg-green-100', border: 'border-green-400', display: 'C' };
+        default:
+            return { text: 'text-gray-400', bg: 'bg-gray-100', border: 'border-gray-200', display: '' };
+    }
 }
 
 function getSortSettings() {
@@ -821,23 +1059,6 @@ function sortCasesInCategory(cases, sortBy, sortOrder) {
     return sortedCases;
 }
 
-function getDifficultyClass(difficulty) {
-    // 難易度に応じたクラスを返す関数を修正
-    // "ランク"文字や空白を除去し、S/A/B/Cのみで判定
-    const rank = (difficulty || '').replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
-    if (rank === 'S') {
-        return { text: 'text-cyan-700', bg: 'bg-cyan-100', border: 'border-cyan-400', display: 'S' };
-    } else if (rank === 'A') {
-        return { text: 'text-red-700', bg: 'bg-red-100', border: 'border-red-400', display: 'A' };
-    } else if (rank === 'B') {
-        return { text: 'text-blue-700', bg: 'bg-blue-100', border: 'border-blue-400', display: 'B' };
-    } else if (rank === 'C') {
-        return { text: 'text-green-700', bg: 'bg-green-100', border: 'border-green-400', display: 'C' };
-    } else {
-        return { text: 'text-gray-400', bg: 'bg-gray-100', border: 'border-gray-200', display: '' };
-    }
-}
-
 async function renderFilteredModules() {
     const categoryFilter = document.getElementById('category-filter');
     const subfolderFilter = document.getElementById('subfolder-filter');
@@ -847,7 +1068,6 @@ async function renderFilteredModules() {
     const selectedCategory = categoryFilter.value;
     const selectedSubfolder = subfolderFilter ? subfolderFilter.value : '';
     const selectedTags = getSelectedTags();
-    const selectedRanks = getSelectedRanks();
     const { sortBy, sortOrder } = getSortSettings();
 
     // ローディング表示
@@ -898,20 +1118,11 @@ async function renderFilteredModules() {
             );
         }
 
-        if (selectedRanks.length > 0) {
-            // 選択されたランクに基づいてフィルタリング
-            filteredCases = filteredCases.filter(c => {
-                const rank = (c.rank || '').replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
-                return selectedRanks.includes(rank);
-            });
-        }
-
         // 結果表示
         const subfolderText = selectedSubfolder ? ` (サブフォルダ: ${selectedSubfolder})` : '';
         const tagText = selectedTags.length > 0 ? ` (タグ: ${selectedTags.join(', ')})` : '';
-        const rankText = selectedRanks.length > 0 ? ` (ランク: ${selectedRanks.join(', ')})` : '';
         const sortText = sortBy !== 'default' ? ` (${getSortDisplayName(sortBy)}${sortOrder === 'desc' ? '降順' : '昇順'})` : '';
-        filterResults.textContent = `${filteredCases.length}件のモジュールが見つかりました${subfolderText}${tagText}${rankText}${sortText}`;
+        filterResults.textContent = `${filteredCases.length}件のモジュールが見つかりました${subfolderText}${tagText}${sortText}`;
 
         // カテゴリごとにグループ化（サブフォルダ対応）
         const categories = {};
@@ -1041,6 +1252,7 @@ async function renderFilteredModules() {
 
                                         // Q&A番号範囲を取得
                                         let qaRangeText = '';
+                                        let qaCompletionDisplay = '';
                                         if (c.questionsAndAnswers && c.questionsAndAnswers.length > 0) {
                                             const ids = c.questionsAndAnswers.map(q => q.id).filter(id => typeof id === 'number');
                                             if (ids.length > 0) {
@@ -1048,14 +1260,26 @@ async function renderFilteredModules() {
                                                 const maxId = Math.max(...ids);
                                                 qaRangeText = `（${minId}～${maxId}）`;
                                             }
+                                            
+                                            // Q&A完了割合を計算
+                                            const completionRatio = calculateQACompletionRatio(c);
+                                            if (completionRatio) {
+                                                const percentage = Math.round(completionRatio.ratio * 100);
+                                                const progressIcon = percentage === 100 ? '🏆' : percentage >= 75 ? '📚' : percentage >= 50 ? '📖' : percentage >= 25 ? '📝' : '📄';
+                                                const progressColor = percentage === 100 ? 'text-green-600 font-bold' : percentage >= 75 ? 'text-blue-600 font-semibold' : percentage >= 50 ? 'text-yellow-600 font-medium' : 'text-gray-600';
+                                                qaCompletionDisplay = `<div class="text-sm mt-2 ${progressColor}">
+                                                    ${progressIcon} <span style="font-size: 1.1em; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">${completionRatio.completed}/${completionRatio.total}</span> 
+                                                    <span class="text-xs">完了</span>
+                                                </div>`;
+                                            }
                                         }
 
                                         return `
-                                        <div data-case-id="${c.id}" class="case-card bg-white p-6 rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                                        <div data-case-id="${c.id}" class="case-card bg-white p-6 rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-shadow animate-fade-in">
                                             <div class="flex justify-between items-start mb-3">
                                                 <span class="inline-block px-4 py-2 rounded-full text-lg font-extrabold border ${diffClass.text} ${diffClass.bg} ${diffClass.border}" style="min-width:2.5em; text-align:center; font-size:1.5rem; letter-spacing:0.1em;">${diffClass.display}</span>
                                                 <div class="flex flex-col items-end gap-1">
-                                                    <div class="folder-badge text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg transform hover:scale-110 transition-transform cursor-pointer">
+                                                    <div class="folder-badge text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg transform hover:scale-110 transition-transform cursor-pointer" data-category="${c.category || 'その他'}">
                                                         📁 ${c.category || 'その他'}
                                                     </div>
                                                     <div class="subfolder-badge text-white text-xs font-bold px-2 py-1 rounded-full shadow-md transform hover:scale-105 transition-transform cursor-pointer">
@@ -1072,6 +1296,7 @@ async function renderFilteredModules() {
                                                 }).join('')}
                                             </div>
                                             <div class="text-xs text-gray-600 mt-1">${qaRangeText ? `Q&A番号: ${qaRangeText}` : ''}</div>
+                                            ${qaCompletionDisplay}
                                         </div>
                                         `;
                                     }).join('')}
@@ -1097,12 +1322,25 @@ async function renderFilteredModules() {
 
                                 // Q&A番号範囲を取得
                                 let qaRangeText = '';
+                                let qaCompletionDisplay = '';
                                 if (c.questionsAndAnswers && c.questionsAndAnswers.length > 0) {
                                     const ids = c.questionsAndAnswers.map(q => q.id).filter(id => typeof id === 'number');
                                     if (ids.length > 0) {
                                         const minId = Math.min(...ids);
                                         const maxId = Math.max(...ids);
                                         qaRangeText = `（${minId}～${maxId}）`;
+                                    }
+                                    
+                                    // Q&A完了割合を計算
+                                    const completionRatio = calculateQACompletionRatio(c);
+                                    if (completionRatio) {
+                                        const percentage = Math.round(completionRatio.ratio * 100);
+                                        const progressIcon = percentage === 100 ? '🏆' : percentage >= 75 ? '📚' : percentage >= 50 ? '📖' : percentage >= 25 ? '📝' : '📄';
+                                        const progressColor = percentage === 100 ? 'text-green-600 font-bold' : percentage >= 75 ? 'text-blue-600 font-semibold' : percentage >= 50 ? 'text-yellow-600 font-medium' : 'text-gray-600';
+                                        qaCompletionDisplay = `<div class="text-sm mt-2 ${progressColor}">
+                                            ${progressIcon} <span style="font-size: 1.1em; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">${completionRatio.completed}/${completionRatio.total}</span> 
+                                            <span class="text-xs">完了</span>
+                                        </div>`;
                                     }
                                 }
 
@@ -1118,12 +1356,12 @@ async function renderFilteredModules() {
                                 }
 
                                 return `
-                                <div data-case-id="${c.id}" class="case-card bg-white p-6 rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                                <div data-case-id="${c.id}" class="case-card bg-white p-6 rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-shadow animate-fade-in">
                                     <div class="flex justify-between items-start mb-3">
                                         <span class="inline-block px-4 py-2 rounded-full text-lg font-extrabold border ${diffClass.text} ${diffClass.bg} ${diffClass.border}" style="min-width:2.5em; text-align:center; font-size:1.5rem; letter-spacing:0.1em;">${diffClass.display}</span>
                                         <div class="flex flex-col items-end gap-1">
-                                            <!-- ★★★ 派手なフォルダバッジ ★★★ -->
-                                            <div class="folder-badge text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg transform hover:scale-110 transition-transform cursor-pointer">
+                                            <!-- ★★★ フォルダカラー対応バッジ ★★★ -->
+                                            <div class="folder-badge text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg transform hover:scale-110 transition-transform cursor-pointer" data-category="${c.category || 'その他'}">
                                                 📁 ${c.category || 'その他'}
                                             </div>
                                             <!-- ★★★ 派手なサブフォルダバッジ（あれば） ★★★ -->
@@ -1143,6 +1381,7 @@ async function renderFilteredModules() {
                                         }).join('')}
                                     </div>
                                     <div class="text-xs text-gray-600 mt-1">${qaRangeText ? `Q&A番号: ${qaRangeText}` : ''}</div>
+                                    ${qaCompletionDisplay}
                                 </div>
                                 `;
                             }).join('')}
@@ -1165,6 +1404,20 @@ async function renderFilteredModules() {
                 }
             });
         });
+
+        // ★★★ フォルダカラーシステムを適用 ★★★
+        const folderBadges = document.querySelectorAll('.folder-badge');
+        console.log(`🔍 フォルダバッジ検出数: ${folderBadges.length}`);
+        
+        await applyFolderColorsToMultipleBadges(
+            folderBadges,
+            (badge) => {
+                const category = badge.getAttribute('data-category');
+                console.log(`📁 バッジからカテゴリ取得: ${category}`);
+                return category;
+            }
+        );
+        console.log('🎨 フォルダカラーを適用しました');
 
         // ★★★ 派手なフォルダバッジの特殊エフェクト ★★★
         document.querySelectorAll('.folder-badge').forEach(badge => {
@@ -1247,6 +1500,14 @@ async function renderFilteredModules() {
                 this.style.boxShadow = '';
             });
         });
+
+        // ★★★ 通常表示でもフォルダカラーシステムを適用 ★★★
+        await applyFolderColorsToMultipleBadges(
+            document.querySelectorAll('.folder-badge'),
+            (badge) => badge.getAttribute('data-category')
+        );
+        console.log('🎨 通常表示でフォルダカラーを適用しました');
+        
     } catch (error) {
         console.error('ケースデータの読み込みエラー:', error);
         modulesContainer.innerHTML = `
@@ -1366,8 +1627,7 @@ function updateFiltersAfterRegeneration() {
         ${allCategories.map(cat => `<option value="${cat}" ${cat === currentCategory ? 'selected' : ''}>${cat.charAt(0).toUpperCase() + cat.slice(1)}</option>`).join('')}
     `;
     
-    // ランクフィルターとタグフィルターを更新
-    updateRankFilter();
+    // タグフィルターを更新
     updateTagFilter();
     updateSubfolderFilter(); // サブフォルダフィルターも更新
     
@@ -1481,7 +1741,9 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
                         moduleId: summary.id,
                         moduleTitle: summary.title,
                         category: summary.category,
-                        tags: summary.tags || []
+                        tags: summary.tags || [],
+                        rank: qa.rank || qa.difficulty || '', // Q&A個別のランク情報を優先
+                        moduleRank: caseData.rank || caseData.difficulty || summary.rank || '' // モジュールランクも保持
                     });
                 });
             } catch (e) { /* skip error */ }
@@ -1490,13 +1752,46 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
     // フィルタ取得（トップページのみ）
     let filteredQAs = allQAs;
     if (showFilter) {
-        const selectedCategory = document.getElementById('category-filter').value;
+        const selectedCategory = document.getElementById('category-filter')?.value || '';
+        const selectedSubfolder = document.getElementById('subfolder-filter')?.value || '';
         const selectedRanks = Array.from(document.querySelectorAll('.rank-checkbox:checked')).map(cb => cb.value);
         const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+        const selectedStatuses = Array.from(document.querySelectorAll('.status-checkbox:checked')).map(cb => cb.value);
+        const selectedQARanks = Array.from(document.querySelectorAll('.qa-rank-checkbox:checked')).map(cb => cb.value);
+        
         filteredQAs = allQAs.filter(qa => {
+            // カテゴリフィルタ
             if (selectedCategory && qa.category !== selectedCategory) return false;
-            if (selectedRanks.length && !selectedRanks.includes(qa.rank)) return false;
+            
+            // サブフォルダフィルタ（Q&Aアイテムにはサブフォルダ情報がないため、モジュール情報から判定）
+            if (selectedSubfolder) {
+                // モジュールIDからサブフォルダを推定
+                if (qa.moduleId && qa.moduleId.includes('/')) {
+                    const pathParts = qa.moduleId.split('/');
+                    if (pathParts.length >= 2) {
+                        const moduleSubfolder = pathParts[1];
+                        if (moduleSubfolder !== selectedSubfolder) return false;
+                    }
+                }
+            }
+            
+            // タグフィルタ
             if (selectedTags.length && !selectedTags.some(tag => qa.tags.includes(tag))) return false;
+            
+            // Q&A個別ランクフィルタ
+            if (selectedQARanks.length) {
+                const qaRank = (qa.rank || '').replace(/ランク$/,'').replace(/\s/g,'').toUpperCase();
+                if (!selectedQARanks.includes(qaRank)) return false;
+            }
+            
+            // ステータスフィルタ（未・済・要）
+            if (selectedStatuses.length) {
+                const qaId = qa.id; // 数値IDを使用
+                const moduleId = qa.moduleId || 'default'; // モジュールIDを使用
+                const currentStatus = qaStatusSystem.getStatus(moduleId, qaId);
+                if (!selectedStatuses.includes(currentStatus)) return false;
+            }
+            
             return true;
         });
     }
@@ -1512,12 +1807,20 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
         const questionHtml = processArticleReferences(qa.question);
         const answerWithRefs = processArticleReferences(qa.answer);
         const answerHtml = processBlankFillText(answerWithRefs, `qa-list-${i}`);
+        // Q&Aステータスボタンを生成（モジュールIDを含める）
+        const qaId = qa.id; // 数値IDを直接使用
+        const moduleId = qa.moduleId || 'default'; // モジュールIDを確実に取得
+        const statusButtons = qaStatusSystem.generateStatusButtons(qaId, null, moduleId);
+        
         html += `<div class="p-4 bg-white rounded-lg shadow border flex flex-col gap-2 qa-item">
-            <div class="flex items-center gap-2">
-                ${rankBadge}
-                <span class="font-bold">Q${qa.id}.</span>
-                <span>${questionHtml}</span>
-                ${showFilter ? `<span class=\"ml-auto text-xs text-blue-700 font-bold cursor-pointer hover:underline module-link\" data-module-id=\"${qa.moduleId}\">[${qa.moduleTitle}]</span>` : ''}
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    ${rankBadge}
+                    <span class="font-bold">Q${qa.id}.</span>
+                    <span>${questionHtml}</span>
+                    ${showFilter ? `<span class=\"ml-auto text-xs text-blue-700 font-bold cursor-pointer hover:underline module-link\" data-module-id=\"${qa.moduleId}\">[${qa.moduleTitle}]</span>` : ''}
+                </div>
+                <div class="qa-status-buttons flex-shrink-0">${statusButtons}</div>
             </div>
             <div class="ml-8">
                 <button class="toggle-answer-btn bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold px-2 py-1 rounded text-xs mb-1" data-target="${answerId}">答えを表示</button>
@@ -1541,6 +1844,16 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
             }
         });
     });
+    
+    // ★★★ Q&AステータスボタンはqaStatusSystem.jsのグローバルイベント委任で処理される ★★★
+    // 重複したイベントリスナーを削除し、グローバルイベント委任のみを使用
+    console.log('🎯 Q&Aステータスボタンはグローバルイベント委任で処理されます');
+    
+    // 初期読み込み時にQ&Aリンクボタンの色を更新
+    if (window.qaStatusSystem) {
+        window.qaStatusSystem.updateAllQALinkColors();
+    }
+    
     if (showFilter) {
         document.querySelectorAll('.module-link').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -1551,6 +1864,17 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
                 }
             });
         });
+    }
+    
+    // ★★★ 条文ボタンの処理をQ&Aリスト内でも有効にする ★★★
+    console.log('🔧 Q&Aリスト内の条文ボタン処理を初期化');
+    const articleButtons = modulesContainer.querySelectorAll('.article-ref-btn');
+    console.log(`📋 発見された条文ボタン数: ${articleButtons.length}`);
+    
+    // 条文ボタンは既にeventHandler.jsのグローバルイベント委任で処理されるため、
+    // 特別な処理は不要。ただし、デバッグ用にログを出力
+    if (articleButtons.length > 0) {
+        console.log('✅ Q&Aリスト内の条文ボタンが検出されました - グローバルイベント委任で処理されます');
     }
 }
 
@@ -1632,6 +1956,20 @@ function saveFilterSettings() {
             tagStates[cb.value] = cb.checked;
         });
         
+        // ステータスのチェック状態を取得
+        const statusCheckboxes = document.querySelectorAll('.status-checkbox');
+        const statusStates = {};
+        statusCheckboxes.forEach(cb => {
+            statusStates[cb.value] = cb.checked;
+        });
+        
+        // Q&Aランクのチェック状態を取得
+        const qaRankCheckboxes = document.querySelectorAll('.qa-rank-checkbox');
+        const qaRankStates = {};
+        qaRankCheckboxes.forEach(cb => {
+            qaRankStates[cb.value] = cb.checked;
+        });
+        
         // 設定をオブジェクトにまとめる
         const filterSettings = {
             category: selectedCategory,
@@ -1640,6 +1978,8 @@ function saveFilterSettings() {
             sortBy: sortSettings.sortBy,
             sortOrder: sortSettings.sortOrder,
             tags: tagStates,
+            statuses: statusStates,
+            qaRanks: qaRankStates,
             lastUpdated: new Date().toISOString()
         };
         
@@ -1652,7 +1992,7 @@ function saveFilterSettings() {
 }
 
 // ★★★ フィルター設定をローカルストレージから読み込み ★★★
-function loadFilterSettings() {
+async function loadFilterSettings() {
     try {
         // ローカルストレージから設定を読み込む
         const savedSettingsJSON = localStorage.getItem('atashinchi_filter_settings');
@@ -1669,18 +2009,16 @@ function loadFilterSettings() {
         if (categoryFilter && savedSettings.category) {
             categoryFilter.value = savedSettings.category;
             
-            // カテゴリ変更に伴うタグ更新とサブフォルダ更新（ここではイベントを発火させない）
-            updateTagFilter(false);
-            updateSubfolderFilter(false);
+            // カテゴリ変更に伴うタグ更新とサブフォルダ更新
+            await updateTagFilter(false);
+            await updateSubfolderFilter(false);
         }
         
         // サブフォルダを設定（カテゴリ設定後に行う）
-        setTimeout(() => {
-            const subfolderFilter = document.getElementById('subfolder-filter');
-            if (subfolderFilter && savedSettings.subfolder) {
-                subfolderFilter.value = savedSettings.subfolder;
-            }
-        }, 100); // サブフォルダ更新の完了を待つ
+        const subfolderFilter = document.getElementById('subfolder-filter');
+        if (subfolderFilter && savedSettings.subfolder) {
+            subfolderFilter.value = savedSettings.subfolder;
+        }
         
         // ソート設定を適用
         const sortBy = document.getElementById('sort-by');
@@ -1710,14 +2048,27 @@ function loadFilterSettings() {
             });
         }
         
-        // サブフォルダフィルターの状態を復元
-        const subfolderFilter = document.getElementById('subfolder-filter');
-        if (subfolderFilter && savedSettings.subfolder) {
-            subfolderFilter.value = savedSettings.subfolder;
+        // ステータスチェックボックスの状態を復元
+        if (savedSettings.statuses) {
+            document.querySelectorAll('.status-checkbox').forEach(cb => {
+                if (savedSettings.statuses.hasOwnProperty(cb.value)) {
+                    cb.checked = savedSettings.statuses[cb.value];
+                }
+            });
         }
         
+        // Q&Aランクチェックボックスの状態を復元
+        if (savedSettings.qaRanks) {
+            document.querySelectorAll('.qa-rank-checkbox').forEach(cb => {
+                if (savedSettings.qaRanks.hasOwnProperty(cb.value)) {
+                    cb.checked = savedSettings.qaRanks[cb.value];
+                }
+            });
+        }
+        
+        // サブフォルダフィルターの状態を復元（重複削除）
         // フィルタを適用してリスト更新
-        renderFilteredModulesOrQAs();
+        await renderFilteredModulesOrQAs();
         
     } catch (error) {
         console.error('フィルター設定の読み込みに失敗:', error);

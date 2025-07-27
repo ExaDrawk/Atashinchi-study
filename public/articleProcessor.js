@@ -16,6 +16,29 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
         return htmlContent;
     }
     
+    // ★★★ デバッグ: 入力内容の確認 ★★★
+    // console.log('🔍 processArticleReferences 入力内容 (最初の200文字):', htmlContent.substring(0, 200)); // デバッグログを減らす
+    
+    // ★★★ HTMLタグが既に含まれているかチェック ★★★
+    if (htmlContent.includes('<button') || htmlContent.includes('article-ref-btn')) {
+        console.warn('⚠️ 入力データにHTMLボタンが既に含まれています:', htmlContent.substring(0, 100) + '...');
+        
+        // 既にHTMLタグが含まれている場合、エスケープされたHTMLタグを修正
+        if (htmlContent.includes('&lt;button') || htmlContent.includes('&gt;')) {
+            console.log('🔧 エスケープされたHTMLタグを修正中...');
+            const unescapedContent = htmlContent
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/&amp;/g, '&');
+            console.log('✅ HTMLタグの修正完了');
+            return unescapedContent;
+        }
+        
+        return htmlContent; // そのまま返す
+    }
+    
     console.log('🔍 条文検出開始:', htmlContent.substring(0, 100) + '...');
     
     // ★★★ 全角数字を半角数字に変換 ★★★
@@ -34,10 +57,9 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
     });
     
     // ★★★ 憲法を含む法令リスト（強化版） ★★★
-    const lawsToUse = supportedLaws.length > 0 ? [...supportedLaws, '憲法', '日本国憲法'] : [
-        '憲法', '日本国憲法', '民法', '会社法', '刑法', '商法', '民事訴訟法', '刑事訴訟法', 
-        '行政法', '労働基準法', '独占禁止法', '麻薬及び向精神薬取締法'
-    ];
+    // サポートされた法令リストと基本法令を統合
+    const basicLaws = ['憲法', '日本国憲法', '民法', '会社法', '刑法', '商法', '民事訴訟法', '刑事訴訟法'];
+    const lawsToUse = supportedLaws.length > 0 ? [...supportedLaws, ...basicLaws] : basicLaws;
     
     // 重複を除去
     const uniqueLaws = [...new Set(lawsToUse)];
@@ -79,18 +101,10 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
         
         // 条文参照をボタンに変換
         const buttonId = `article-ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const buttonHtml = `<button 
-            id="${buttonId}" 
-            class="article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm font-semibold border border-blue-300 transition-colors cursor-pointer mx-1" 
-            data-law-name="${actualLawName}" 
-            data-article-ref="${baseArticleRef}"
-            data-has-proviso="${hasProviso}"
-            data-proviso-text="${tadashiPart}"
-            data-display-name="${displayLawName}"
-            title="クリックして条文を表示${hasProviso ? ' (ただし書きを含む)' : ''}"
-        >${displayLawName}${articleRef}</button>`;
+        const buttonHtml = `<button id="${buttonId}" class="article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-sm font-semibold border border-blue-300 transition-colors cursor-pointer mx-1" data-law-name="${actualLawName}" data-article-ref="${baseArticleRef}" data-has-proviso="${hasProviso}" data-proviso-text="${tadashiPart}" data-display-name="${displayLawName}" title="クリックして条文を表示${hasProviso ? ' (ただし書きを含む)' : ''}">${displayLawName}${articleRef}</button>`;
         
         console.log(`🔧 ボタン生成: ${buttonId} (${actualLawName} → ${displayLawName})${hasProviso ? ' [ただし書き対応]' : ''}`);
+        // console.log(`🔍 生成されたボタンHTML:`, buttonHtml); // デバッグログを減らす
         return buttonHtml;
     });
     
@@ -100,7 +114,22 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
         return `{{${restoredInnerContent}}}`;
     });
     
+    // ★★★ HTMLボタンタグ内の改行を保護 ★★★
+    const protectedResult = finalResult.replace(/<button[^>]*>[\s\S]*?<\/button>/g, (match) => {
+        // ボタンタグ内の改行を特殊文字に置換して保護
+        return match.replace(/\n/g, '⟪NEWLINE⟫').replace(/\\n/g, '⟪BACKSLASH_N⟫');
+    });
+    
+    // ★★★ \n改行をHTMLの<br>タグに変換（ボタンタグ外のみ） ★★★
+    const resultWithLineBreaks = protectedResult.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+    
+    // ★★★ ボタンタグ内の改行保護を解除 ★★★
+    const finalResultWithButtons = resultWithLineBreaks.replace(/⟪NEWLINE⟫/g, '\n').replace(/⟪BACKSLASH_N⟫/g, '\\n');
+    
     console.log(`📊 条文検出結果: ${matchCount}件の条文をボタン化`);
+    
+    // ★★★ デバッグ: 出力内容の確認 ★★★
+    // console.log('🔍 processArticleReferences 出力内容 (最初の200文字):', finalResultWithButtons.substring(0, 200)); // デバッグログを減らす
     
     if (matchCount === 0) {
         console.warn('⚠️ 条文が検出されませんでした。入力内容を確認してください。');
@@ -113,7 +142,7 @@ export function processArticleReferences(htmlContent, supportedLaws = []) {
         }
     }
     
-    return finalResult;
+    return finalResultWithButtons;
 }
 
 // ★★★ Q&A参照自動検出とボタン化（新機能） ★★★
@@ -151,9 +180,22 @@ export function processQAReferences(htmlContent, questionsAndAnswers = []) {
         
         // Q&A参照をボタンに変換
         const buttonId = `qa-ref-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // ステータスに応じた色を取得
+        let status = '未'; // デフォルトステータス
+        let colorClasses = 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-300';
+        
+        if (window.qaStatusSystem) {
+            status = window.qaStatusSystem.getStatus('default', qaId);
+            const colors = window.qaStatusSystem.qaLinkColors[status];
+            if (colors) {
+                colorClasses = `${colors.bg} ${colors.hover} ${colors.text} ${colors.border}`;
+            }
+        }
+        
         const buttonHtml = `<button 
             id="${buttonId}" 
-            class="qa-ref-btn inline-block bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-sm font-bold border border-yellow-300 transition-colors cursor-pointer mx-1" 
+            class="qa-ref-btn inline-block px-2 py-1 rounded text-sm font-bold border transition-colors cursor-pointer mx-1 ${colorClasses}" 
             data-qa-index="${qaIndex}" 
             data-q-number="${qaId}"
             data-quiz-index="global"
@@ -174,18 +216,84 @@ export function processQAReferences(htmlContent, questionsAndAnswers = []) {
     return result;
 }
 
-// ★★★ 条文参照、Q&A参照、**囲み文字の統合処理関数 ★★★
-export function processAllReferences(htmlContent, supportedLaws = [], questionsAndAnswers = []) {
+// ★★★ 統一テキスト処理関数（条文ボタン化 + Q&A参照 + 改行対応 + 図表保護） ★★★
+export function processDisplayText(content, supportedLaws = [], questionsAndAnswers = []) {
+    if (!content || typeof content !== 'string') {
+        console.warn('⚠️ processDisplayText: 無効な入力', content);
+        return content;
+    }
+    
+    // ★★★ 図表ブロックを保護 ★★★
+    const codeBlocks = [];
+    let protectedContent = content;
+    
+    // Mermaid図表ブロックを保護（```mermaid...```や<div class="mermaid">...）
+    protectedContent = protectedContent.replace(/```mermaid[\s\S]*?```/g, (match) => {
+        codeBlocks.push(match);
+        return `__MERMAID_BLOCK_${codeBlocks.length - 1}__`;
+    });
+    
+    // HTMLのmermaidクラス要素を保護
+    protectedContent = protectedContent.replace(/<div[^>]*class="[^"]*mermaid[^"]*"[^>]*>[\s\S]*?<\/div>/g, (match) => {
+        codeBlocks.push(match);
+        return `__MERMAID_BLOCK_${codeBlocks.length - 1}__`;
+    });
+    
     // まず**囲み文字を処理
-    let processedContent = processBoldText(htmlContent);
+    protectedContent = processBoldText(protectedContent);
     
     // 次に条文参照を処理
-    processedContent = processArticleReferences(processedContent, supportedLaws);
+    protectedContent = processArticleReferences(protectedContent, supportedLaws);
     
     // 最後にQ&A参照を処理
-    processedContent = processQAReferences(processedContent, questionsAndAnswers);
+    protectedContent = processQAReferences(protectedContent, questionsAndAnswers);
     
-    return processedContent;
+    // ★★★ HTMLボタンを保護しながら改行変換 ★★★
+    protectedContent = protectedLineBreakConversion(protectedContent);
+    
+    // ★★★ 保護した図表ブロックを復元 ★★★
+    for (let i = 0; i < codeBlocks.length; i++) {
+        protectedContent = protectedContent.replace(`__MERMAID_BLOCK_${i}__`, codeBlocks[i]);
+    }
+    
+    return protectedContent;
+}
+
+// ★★★ 条文参照、Q&A参照、**囲み文字の統合処理関数（後方互換性のため残す） ★★★
+export function processAllReferences(htmlContent, supportedLaws = [], questionsAndAnswers = []) {
+    // 新しい統一関数を呼び出す
+    return processDisplayText(htmlContent, supportedLaws, questionsAndAnswers);
+}
+
+// ★★★ エクスポートリストに統一関数を追加 ★★★
+
+// ★★★ HTMLボタンを保護しながら改行変換を行う関数 ★★★
+function protectedLineBreakConversion(content) {
+    // HTMLボタンを一時的にプレースホルダーに置換
+    const buttonPlaceholders = [];
+    let protectedContent = content;
+    
+    // article-ref-btnボタンを保護
+    protectedContent = protectedContent.replace(/<button[^>]*class="[^"]*article-ref-btn[^"]*"[^>]*>.*?<\/button>/gs, (match) => {
+        buttonPlaceholders.push(match);
+        return `__BUTTON_PLACEHOLDER_${buttonPlaceholders.length - 1}__`;
+    });
+    
+    // qa-ref-btnボタンを保護
+    protectedContent = protectedContent.replace(/<button[^>]*class="[^"]*qa-ref-btn[^"]*"[^>]*>.*?<\/button>/gs, (match) => {
+        buttonPlaceholders.push(match);
+        return `__BUTTON_PLACEHOLDER_${buttonPlaceholders.length - 1}__`;
+    });
+    
+    // 改行を<br>タグに変換
+    protectedContent = protectedContent.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+    
+    // プレースホルダーを元のボタンに戻す
+    for (let i = 0; i < buttonPlaceholders.length; i++) {
+        protectedContent = protectedContent.replace(`__BUTTON_PLACEHOLDER_${i}__`, buttonPlaceholders[i]);
+    }
+    
+    return protectedContent;
 }
 
 // ★★★ 条文参照ボタンのイベントリスナー設定（強化版） ★★★
@@ -232,6 +340,13 @@ export function setupArticleRefButtons(container) {
         // 新しいイベントリスナーを追加
         button.addEventListener('click', handleQAButtonClick);
         
+        // ボタンの色をステータスに応じて即座に更新
+        if (window.qaStatusSystem && button.dataset.qNumber) {
+            const qaId = button.dataset.qNumber;
+            const status = window.qaStatusSystem.getStatus('default', qaId);
+            window.qaStatusSystem.updateQALinkColors(qaId, status);
+        }
+        
         console.log(`✅ Q&Aボタン ${index + 1} イベントリスナー設定完了`);
     });
     
@@ -267,7 +382,14 @@ function handleArticleButtonClick(e) {
         return;
     }
       // 条文表示パネルを開いて、該当する条文をセット（ただし書き情報も含む）
-    showArticlePanelWithPreset(lawName, articleRef, hasProviso ? provisoText : null);
+    console.log(`🚀 showArticlePanelWithPreset呼び出し開始: ${lawName}, ${articleRef}, ${hasProviso ? provisoText : null}`);
+    
+    try {
+        showArticlePanelWithPreset(lawName, articleRef, hasProviso ? provisoText : null);
+        console.log(`✅ showArticlePanelWithPreset呼び出し成功`);
+    } catch (error) {
+        console.error(`❌ showArticlePanelWithPreset呼び出しエラー:`, error);
+    }
 }
 
 // ★★★ Q&Aボタンクリックハンドラー ★★★
@@ -384,8 +506,16 @@ function showQAPopup(qaIndex, qNumber, quizIndex, subIndex) {
     // ポップアップ内のイベントリスナーを設定（qaPopup.jsの関数を使用）
     setupQAPopupEvents(popupId);
     
+    // ポップアップ表示後に関連するQ&Aボタンの色を即座に更新
+    if (window.qaStatusSystem) {
+        window.qaStatusSystem.updateAllQALinkColors();
+    }
+    
     console.log(`✅ Q&Aポップアップ表示完了: ${popupId}`);
 }
+
+// ★★★ グローバル関数として公開 ★★★
+window.showQAPopup = showQAPopup;
 
 // ★★★ 空欄表示切り替え関数（グローバル関数） ★★★
 window.toggleBlankReveal = function(blankElement) {
@@ -422,8 +552,9 @@ window.toggleBlankReveal = function(blankElement) {
         blankElement.title = 'クリックして答えを隠す';
         console.log('👁️ 答えを表示しました');
         
-        // 答えの中に条文参照ボタンがある場合、イベントリスナーを設定
-        setupArticleRefButtons(blankElement);
+        // 答えの中に条文参照ボタンがある場合はイベント委任で処理されるので、
+        // setupArticleRefButtons は不要（重複を避けるため）
+        console.log('🔧 穴埋め答え表示完了 - イベント委任システムで処理されます');
     }
 };
 
@@ -490,18 +621,21 @@ export function processBlankFillText(text, uniqueId = '') {
         console.log('🔄 空欄化処理: 全角数字を半角数字に変換');
     }
     
+    // ★★★ \n改行をHTMLの<br>タグに変換 ★★★
+    const textWithLineBreaks = normalizedText.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+    
     // {{}}で囲まれた部分を検出する正規表現
     const blankPattern = /\{\{([^}]+)\}\}/g;
     let blankCounter = 0;
-    let processedText = normalizedText;
+    let processedText = textWithLineBreaks;
     
     // まず、{{}}の外側にある【】を条文参照ボタン化
-    let outsideBlankText = normalizedText;
+    let outsideBlankText = textWithLineBreaks;
     let blankMatches = [];
     let match;
     
     // {{}}の内容を一時的にプレースホルダーに置換
-    while ((match = blankPattern.exec(normalizedText)) !== null) {
+    while ((match = blankPattern.exec(textWithLineBreaks)) !== null) {
         blankMatches.push(match[1]);
         const placeholder = `__BLANK_${blankMatches.length - 1}__`;
         outsideBlankText = outsideBlankText.replace(match[0], placeholder);
@@ -509,7 +643,23 @@ export function processBlankFillText(text, uniqueId = '') {
     
     // {{}}の外側の【】を条文参照ボタン化
     outsideBlankText = outsideBlankText.replace(/【([^】]+)】/g, (match, lawText) => {
-        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
+        // 簡単なパターンマッチングで法令名と条文を分離
+        const simpleMatch = lawText.match(/^(.+?)(\d+条.*?)$/);
+        let lawName, articleRef, displayName;
+        
+        if (simpleMatch) {
+            const rawLawName = simpleMatch[1].trim();
+            lawName = LAW_NAME_MAPPING[rawLawName] || rawLawName;
+            articleRef = simpleMatch[2];
+            displayName = lawText;
+        } else {
+            // パターンにマッチしない場合
+            lawName = 'unknown';
+            articleRef = 'unknown';
+            displayName = lawText;
+        }
+        
+        return `<button type='button' class='article-ref-btn bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded border border-blue-300 text-xs' data-law-name='${lawName}' data-article-ref='${articleRef}' data-display-name='${displayName}'>${lawText}</button>`;
     });
     
     // プレースホルダーを空欄に戻す
@@ -525,7 +675,23 @@ export function processBlankFillText(text, uniqueId = '') {
         if (hasArticleRef) {
             // 条文参照がある場合：ボタン化して色を変える
             displayContent = content.replace(/【([^】]+)】/g, (match, lawText) => {
-                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-text='${lawText}' onclick='event.stopPropagation(); showArticlePanel("${lawText}")'>${lawText}</button>`;
+                // 簡単なパターンマッチングで法令名と条文を分離
+                const simpleMatch = lawText.match(/^(.+?)(\d+条.*?)$/);
+                let lawName, articleRef, displayName;
+                
+                if (simpleMatch) {
+                    const rawLawName = simpleMatch[1].trim();
+                    lawName = LAW_NAME_MAPPING[rawLawName] || rawLawName;
+                    articleRef = simpleMatch[2];
+                    displayName = lawText;
+                } else {
+                    // パターンにマッチしない場合
+                    lawName = 'unknown';
+                    articleRef = 'unknown';
+                    displayName = lawText;
+                }
+                
+                return `<button type='button' class='article-ref-btn bg-blue-200 hover:bg-blue-300 text-blue-900 px-2 py-1 rounded border border-blue-400 text-xs font-bold' data-law-name='${lawName}' data-article-ref='${articleRef}' data-display-name='${displayName}'>${lawText}</button>`;
             });
             dataAnswer = content.replace(/【([^】]+)】/g, '$1'); // data-answerはプレーンテキスト
         } else {

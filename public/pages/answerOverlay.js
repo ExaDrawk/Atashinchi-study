@@ -279,8 +279,8 @@ class AnswerOverlay {
                 let answer = q.modelAnswer || q.answer || '模範解答が登録されていません';
                 
                 // ★★★ 模範解答内の条文参照とQ&A参照を自動処理 ★★★
-                // まず改行を<br>に変換
-                const normalizedAnswer = this.escapeHTML(answer).replace(/\\n|\n/g, '<br>');
+                // まず改行を<br>に変換（HTMLエスケープはprocessAllReferences内で適切に処理される）
+                const normalizedAnswer = answer.replace(/\\n|\n/g, '<br>');
                 // processAllReferencesで条文とQ&A参照をボタン化
                 const processedAnswer = processAllReferences(
                     normalizedAnswer, 
@@ -581,10 +581,14 @@ class AnswerOverlay {
         lineCount.textContent = lines;
     }
 
-    // 一時保存キー生成（モジュールID＋問題ごとにユニーク）
+    // 一時保存キー生成（モジュールファイル名＋ID＋問題ごとにユニーク）
     getTempSaveKey() {
         const caseId = window.currentCaseData?.caseId || 'unknownCase';
-        return `tempAnswer_${caseId}_${this.currentQuizIndex}_${this.currentSubIndex}`;
+        const moduleId = window.currentCaseData?.id || window.currentCaseData?.moduleId || 'unknownModule';
+        const fileName = window.currentCaseData?.fileName || 'unknownFile';
+        const key = `tempAnswer_${fileName}_${moduleId}_${caseId}_${this.currentQuizIndex}_${this.currentSubIndex}`;
+        console.log('🔑 一時保存キー生成:', { fileName, moduleId, caseId, quizIndex: this.currentQuizIndex, subIndex: this.currentSubIndex, key });
+        return key;
     }
 
     // 一時保存
@@ -1100,7 +1104,12 @@ class AnswerOverlay {
         } catch(e) { matchText = ''; }
 
         // --- コメント内の【法令名○条】をボタン化（casePage/articleProcessor.jsと同じ見た目・属性・イベント） ---
-        let commentHtml = processArticleReferences(this.escapeHTML(message).replace(/【([^】]+)】/g, lawRefReplacer));
+        // HTMLエスケープを先に行い、その後に条文参照処理を適用
+        let escapedMessage = this.escapeHTML(message);
+        let commentHtml = processArticleReferences(escapedMessage.replace(/【([^】]+)】/g, lawRefReplacer));
+        
+        // HTMLエスケープされた&lt;button&gt;を正しいHTMLタグに戻す
+        commentHtml = commentHtml.replace(/&lt;(\/?button[^&]*?)&gt;/g, '<$1>');
 
         // 埋め込み先
         const correctionArea = document.getElementById('correction-area');
@@ -1418,70 +1427,86 @@ class AnswerOverlay {
         this.currentSavedAnswers = savedAnswers;
     }
     
-    // 答案全文表示
+    // 答案全文表示（答案ビューで再現）
     viewFullAnswer(index) {
         const answers = this.currentSavedAnswers;
         if (!answers || !answers[index]) return;
         
         const answer = answers[index];
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); z-index: 100001;
-            display: flex; align-items: center; justify-content: center;
-            padding: 20px;
-        `;
         
-        const content = document.createElement('div');
-        content.style.cssText = `
-            background: white; border-radius: 12px; padding: 24px;
-            width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-        `;
+        // 過去の答案モーダルを閉じる
+        const pastAnswersModal = document.getElementById('past-answers-modal');
+        if (pastAnswersModal) pastAnswersModal.remove();
         
-        const date = new Date(answer.timestamp);
-        const dateStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP');
+        // 答案エリアに過去の答案を復元
+        const editor = document.getElementById('answer-editor');
+        if (!editor) return;
         
-        let scoreHtml = '';
-        if (answer.correctionResults) {
-            const score = answer.correctionResults.score || 0;
-            const maxScore = answer.correctionResults.maxScore || 100;
-            const percentage = Math.round((score / maxScore) * 100);
-            let scoreColor = '#28a745';
-            if (percentage < 60) scoreColor = '#dc3545';
-            else if (percentage < 80) scoreColor = '#ffc107';
+        // 答案テキストを復元
+        const answerText = answer.answerText || '';
+        editor.innerHTML = '';
+        this.rawText = answerText;
+        
+        // 添削結果がある場合は、マーカー付きで復元
+        if (answer.correctionResults && answer.correctionResults.corrections) {
+            // 添削結果をインスタンス変数に保存
+            this.currentCorrectionResults = answer.correctionResults;
             
-            scoreHtml = `
-                <div style="margin: 16px 0; padding: 12px; background: ${scoreColor}20; border-radius: 8px; border-left: 4px solid ${scoreColor};">
-                    <div style="font-weight: bold; color: ${scoreColor};">📊 添削結果: ${score}/${maxScore}点 (${percentage}%)</div>
-                    ${answer.correctionResults.overallComment ? `<div style="margin-top: 8px; color: #495057;">${this.escapeHTML(answer.correctionResults.overallComment)}</div>` : ''}
-                </div>
-            `;
+            // 添削結果をマーカーで表示
+            this.applyCorrectionMarkers(editor, answer.correctionResults);
+            
+            // 結果エリアに添削結果を表示
+            const resultArea = document.getElementById('result-area');
+            const resultContent = document.getElementById('result-content');
+            if (resultArea && resultContent) {
+                resultArea.style.display = 'block';
+                this.displayCorrectionResults(answer.correctionResults, resultContent);
+            }
+            
+            // 添削箇所エリアもリセット
+            const correctionArea = document.getElementById('correction-area');
+            if (correctionArea) {
+                correctionArea.innerHTML = `<h4 style='margin: 0 0 10px 0; color: #495057;'>🎯 添削箇所</h4><div id='correction-content'>答案内の<mark style='background: #ffe066; padding: 2px 4px; border-radius: 3px;'>マーカー部分</mark>をクリックすると詳細なコメントが表示されます。</div><div id='correction-detail-embed' style='margin-top:18px;'></div>`;
+            }
+        } else {
+            // 添削結果がない場合は、プレーンテキストで復元
+            editor.innerText = answerText;
+            
+            // 結果エリアを非表示
+            const resultArea = document.getElementById('result-area');
+            if (resultArea) {
+                resultArea.style.display = 'none';
+            }
+            
+            // 添削箇所エリアをリセット
+            const correctionArea = document.getElementById('correction-area');
+            if (correctionArea) {
+                correctionArea.innerHTML = `<h4 style='margin: 0 0 10px 0; color: #495057;'>🎯 添削箇所</h4><div id='correction-content'>答案内の<mark style='background: #ffe066; padding: 2px 4px; border-radius: 3px;'>マーカー部分</mark>をクリックすると詳細なコメントが表示されます。</div>`;
+            }
         }
         
-        content.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h3 style="margin: 0; color: #333;">📖 答案詳細</h3>
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                    background: #dc3545; color: white; border: none; border-radius: 50%;
-                    width: 32px; height: 32px; cursor: pointer; font-size: 18px;
-                ">×</button>
-            </div>
-            <div style="color: #6c757d; margin-bottom: 16px;">${dateStr}</div>
-            ${scoreHtml}
-            <div style="
-                background: #f8f9fa; padding: 16px; border-radius: 8px;
-                font-family: monospace; line-height: 1.6; white-space: pre-wrap;
-                color: #495057; border: 1px solid #dee2e6;
-            ">${this.escapeHTML(answer.answerText)}</div>
-        `;
+        // 文字数・行数を更新
+        const charCount = document.getElementById('char-count');
+        const lineCount = document.getElementById('line-count');
+        if (charCount) charCount.textContent = answerText.length;
+        if (lineCount) lineCount.textContent = answerText ? answerText.split('\n').length : 1;
         
-        modal.appendChild(content);
-        document.body.appendChild(modal);
+        // 罫線を更新
+        this.updateDynamicLines(answerText);
         
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
-        };
+        // 通知表示
+        const date = new Date(answer.timestamp);
+        const dateStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP');
+        const scoreText = answer.correctionResults ? 
+            `（${answer.correctionResults.score}/${answer.correctionResults.maxScore}点）` : 
+            '（添削前）';
+        
+        this.showNotification(`📖 過去の答案を復元しました ${scoreText}\n${dateStr}`, 'success');
+        
+        // エディタにフォーカス
+        setTimeout(() => {
+            editor.focus();
+        }, 100);
     }
     
     // 答案削除
@@ -1502,13 +1527,17 @@ class AnswerOverlay {
         this.showNotification('🗑️ 答案を削除しました', 'success');
     }
     
-    // 答案保存用キー生成
+    // 答案保存用キー生成（モジュールファイル名＋ID＋問題ごとにユニーク）
     getAnswerSaveKey() {
         const caseId = window.currentCaseData?.caseId || 'unknown';
-        return `savedAnswers_${caseId}_${this.currentQuizIndex}_${this.currentSubIndex}`;
+        const moduleId = window.currentCaseData?.id || window.currentCaseData?.moduleId || 'unknownModule';
+        const fileName = window.currentCaseData?.fileName || 'unknownFile';
+        const key = `savedAnswers_${fileName}_${moduleId}_${caseId}_${this.currentQuizIndex}_${this.currentSubIndex}`;
+        console.log('🔑 答案保存キー生成:', { fileName, moduleId, caseId, quizIndex: this.currentQuizIndex, subIndex: this.currentSubIndex, key });
+        return key;
     }
     
-    // 通知表示
+    // 通知表示（複数行対応）
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         let bgColor = '#17a2b8';
@@ -1520,7 +1549,8 @@ class AnswerOverlay {
             position: fixed; bottom: 24px; right: 24px; z-index: 100002;
             background: ${bgColor}; color: white; padding: 12px 20px;
             border-radius: 8px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            animation: slideInRight 0.3s ease-out;
+            animation: slideInRight 0.3s ease-out; white-space: pre-line;
+            max-width: 400px; line-height: 1.4;
         `;
         
         // アニメーションCSS追加

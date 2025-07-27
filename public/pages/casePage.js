@@ -8,6 +8,10 @@ import { ApiService } from '../apiService.js';
 import { startChatSession } from '../chatSystem.js';
 import { renderFilteredQAs } from './homePage.js';
 import { recreateQAPopup, createGlobalPopupContainer } from '../qaPopup.js';
+import { QAStatusSystem } from '../qaStatusSystem.js';
+
+// QAStatusSystemのインスタンス作成
+const qaStatusSystem = new QAStatusSystem();
 
 // 答案入力ボタンのシンプルスタイル
 const answerButtonCSS = document.createElement('style');
@@ -315,15 +319,20 @@ function renderCaseDetail() {
             <header class="text-center border-b pb-4 mb-6">
                 <p class="text-gray-500">${caseInfo.citation}</p>
                 <h2 class="text-3xl md:text-4xl font-extrabold text-yellow-700">${caseInfo.title}</h2>
-            </header>            <div class="flex flex-wrap justify-center border-b mb-6">                <button class="tab-button p-4 flex-grow text-center text-gray-600 active" data-tab="story">📖 ストーリー</button>
-                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="explanation">🤔 解説</button>
-                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="speed-quiz">⚡ スピード条文</button>
-                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="essay">✍️ 論文トレーニング</button>
-                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="qa-list">📝 Q&A</button>
-                <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="quiz">✏️ ミニ論文</button>
+            </header>            <div class="flex flex-wrap justify-center border-b mb-6">                <button class="tab-button p-4 flex-grow text-center text-gray-600 active gentle-rotate-on-hover" data-tab="story">📖 ストーリー</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600 sparkle-effect" data-tab="explanation">🤔 解説</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600 heartbeat" data-tab="speed-quiz">⚡ スピード条文</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600 soft-bounce-on-hover" data-tab="essay">✍️ 論文トレーニング</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600 sparkle-effect" data-tab="qa-list">📝 Q&A</button>
+                <button class="tab-button p-4 flex-grow text-center text-gray-600 heartbeat" data-tab="quiz">✏️ ミニ論文</button>
             </div>
             <div id="tab-content"></div>
-        </div>    `;    renderTabContent('story');
+        </div>    `;
+    
+    // ★★★ 保存されたタブ状態を復元（F5更新対応） ★★★
+    const savedTab = getSavedTab();
+    renderTabContent(savedTab);
+    
       // ★★★ Mermaid初期化（強化版・DOM構築完了保証） ★★★
     // まず最初の初期化を待機
     setTimeout(() => {
@@ -370,6 +379,10 @@ function renderCaseDetail() {
 
 export function renderTabContent(tabName) {
     console.log(`🔄 タブ表示: ${tabName}`);
+    
+    // ★★★ タブ状態をlocalStorageに保存（F5更新対応） ★★★
+    saveCurrentTab(tabName);
+    
     const contentDiv = document.getElementById('tab-content');
     // 既存のタブコンテンツがあるかチェック
     let storyTab = document.getElementById('tab-story-content');
@@ -386,22 +399,53 @@ export function renderTabContent(tabName) {
         const processedExplanationHtml = processAllReferences(explanationHtml, window.SUPPORTED_LAWS || [], window.currentCaseData.questionsAndAnswers || []);
         // ★★★ 論文トレーニングが無い場合はタブ自体を省略 ★★★
         const hasEssay = window.currentCaseData.essay && window.currentCaseData.essay.question;
-        let essayTabButton = hasEssay ? `<button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="essay">✍️ 論文トレーニング</button>` : '';
+        let essayTabButton = hasEssay ? `<button class="tab-button p-4 flex-grow text-center text-gray-600 soft-bounce-on-hover" data-tab="essay">✍️ 論文トレーニング</button>` : '';
         let essayTabContent = hasEssay ? `<div id="tab-essay-content" class="tab-content-panel hidden"></div>` : '';
         // ★★★ スピード条文タブは常に表示（中身は初期化関数で制御）★★★
-        const speedQuizTabButton = `<button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="speed-quiz">⚡ スピード条文</button>`;
+        const speedQuizTabButton = `<button class="tab-button p-4 flex-grow text-center text-gray-600 heartbeat" data-tab="speed-quiz">⚡ スピード条文</button>`;
         const speedQuizTabContent = `<div id="tab-speed-quiz-content" class="tab-content-panel hidden"></div>`;
         // Q&Aタブ
-        const qaTabButton = `<button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="qa-list">📝 Q&A</button>`;
+        const qaTabButton = `<button class="tab-button p-4 flex-grow text-center text-gray-600 sparkle-effect" data-tab="qa-list">📝 Q&A</button>`;
         let qaTabContent = `<div id="tab-qa-list-content" class="tab-content-panel hidden"></div>`;
+        
+        // ★★★ 復元されるタブに応じて初期アクティブ状態を決定 ★★★
+        const getSavedTabInner = () => {
+            try {
+                const caseId = window.currentCaseData?.caseId || 'unknown';
+                const key = `currentTab_${caseId}`;
+                const savedTab = localStorage.getItem(key);
+                const validTabs = ['story', 'explanation', 'quiz', 'speed-quiz', 'qa-list', 'essay'];
+                if (savedTab && validTabs.includes(savedTab)) {
+                    return savedTab;
+                }
+                return 'story';
+            } catch (error) {
+                return 'story';
+            }
+        };
+        const savedTab = getSavedTabInner();
+        const getTabButtonClass = (tabName) => {
+            const baseClass = "tab-button p-4 flex-grow text-center text-gray-600";
+            const activeClass = tabName === savedTab ? " active" : "";
+            const effectClasses = {
+                'story': ' gentle-rotate-on-hover',
+                'explanation': ' sparkle-effect',
+                'quiz': ' heartbeat',
+                'speed-quiz': ' heartbeat',
+                'qa-list': ' sparkle-effect',
+                'essay': ' soft-bounce-on-hover'
+            };
+            return baseClass + activeClass + (effectClasses[tabName] || '');
+        };
+        
         // タブボタン
         const tabButtons = `
-            <button class="tab-button p-4 flex-grow text-center text-gray-600 active" data-tab="story">📖 ストーリー</button>
-            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="explanation">🤔 解説</button>
-            <button class="tab-button p-4 flex-grow text-center text-gray-600" data-tab="quiz">✏️ ミニ論文</button>
-            ${speedQuizTabButton}
-            ${qaTabButton}
-            ${essayTabButton}
+            <button class="${getTabButtonClass('story')}" data-tab="story">📖 ストーリー</button>
+            <button class="${getTabButtonClass('explanation')}" data-tab="explanation">🤔 解説</button>
+            <button class="${getTabButtonClass('quiz')}" data-tab="quiz">✏️ ミニ論文</button>
+            <button class="${getTabButtonClass('speed-quiz')}" data-tab="speed-quiz">⚡ スピード条文</button>
+            <button class="${getTabButtonClass('qa-list')}" data-tab="qa-list">📝 Q&A</button>
+            ${hasEssay ? `<button class="${getTabButtonClass('essay')}" data-tab="essay">✍️ 論文トレーニング</button>` : ''}
         `;
         // タブ本体
         contentDiv.innerHTML = `
@@ -452,6 +496,11 @@ export function renderTabContent(tabName) {
           // 条文参照ボタンのイベントリスナーを設定
         setupArticleRefButtons(contentDiv);
         
+        // ★★★ Q&Aリンクボタンの色を更新 ★★★
+        if (window.qaStatusSystem) {
+            window.qaStatusSystem.updateAllQALinkColors();
+        }
+        
         // Q&Aタブの初期描画
         (async () => {
             const qaTabDiv = document.getElementById('tab-qa-list-content');
@@ -471,6 +520,14 @@ export function renderTabContent(tabName) {
       // 全てのタブを非表示にする
     document.querySelectorAll('.tab-content-panel').forEach(panel => {
         panel.classList.add('hidden');
+    });
+    
+    // ★★★ タブボタンのアクティブ状態を更新 ★★★
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabName) {
+            btn.classList.add('active');
+        }
     });
     
     // ★★★ タブ切り替え時に全てのQ&Aポップアップを閉じる ★★★
@@ -509,6 +566,11 @@ export function renderTabContent(tabName) {
         console.log(`📋 タブ ${tabName} 内のQ&Aボタン: ${qaButtons.length}個`);
         setupArticleRefButtons(targetTab);
         
+        // ★★★ Q&Aリンクボタンの色を更新 ★★★
+        if (window.qaStatusSystem) {
+            window.qaStatusSystem.updateAllQALinkColors();
+        }
+        
         // ★★★ 遅延読み込みされたQ&Aボタンにも対応 ★★★
         setTimeout(() => {
             console.log(`🔧 遅延設定: ${tabName}タブの追加Q&Aボタンをチェック`);
@@ -517,6 +579,11 @@ export function renderTabContent(tabName) {
             if (newQaButtons.length !== qaButtons.length) {
                 console.log('🔄 新しいQ&Aボタンが見つかったため、再設定します');
                 setupArticleRefButtons(targetTab);
+                
+                // 遅延読み込みボタンの色も更新
+                if (window.qaStatusSystem) {
+                    window.qaStatusSystem.updateAllQALinkColors();
+                }
             }
         }, 200);
         
@@ -1131,8 +1198,8 @@ function initializeMermaidDiagrams() {
             deterministicIDSeed: 'mermaid-seed'
         });
         
-        // 現在表示されている未処理のMermaid要素のみをレンダリング
-        const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed="true"])');
+        // 現在表示されている未処理のMermaid要素のみをレンダリング（エラー要素を除外）
+        const mermaidElements = document.querySelectorAll('.mermaid:not([data-processed="true"]):not(.mermaid-error)');
         console.log(`🔍 処理対象のMermaid要素を${mermaidElements.length}個発見`);
         
         if (mermaidElements.length === 0) {
@@ -1232,6 +1299,9 @@ function initializeMermaidDiagrams() {
             } catch (renderError) {
                 console.error(`❌ Mermaid レンダリングエラー #${index}:`, renderError);
                 const graphDefinition = element.textContent.trim();
+                
+                // エラー要素のクラスを変更してMermaid処理対象から除外
+                element.className = 'mermaid-error';
                 element.innerHTML = `
                     <div style="color: red; padding: 20px; border: 2px solid red; border-radius: 8px; background: #fef2f2;">
                         <h3>❌ 図表レンダリングエラー</h3>
@@ -1493,7 +1563,7 @@ function updateMermaidTransform(mermaidDiv) {
     const scaledWidth = svgRect.width * data.scale;
     const scaledHeight = svgRect.height * data.scale;
     
-    // ★★★ 最小移動範囲を設定（ズームレベルに関係なく常に動かせる） ★★★
+    // ★★★ 最小移動範囲を含む拡張移動範囲を計算 ★★★
     const minMovableRange = 400; // 最小400px分は動かせるようにする（拡大）
     const baseMaxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2);
     const baseMaxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2);
@@ -1842,11 +1912,11 @@ function buildStoryHtml(storyData) {
         const fallbackSrc = `/images/${character.baseName}_normal.png`;
         const onErrorAttribute = `this.src='${fallbackSrc}'; this.onerror=null;`;
         
-        const imageStyle = "width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0,  0, 0.1);";
+        const imageStyle = "width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);";
         const isRightSide = rightSideCharacters.includes(item.speaker);
         const iconTransform = isRightSide ? 'transform: scaleX(-1);' : '';
-        const iconHtml = `<img src="${iconSrc}" alt="${character.name}" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;
-        const bubbleHtml = `<div class="chat-bubble ${isRightSide ? 'chat-bubble-right' : 'chat-bubble-left'} p-3 rounded-lg shadow"><p class="font-bold">${character.name}</p><p>${item.dialogue}</p></div>`;
+        const iconHtml = `<img src="${iconSrc}" alt="${character.name}" class="character-icon animate-fade-in" style="${imageStyle} ${iconTransform}" onerror="${onErrorAttribute}">`;
+        const bubbleHtml = `<div class="chat-bubble ${isRightSide ? 'chat-bubble-right' : 'chat-bubble-left'} p-3 rounded-lg shadow animate-fade-in"><p class="font-bold">${character.name}</p><p>${item.dialogue}</p></div>`;
         
         return `<div class="flex items-start gap-3 my-4 ${isRightSide ? 'justify-end' : ''}">${isRightSide ? bubbleHtml + iconHtml : iconHtml + bubbleHtml}</div>`;    
     }).join('');
@@ -2187,5 +2257,63 @@ function testMermaidMovableRange() {
     console.log('🎯 改善点: 最小400px分の移動範囲を保証し、ズーム前でも常に動かせるようになりました！');
 }
 
-// グローバル関数として登録
-window.testMermaidMovableRange = testMermaidMovableRange;
+// ★★★ タブ状態管理機能（F5更新対応） ★★★
+/**
+ * 現在のタブ状態をlocalStorageに保存
+ * @param {string} tabName - 現在のタブ名
+ */
+function saveCurrentTab(tabName) {
+    try {
+        const caseId = window.currentCaseData?.caseId || 'unknown';
+        const key = `currentTab_${caseId}`;
+        localStorage.setItem(key, tabName);
+        console.log(`💾 タブ状態保存: ${tabName} (case: ${caseId})`);
+    } catch (error) {
+        console.warn('⚠️ タブ状態の保存に失敗:', error);
+    }
+}
+
+/**
+ * 保存されたタブ状態をlocalStorageから取得
+ * @returns {string} 保存されたタブ名（デフォルト: 'story'）
+ */
+function getSavedTab() {
+    try {
+        const caseId = window.currentCaseData?.caseId || 'unknown';
+        const key = `currentTab_${caseId}`;
+        const savedTab = localStorage.getItem(key);
+        const defaultTab = 'story';
+        
+        if (savedTab) {
+            // 有効なタブ名かチェック
+            const validTabs = ['story', 'explanation', 'quiz', 'speed-quiz', 'qa-list', 'essay'];
+            if (validTabs.includes(savedTab)) {
+                console.log(`📖 タブ状態復元: ${savedTab} (case: ${caseId})`);
+                return savedTab;
+            } else {
+                console.warn(`⚠️ 無効なタブ名: ${savedTab}、デフォルトに戻します`);
+            }
+        }
+        
+        console.log(`📖 デフォルトタブ使用: ${defaultTab} (case: ${caseId})`);
+        return defaultTab;
+    } catch (error) {
+        console.warn('⚠️ タブ状態の復元に失敗:', error);
+        return 'story';
+    }
+}
+
+/**
+ * タブ状態をクリア（必要に応じて使用）
+ * @param {string} caseId - 対象のケースID（省略時は現在のケース）
+ */
+function clearSavedTab(caseId = null) {
+    try {
+        const targetCaseId = caseId || window.currentCaseData?.caseId || 'unknown';
+        const key = `currentTab_${targetCaseId}`;
+        localStorage.removeItem(key);
+        console.log(`🗑️ タブ状態クリア: ${targetCaseId}`);
+    } catch (error) {
+        console.warn('⚠️ タブ状態のクリアに失敗:', error);
+    }
+}

@@ -1,6 +1,164 @@
 // speedQuiz.js - スピード条文ゲームモジュール
 
 /**
+ * 法令設定（絵文字・色・デザイン）の一元管理
+ */
+const LAW_SETTINGS = {
+    '民法': {
+        emoji: '🏠',
+        color: 'from-red-500 to-red-600',
+        textColor: 'text-white',
+        name: '民法'
+    },
+    '刑法': {
+        emoji: '⚖️',
+        color: 'from-blue-500 to-blue-600',
+        textColor: 'text-white',
+        name: '刑法'
+    },
+    '日本国憲法': {
+        emoji: '🇯🇵',
+        color: 'from-green-500 to-green-600',
+        textColor: 'text-white',
+        name: '日本国憲法'
+    },
+    '憲法': {
+        emoji: '🇯🇵',
+        color: 'from-green-500 to-green-600',
+        textColor: 'text-white',
+        name: '憲法'
+    },
+    '民事訴訟法': {
+        emoji: '�',
+        color: 'from-yellow-500 to-yellow-600',
+        textColor: 'text-black',
+        name: '民事訴訟法'
+    },
+    '刑事訴訟法': {
+        emoji: '🔍',
+        color: 'from-purple-500 to-purple-600',
+        textColor: 'text-white',
+        name: '刑事訴訟法'
+    },
+    '商法': {
+        emoji: '�',
+        color: 'from-orange-500 to-orange-600',
+        textColor: 'text-white',
+        name: '商法'
+    },
+    '行政法': {
+        emoji: '�️',
+        color: 'from-lime-500 to-lime-600',
+        textColor: 'text-black',
+        name: '行政法'
+    },
+    '会社法': {
+        emoji: '�',
+        color: 'from-indigo-500 to-indigo-600',
+        textColor: 'text-white',
+        name: '会社法'
+    }
+};
+
+/**
+ * 法令名に対応する設定を取得
+ * @param {string} lawName - 法令名
+ * @returns {object} 法令設定オブジェクト
+ */
+function getLawSettings(lawName) {
+    // 完全一致を優先
+    if (LAW_SETTINGS[lawName]) {
+        return LAW_SETTINGS[lawName];
+    }
+    
+    // 部分一致で検索
+    for (const [key, settings] of Object.entries(LAW_SETTINGS)) {
+        if (lawName.includes(key)) {
+            return settings;
+        }
+    }
+    
+    // デフォルト設定
+    return {
+        emoji: '📖',
+        color: 'from-gray-500 to-gray-600',
+        textColor: 'text-white',
+        name: lawName || '不明な法令'
+    };
+}
+
+/**
+ * 記事データから法令名を抽出
+ * @param {object} article - 記事オブジェクト
+ * @returns {string} 法令名
+ */
+function extractLawName(article) {
+    if (!article) return '不明な法令';
+    
+    // 詳細なデバッグログ
+    console.log('=== 記事データ構造の詳細分析 ===');
+    console.log('記事オブジェクト:', article);
+    console.log('記事のキー:', Object.keys(article));
+    console.log('記事のプロパティ詳細:');
+    
+    // 全てのプロパティを調べる
+    for (const [key, value] of Object.entries(article)) {
+        console.log(`  ${key}:`, typeof value, value);
+        
+        // オブジェクトプロパティの場合、さらに詳細に調べる
+        if (typeof value === 'object' && value !== null) {
+            console.log(`    ${key}のキー:`, Object.keys(value));
+        }
+    }
+    
+    // 法令名を取得する優先順位
+    const lawNameCandidates = [
+        article.lawName,
+        article.law,
+        article.fullLawName,
+        article.lawTitle,
+        article.title,
+        article.name,
+        article.displayText ? article.displayText.split('：')[0] : null,
+        article.displayText ? article.displayText.split('（')[0] : null,
+        article.displayText ? article.displayText.split(' ')[0] : null,
+        article.displayText ? article.displayText.match(/^[^（）\s]+法/)?.[0] : null,
+        article.displayText ? article.displayText.match(/^[^（）\s]+憲法/)?.[0] : null
+    ];
+    
+    // 最初の有効な値を返す
+    for (const candidate of lawNameCandidates) {
+        if (candidate && typeof candidate === 'string' && candidate.trim()) {
+            console.log('法令名が見つかりました:', candidate);
+            return candidate.trim();
+        }
+    }
+    
+    // ファイル名から推測
+    if (article.filename) {
+        const fileBaseName = article.filename.split('-')[0];
+        console.log('ファイル名からの推測:', fileBaseName);
+        return fileBaseName;
+    }
+    
+    console.log('法令名が見つかりませんでした');
+    return '不明な法令';
+}
+
+// グローバルに公開
+window.LAW_SETTINGS = LAW_SETTINGS;
+window.getLawSettings = getLawSettings;
+
+/**
+ * 法令名に対応するデコ文字（絵文字）を取得（後方互換性のため残す）
+ * @param {string} lawName - 法令名
+ * @returns {string} 対応する絵文字
+ */
+function getLawEmoji(lawName) {
+    return getLawSettings(lawName).emoji;
+}
+
+/**
  * モジュール内の全条文を抽出
  * @param {Object} caseData - ケースデータ
  * @returns {Array} 条文リスト
@@ -57,17 +215,15 @@ export async function extractAllArticles(caseData) {
     }
       // 条文パターンを抽出
     const allText = texts.join(' ');
-    console.log('🔍 条文抽出対象テキスト（抜粋）:', allText.substring(0, 500) + '...');    const patterns = [
-        // 【】内の条文参照を正確に抽出（最も厳密なパターン）
-        /【(民法|刑法|憲法|会社法|商法|民事訴訟法|刑事訴訟法|行政法|労働基準法|日本国憲法)(\d+(?:の\d+)?条(?:第?\d+項)?(?:第?\d+号)?)】/g,
-        // より柔軟な【】内パターン（法令名+条文番号のみ）
-        /【([^】]*?)((?:\d+(?:の\d+)?条(?:第?\d+項)?(?:第?\d+号)?))】/g,
-        // 【】なしでの条文参照
-        /(民法|刑法|憲法|会社法|商法|民事訴訟法|刑事訴訟法|行政法|労働基準法|日本国憲法)(\d+(?:の\d+)?条(?:第?\d+項)?(?:第?\d+号)?)[^】]/g,
-        // 特別パターン：「の」を含む条文番号専用
-        /【(民法|刑法|憲法)(\d+の\d+条(?:第?\d+項)?(?:第?\d+号)?)】/g,
-        // 最も具体的なパターン：「民法413条の2第2項」を直接抽出
-        /【(民法)(413条の2第?2項)】/g
+    console.log('🔍 条文抽出対象テキスト（抜粋）:', allText.substring(0, 500) + '...');
+    
+    const patterns = [
+        // 【】内の条文参照を抽出（項番号除去、余計な文言も除去）
+        /【[^】]*?(民法|刑法|憲法|会社法|商法|民事訴訟法|刑事訴訟法|行政法|労働基準法|日本国憲法)[^】]*?(\d+(?:の\d+)?条)[^】]*?】/g,
+        // より広範囲な【】内パターン
+        /【([^】]*?)(\d+(?:の\d+)?条)[^】]*?】/g,
+        // 【】なしでの条文参照（項番号除去）
+        /(民法|刑法|憲法|会社法|商法|民事訴訟法|刑事訴訟法|行政法|労働基準法|日本国憲法)(\d+(?:の\d+)?条)(?:[^0-9条]|$)/g
     ];
       // デバッグ：特定の条文が含まれているかチェック
     if (allText.includes('民法413条の2')) {
@@ -87,13 +243,30 @@ export async function extractAllArticles(caseData) {
       patterns.forEach((pattern, index) => {
         console.log(`🔍 パターン${index + 1}での抽出開始:`, pattern);
         let match;
-        let matchCount = 0;        while ((match = pattern.exec(allText)) !== null) {
+        let matchCount = 0;
+        
+        while ((match = pattern.exec(allText)) !== null) {
             let lawName, articleRef;
             
-            if (index === 1) {
-                // 2番目のパターン：【】内の複雑なパターン
-                const fullMatch = match[1].trim();
-                // 法令名部分を最後の有効な法令名で特定
+            if (index === 0) {
+                // 1番目のパターン：【】内の厳密なパターン
+                const fullMatch = match[0];
+                lawName = match[1];
+                articleRef = match[2];
+                
+                // 余計な文言を除去（ただし書き、但し書き等）
+                articleRef = articleRef.replace(/(?:ただし書き?|但し書き?|前段|後段|本文|各号|各項|柱書|前文).*$/, '');
+                
+            } else if (index === 1) {
+                // 2番目のパターン：【】内の広範囲パターン
+                const fullMatch = match[0];
+                const beforeArticle = match[1];
+                articleRef = match[2];
+                
+                // 余計な文言を除去
+                articleRef = articleRef.replace(/(?:ただし書き?|但し書き?|前段|後段|本文|各号|各項|柱書|前文).*$/, '');
+                
+                // 法令名を抽出
                 const validLaws = ['民法', '刑法', '憲法', '会社法', '商法', '民事訴訟法', '刑事訴訟法', '行政法', '労働基準法', '日本国憲法'];
                 let foundLaw = null;
                 for (const law of validLaws) {
@@ -102,43 +275,35 @@ export async function extractAllArticles(caseData) {
                         break;
                     }
                 }
-                if (foundLaw) {
-                    lawName = foundLaw;
-                    articleRef = match[2];
-                } else {
-                    continue;
-                }
+                if (!foundLaw) continue;
+                lawName = foundLaw;
+                
             } else if (index === 2) {
                 // 3番目のパターン：【】なしでの抽出
-                lawName = match[1].trim();
+                lawName = match[1];
                 articleRef = match[2];
-                // 後に続く文字が】でないことを確認
-                const nextChar = allText[match.index + match[0].length];
-                if (nextChar === '】') {
-                    continue; // 【】内のパターンなので除外
-                }
-            } else {
-                // 1番目、4番目、5番目のパターン
-                lawName = match[1].trim();
-                articleRef = match[2];
+                
+                // 余計な文言を除去
+                articleRef = articleRef.replace(/(?:ただし書き?|但し書き?|前段|後段|本文|各号|各項|柱書|前文).*$/, '');
             }
             
             matchCount++;
             
-            // デバッグ：「413条の2」を含むマッチを特別にログ
-            if (articleRef && articleRef.includes('413条の2')) {
-                console.log(`🎯 「413条の2」マッチ発見:`, { lawName, articleRef, fullMatch: match[0], pattern: index + 1 });
-            }
+            // デバッグログ
+            console.log(`🎯 マッチ発見:`, { lawName, articleRef, fullMatch: match[0], pattern: index + 1 });
             
-            // 有効な法令名かチェック（より厳密に）
-            if (isValidLawName(lawName) && lawName.length <= 10) { // 異常に長い法令名を除外
-                articles.add(`${lawName}${articleRef}`);
-                console.log(`➕ 条文追加: ${lawName}${articleRef}`);
+            // 有効な法令名かチェック
+            if (isValidLawName(lawName) && lawName.length <= 10) {
+                // 重複チェック用のキーを生成（法令名+条文番号のみ）
+                const articleKey = `${lawName}${articleRef}`;
+                articles.add(articleKey);
+                console.log(`➕ 条文追加: ${articleKey}`);
             } else {
-                console.log(`❌ 無効な法令名: "${lawName}" (${articleRef}) - 長さ: ${lawName.length}`);
+                console.log(`❌ 無効な法令名: "${lawName}" (${articleRef})`);
             }
         }
-        console.log(`📊 パターン${index + 1}で ${matchCount} 件のマッチ`);    });
+        console.log(`📊 パターン${index + 1}で ${matchCount} 件のマッチ`);
+    });
     
     console.log(`📚 抽出された条文一覧 (${Array.from(articles).length}件):`);
     Array.from(articles).forEach((article, index) => {
@@ -216,27 +381,25 @@ function isValidLawName(lawName) {
  */
 async function parseArticle(articleStr) {
     // 不正な文字列を事前に除外
-    if (!articleStr || articleStr.length > 50 || articleStr.includes('】）。') || articleStr.includes('○項')) {
+    if (!articleStr || articleStr.length > 50) {
         console.warn(`🚫 不正な条文文字列: "${articleStr}"`);
         return null;
     }
     
-    // より強化された正規表現で「413条の2第2項」などのパターンに確実に対応
-    // パターン1: 民法413条の2第2項 -> 法令名 + 条文番号（「の」含む） + 項 + 号（オプション）
-    const pattern1 = /^(.+?)(\d+条の\d+)(?:第?(\d+)項)?(?:第?(\d+)号)?$/;
-    // パターン2: 民法413条第2項 -> 法令名 + 条文番号（通常） + 項 + 号（オプション）
-    const pattern2 = /^(.+?)(\d+条)(?:第?(\d+)項)?(?:第?(\d+)号)?$/;
+    // 条文番号のみを抽出する正規表現（項番号は除外）
+    // パターン1: 民法413条の2 -> 法令名 + 条文番号（「の」含む）
+    const pattern1 = /^(.+?)(\d+条の\d+)$/;
+    // パターン2: 民法413条 -> 法令名 + 条文番号（通常）
+    const pattern2 = /^(.+?)(\d+条)$/;
     
     let match = articleStr.match(pattern1) || articleStr.match(pattern2);
     
     if (!match) {
         console.warn(`🚫 条文パターンにマッチしません: "${articleStr}"`);
-        console.log(`📝 試行パターン1: ${pattern1}`);
-        console.log(`📝 試行パターン2: ${pattern2}`);
         return null;
     }
     
-    const [fullMatch, lawName, articleWithJou, paragraph, item] = match;
+    const [fullMatch, lawName, articleWithJou] = match;
     
     // 法令名の妥当性を再チェック
     if (!isValidLawName(lawName.trim())) {
@@ -246,20 +409,17 @@ async function parseArticle(articleStr) {
     
     // 「条」を削除して条文番号のみを抽出（「413の2」「413」など）
     const articleNumberStr = articleWithJou.replace(/条$/, '');
-    const paragraphNum = paragraph ? parseInt(paragraph) : null;
-    const itemNum = item ? parseInt(item) : null;
     
-    console.log(`🔍 条文解析成功: 法令名="${lawName.trim()}", 条文番号="${articleNumberStr}", 項=${paragraphNum}, 号=${itemNum}`);
-    console.log(`📄 元の入力: "${articleStr}" -> 解析結果: "${fullMatch}"`);
+    console.log(`🔍 条文解析成功: 法令名="${lawName.trim()}", 条文番号="${articleNumberStr}"`);
     
-    // 条文メタデータのみを作成（本文は取得せず）
+    // 条文メタデータを作成（項番号は含めない）
     const articleData = {
         lawName: lawName.trim(),
         fullText: articleStr,
         articleNumber: articleNumberStr, // 文字列として保持（「413の2」など）
-        paragraph: paragraphNum,
-        item: itemNum,
-        displayText: `${lawName.trim()}${articleWithJou}${paragraph ? `第${paragraph}項` : ''}${item ? `第${item}号` : ''}`,
+        paragraph: null, // 項番号は含めない
+        item: null, // 号番号は含めない
+        displayText: `${lawName.trim()}${articleWithJou}`, // 「民法94条」「民法413条の2」の形式
         content: null // 本文は事前に取得しない
     };
     
@@ -468,8 +628,13 @@ export async function initializeSpeedQuizGame(containerId, caseData, preserveExi
                 <div class="text-center mt-1">残り時間: <span id="time-remaining">10</span>秒</div>
             </div>
             
-            <div id="article-display" class="bg-white border-2 border-gray-300 rounded-lg p-6 mb-6 min-h-40 flex items-center justify-center text-center text-black">
-                <div id="article-text" class="transition-all duration-500 text-xs text-black">条文内容が表示されます...</div>
+            <!-- 現在の法令名を表示 -->
+            <div id="current-law-name" class="text-center mb-4 py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg">
+                <div class="text-xl font-bold">📚 法令名を取得中...</div>
+            </div>
+            
+            <div id="article-display" class="bg-white border-2 border-gray-300 rounded-lg p-6 mb-6 min-h-40 text-black">
+                <div id="article-text" class="transition-all duration-500 text-xs text-black text-left">条文内容が表示されます...</div>
             </div>            <div class="text-center mb-4">                <div class="flex items-center justify-center gap-2">
                     <div class="relative">                        <input type="text" id="article-number-input" class="text-3xl text-center border-2 border-blue-300 rounded-lg p-4 w-40 font-mono tracking-widest bg-transparent" style="color: transparent;" maxlength="8" autocomplete="off">
                         <div id="article-overlay" class="absolute top-0 left-0 text-3xl text-center p-4 w-40 font-mono tracking-widest pointer-events-none text-black"></div>
@@ -505,6 +670,12 @@ export async function initializeSpeedQuizGame(containerId, caseData, preserveExi
                 </div>
                 <div id="score-rank" class="text-xl font-bold mb-4"></div>
                 <div id="score-comment" class="text-gray-700"></div>
+                
+                <!-- 平均点情報表示 -->
+                <div id="average-score-section" class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">📊 今回の問題別平均点</h4>
+                    <div id="average-score-list" class="text-sm text-gray-600 max-h-32 overflow-y-auto"></div>
+                </div>
             </div>
             
             <div id="wrong-answers-section" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -575,19 +746,8 @@ function handleArticleInput(e) {
     // 正解判定＆次問題移動
     if (validInput === correctArticleNumber && correctArticleNumber.length > 0) {
         input.readOnly = true;
-        const currentArticle = gameState.articles[gameState.currentIndex];
-        if (currentArticle && currentArticle.paragraph) {
-            showParagraphSection();
-            const paragraphInput = document.getElementById('paragraph-number-input');
-            if (paragraphInput) {
-                paragraphInput.value = '';
-                paragraphInput.focus();
-            }
-            gameState.currentAnswerStage = 'paragraph';
-            gameState.isWaitingForParagraph = true;
-        } else {
-            completeAnswer();
-        }
+        // 項番号セクションは表示しない（記事番号のみの仕様に変更）
+        completeAnswer();
     }
     
     // デバッグ出力
@@ -595,9 +755,9 @@ function handleArticleInput(e) {
 }
 
 /**
- * 項番号の入力を処理
+ * 項番号入力を処理する関数（記事番号のみの仕様変更に伴い削除）
  */
-function handleParagraphInput(event) {
+/* function handleParagraphInput(event) {
     if (gameState.isProcessingAnswer) return;
     
     const input = event.target;
@@ -656,7 +816,7 @@ function handleParagraphInput(event) {
     if (validInput === correctParagraphNumber) {
         completeAnswer();
     }
-}
+} */
 
 /**
  * 正解時の処理
@@ -670,16 +830,21 @@ function handleCorrectAnswer() {
     // 正答率記録
     const currentArticle = gameState.articles[gameState.currentIndex];
     if (currentArticle) {
+        // スコア計算（残り時間ベース）
+        const earnedScore = Math.max(1, gameState.timeLeft);
         recordArticleAnswer(
             currentArticle.lawName || 'その他',
             currentArticle.articleNumber,
             currentArticle.paragraph || 1,
-            true  // 正解
+            true,  // 正解
+            earnedScore  // 獲得点数
         );
+        // サーバーに条文を追加
+        postArticleToLawList(currentArticle);
+        // スコア更新
+        gameState.score += earnedScore;
     }
     
-    // スコア更新
-    gameState.score += Math.max(1, gameState.timeLeft);
     gameState.correctAnswers++;
     
     // フィードバック表示
@@ -783,10 +948,13 @@ function setupSpeedQuizEventListeners() {
         articleInput.addEventListener('keydown', handleArticleKeyDown);
     }
     
+    // 項番号入力は無効化（記事番号のみの仕様変更）
+    /*
     if (paragraphInput) {
         paragraphInput.addEventListener('input', handleParagraphInput);
         paragraphInput.addEventListener('keydown', handleParagraphKeyDown);
     }
+    */
     
     // グローバルで数字キー入力を監視し、入力欄が未フォーカスでも自動でフォーカス＆入力
     window.addEventListener('keydown', function(e) {
@@ -833,6 +1001,28 @@ function setupSpeedQuizEventListeners() {
             }
         }
     });
+    
+    // ページ離脱時やタブ切り替え時にタイマーをクリア
+    const handleVisibilityChange = () => {
+        if (document.hidden && gameState && gameState.timer) {
+            console.log('🌙 ページが非表示になったため、タイマーを一時停止');
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+                gameState.timer = null;
+            }
+        }
+    };
+    
+    const handleBeforeUnload = () => {
+        if (gameState && gameState.timer) {
+            clearInterval(gameState.timer);
+            gameState.timer = null;
+            console.log('🚪 ページ離脱時にタイマーをクリア');
+        }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     
     console.log('✅ スピード条文ゲーム イベントリスナー設定完了');
 }
@@ -892,6 +1082,13 @@ export async function startSpeedQuiz() {
     
     // 成功時は再帰カウントをリセット
     startSpeedQuizRetryCount = 0;
+    
+    // 既存のタイマーがあればクリア
+    if (gameState && gameState.timer) {
+        clearInterval(gameState.timer);
+        console.log('⚠️ ゲーム開始時に既存タイマーをクリアしました');
+    }
+    
       // ゲーム状態を初期化
     gameState = {
         articles: [...window.speedQuizArticles],
@@ -947,6 +1144,12 @@ async function displayCurrentQuestion() {
     
     const currentArticle = gameState.articles[gameState.currentIndex];
     console.log('📖 現在の条文:', currentArticle);
+    console.log('📚 条文データのキー:', Object.keys(currentArticle));
+    console.log('📚 法令名データ:', {
+        law: currentArticle.law,
+        lawName: currentArticle.lawName,
+        displayText: currentArticle.displayText?.substring(0, 100)
+    });
     
     // UI更新
     const questionNumberElement = document.getElementById('question-number');
@@ -968,8 +1171,27 @@ async function displayCurrentQuestion() {
     console.log('🔄 条文本文をオンデマンドで取得開始:', currentArticle.displayText);
     
     // 読み込み中表示
-    articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black">${content}</div>`;
+    articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black text-left">${content}</div>`;
     articleDisplay.className = 'text-base text-black';
+    
+    // 法令名を更新
+    const lawNameDisplay = document.getElementById('current-law-name');
+    
+    // 法令名を抽出
+    const lawName = window.extractLawName ? window.extractLawName(currentArticle) : extractLawName(currentArticle);
+    
+    if (lawNameDisplay) {
+        // 装飾的な表示を使用
+        if (window.createDecorativeLawDisplay) {
+            lawNameDisplay.innerHTML = window.createDecorativeLawDisplay(lawName);
+        } else {
+            // フォールバック表示
+            lawNameDisplay.innerHTML = `<div class="text-center text-lg font-bold text-gray-700">${lawName}</div>`;
+        }
+        console.log('法令名表示更新:', lawName);
+    } else {
+        console.warn('法令名表示要素が見つかりません');
+    }
     
     // 非同期で条文本文を取得
     try {
@@ -980,13 +1202,13 @@ async function displayCurrentQuestion() {
         content = hideAnswersInContentForQuiz(content, currentArticle);
         
         console.log('📝 表示する内容:', content);
-        // HTMLとして表示し、改行を保持
-        articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black">${content}</div>`;
+        // HTMLとして表示し、改行を保持（左詰めで表示）
+        articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black text-left">${content}</div>`;
         
     } catch (error) {
         console.error('❌ 条文本文取得エラー:', error);
         content = currentArticle.displayText || '条文内容の取得に失敗しました';
-        articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black">${content}</div>`;
+        articleDisplay.innerHTML = `<div class="whitespace-pre-line leading-relaxed text-black text-left">${content}</div>`;
     }    // 入力フィールドをリセット
     const articleInput = document.getElementById('article-number-input');
     const paragraphInput = document.getElementById('paragraph-number-input');
@@ -1052,6 +1274,13 @@ async function displayCurrentQuestion() {
  * タイマー開始
  */
 function startTimer() {
+    // 既存のタイマーが動いている場合は停止
+    if (gameState.timer) {
+        clearInterval(gameState.timer);
+        gameState.timer = null;
+        console.log('⚠️ 既存のタイマーをクリアしました');
+    }
+    
     const timeLimit = gameState.timeLimit || 10;
     gameState.timeLeft = timeLimit;
     
@@ -1060,6 +1289,8 @@ function startTimer() {
     
     if (timeRemainingElement) timeRemainingElement.textContent = gameState.timeLeft;
     if (progressBar) progressBar.style.width = '100%';
+    
+    console.log(`⏰ タイマー開始: ${timeLimit}秒`);
     
     gameState.timer = setInterval(() => {
         gameState.timeLeft--;
@@ -1074,6 +1305,8 @@ function startTimer() {
             
             gameState.isProcessingAnswer = true;
             clearInterval(gameState.timer);
+            gameState.timer = null;
+            console.log('⏰ 時間切れ');
               // 間違えた問題として記録
             const currentArticle = gameState.articles[gameState.currentIndex];
             if (currentArticle && currentArticle.articleNumber !== undefined) {
@@ -1089,7 +1322,8 @@ function startTimer() {
                     currentArticle.lawName || 'その他',
                     currentArticle.articleNumber,
                     currentArticle.paragraph || 1,
-                    false  // 不正解
+                    false,  // 不正解
+                    0  // 獲得点数は0
                 );
             }
             
@@ -1250,6 +1484,9 @@ function showIncorrectFeedback(message = '❌ 不正解', correctArticle = '', c
  * 次の問題へ
  */
 async function nextQuestion() {
+    // 確実にタイマーを停止
+    stopTimer();
+    
     gameState.currentIndex++;
     
     if (gameState.currentIndex >= gameState.articles.length) {
@@ -1282,7 +1519,8 @@ function skipQuestion() {
             currentArticle.lawName || 'その他',
             currentArticle.articleNumber,
             currentArticle.paragraph || 1,
-            false  // 不正解
+            false,  // 不正解
+            0  // 獲得点数は0
         );
     }
     
@@ -1319,6 +1557,9 @@ async function quitGame() {
  * メニューに戻る
  */
 function backToMenu() {
+    // タイマーを確実に停止
+    stopTimer();
+    
     // 元の条文データを復元（特定法律モードの場合）
     if (window.originalSpeedQuizArticles) {
         window.speedQuizArticles = window.originalSpeedQuizArticles;
@@ -1382,8 +1623,59 @@ async function showResult() {
     if (rankElement) rankElement.textContent = rank;
     if (commentElement) commentElement.textContent = comment;
     
+    // 平均点情報を表示
+    displayAverageScores();
+    
     // 間違えた問題がある場合は表示
     await displayWrongAnswers();
+}
+
+/**
+ * 平均点情報を表示
+ */
+function displayAverageScores() {
+    const averageScoreList = document.getElementById('average-score-list');
+    if (!averageScoreList) return;
+    
+    const answerRates = getAnswerRates();
+    const scoreInfos = [];
+    
+    // 今回のゲームで出題された問題の平均点を収集
+    gameState.articles.forEach(article => {
+        const normalizedLawName = normalizeLawName(article.lawName || 'その他');
+        const normalizedArticleNumber = article.articleNumber.toString();
+        const paragraphKey = (article.paragraph || 1).toString();
+        
+        if (answerRates[normalizedLawName] && 
+            answerRates[normalizedLawName][normalizedArticleNumber] && 
+            answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey]) {
+            
+            const record = answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey];
+            scoreInfos.push({
+                law: normalizedLawName,
+                article: normalizedArticleNumber,
+                answered: record.answered,
+                averageScore: record.averageScore || 0,
+                correctRate: Math.round((record.correct / record.answered) * 100)
+            });
+        }
+    });
+    
+    if (scoreInfos.length === 0) {
+        averageScoreList.innerHTML = '<div class="text-gray-500">データがまだありません</div>';
+        return;
+    }
+    
+    // 平均点でソート（降順）
+    scoreInfos.sort((a, b) => b.averageScore - a.averageScore);
+    
+    // 表示
+    averageScoreList.innerHTML = scoreInfos.map(info => 
+        `<div class="flex justify-between items-center py-1">
+            <span class="font-mono">${info.law}${info.article}条</span>
+            <span class="text-blue-600 font-semibold">平均${info.averageScore}点 (正答率${info.correctRate}%, ${info.answered}回)</span>
+        </div>`
+    ).join('');
 }
 
 /**
@@ -1730,7 +2022,7 @@ function formatDoubleParenthesesForQuiz(text) {
 /**
  * 条文の正答率データを記録（自動保存対応）
  */
-function recordArticleAnswer(lawName, articleNumber, paragraph, isCorrect) {
+function recordArticleAnswer(lawName, articleNumber, paragraph, isCorrect, earnedScore = 0) {
     try {
         // ローカルストレージから既存データを取得
         const storageKey = 'speedQuizAnswerRates';
@@ -1763,17 +2055,25 @@ function recordArticleAnswer(lawName, articleNumber, paragraph, isCorrect) {
             answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey] = {
                 answered: 0,
                 correct: 0,
+                totalScore: 0,      // 累計点数
+                averageScore: 0,    // 平均点
                 lastAnswered: Date.now()
             };
         }
         
         // 記録を更新
         const record = answerRates[normalizedLawName][normalizedArticleNumber][paragraphKey];
+        
+        // 回答数と正解数の更新
         record.answered++;
         record.lastAnswered = Date.now();
         if (isCorrect) {
             record.correct++;
         }
+        
+        // 点数記録と平均点計算
+        record.totalScore = (record.totalScore || 0) + earnedScore;
+        record.averageScore = record.answered > 0 ? Math.round(record.totalScore / record.answered * 100) / 100 : 0;
         
         // ローカルストレージに保存
         localStorage.setItem(storageKey, JSON.stringify(answerRates));
@@ -1786,7 +2086,7 @@ function recordArticleAnswer(lawName, articleNumber, paragraph, isCorrect) {
             autoBackupAnswerRates();
         }
         
-        console.log(`📊 正答率記録: ${normalizedLawName}${normalizedArticleNumber}条${paragraphKey}項 - ${isCorrect ? '正解' : '不正解'} (${record.correct}/${record.answered})`);
+        console.log(`📊 記録更新: ${normalizedLawName}${normalizedArticleNumber}条${paragraphKey}項 - ${isCorrect ? '正解' : '不正解'} +${earnedScore}点 (正答率: ${record.correct}/${record.answered}, 平均点: ${record.averageScore})`);
         
     } catch (error) {
         console.error('❌ 正答率記録エラー:', error);
@@ -1905,6 +2205,32 @@ function getAnswerRates(lawName = null) {
         
         const answerRates = JSON.parse(existingData);
         
+        // 後方互換性：古いデータ構造を新しい構造にアップグレード
+        let dataUpgraded = false;
+        for (const lawName in answerRates) {
+            for (const articleNumber in answerRates[lawName]) {
+                for (const paragraph in answerRates[lawName][articleNumber]) {
+                    const record = answerRates[lawName][articleNumber][paragraph];
+                    
+                    // 新しいフィールドが存在しない場合は初期化
+                    if (record.totalScore === undefined) {
+                        record.totalScore = 0;
+                        dataUpgraded = true;
+                    }
+                    if (record.averageScore === undefined) {
+                        record.averageScore = 0;
+                        dataUpgraded = true;
+                    }
+                }
+            }
+        }
+        
+        // データをアップグレードした場合は保存
+        if (dataUpgraded) {
+            localStorage.setItem(storageKey, JSON.stringify(answerRates));
+            console.log('📊 データ構造をアップグレードしました');
+        }
+        
         if (lawName) {
             const normalizedLawName = normalizeLawName(lawName);
             return answerRates[normalizedLawName] || {};
@@ -1994,10 +2320,34 @@ export function startFilteredSpeedQuiz(settings) {
         console.log('⚙️ 設定詳細:');
         console.log('  selectedLaws:', settings.selectedLaws);
         console.log('  mode:', settings.mode);
+        console.log('  targetArticle:', settings.targetArticle);
         console.log('  filterWeak:', settings.filterWeak);
         console.log('  filterNoParagraph:', settings.filterNoParagraph);
         console.log('  filterRecent:', settings.filterRecent);
         console.log('  questionCount:', settings.questionCount);
+        
+        // 単体条文モードの処理
+        if (settings.mode === 'single' && settings.targetArticle) {
+            console.log('🎯 単体条文モード処理開始');
+            const target = settings.targetArticle;
+            
+            filteredArticles = filteredArticles.filter(article => {
+                const normalizedLawName = normalizeLawName(article.lawName || '');
+                const targetLawName = normalizeLawName(target.lawName);
+                const articleMatch = article.articleNumber === target.articleNumber;
+                const paragraphMatch = (article.paragraph || 1) === (target.paragraph || 1);
+                const lawMatch = normalizedLawName === targetLawName;
+                
+                console.log(`🔍 条文チェック: ${article.lawName}${article.articleNumber}条${article.paragraph ? `第${article.paragraph}項` : ''}`);
+                console.log(`  法令一致: ${lawMatch} (${normalizedLawName} === ${targetLawName})`);
+                console.log(`  条文一致: ${articleMatch} (${article.articleNumber} === ${target.articleNumber})`);
+                console.log(`  項一致: ${paragraphMatch} (${article.paragraph || 1} === ${target.paragraph || 1})`);
+                
+                return lawMatch && articleMatch && paragraphMatch;
+            });
+            
+            console.log(`📊 単体条文フィルタリング後: ${filteredArticles.length}問`);
+        }
         
         // 法令でフィルタリング
         if (settings.selectedLaws && settings.selectedLaws.length > 0) {
@@ -2173,6 +2523,12 @@ export function startFilteredSpeedQuiz(settings) {
         // フィルタリングされた条文でゲームを開始
         window.speedQuizArticles = filteredArticles;
         
+        // 既存のタイマーがあればクリア
+        if (gameState && gameState.timer) {
+            clearInterval(gameState.timer);
+            console.log('⚠️ フィルタ設定時に既存タイマーをクリアしました');
+        }
+        
         // ゲーム状態を初期化してタイマー制限を設定
         gameState = {
             articles: [...filteredArticles],
@@ -2344,12 +2700,15 @@ function showIncorrectInputAnimation(inputElement, incorrectChar) {
 /**
  * 項セクションを表示
  */
-function showParagraphSection() {
-    const paragraphSection = document.getElementById('paragraph-section');
-    if (paragraphSection) {
-        paragraphSection.style.display = 'flex';
-    }
-}
+/**
+ * 項番号入力を隠すための処理（記事番号のみの仕様変更に伴い削除）
+ * function showParagraphSection() {
+ *     const paragraphSection = document.getElementById('paragraph-section');
+ *     if (paragraphSection) {
+ *         paragraphSection.style.display = 'flex';
+ *     }
+ * }
+ */
 
 /**
  * 答えが完成した時の処理
@@ -2359,7 +2718,7 @@ function completeAnswer() {
     gameState.correctAnswers++;
     const timeBonus = Math.max(0, gameState.timeLeft * 10);
     const baseScore = 100;
-    gameState.score += baseScore + timeBonus;
+    const earnedScore = baseScore + timeBonus;
     
     // 正答率記録
     const currentArticle = gameState.articles[gameState.currentIndex];
@@ -2368,9 +2727,36 @@ function completeAnswer() {
             currentArticle.lawName || 'その他',
             currentArticle.articleNumber,
             currentArticle.paragraph || 1,
-            true  // 正解
+            true,  // 正解
+            earnedScore  // 獲得点数
         );
+        // サーバーに条文を追加
+        postArticleToLawList(currentArticle);
     }
+// サーバーAPIに条文を追加
+async function postArticleToLawList(article) {
+    if (!article || !article.lawName || !article.articleNumber) return;
+    try {
+        const res = await fetch(`/api/law-articles/${encodeURIComponent(article.lawName)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                articleNumber: article.articleNumber,
+                paragraph: article.paragraph || '1',
+                sourceCase: article.sourceCase || article.sourceCaseId || '',
+                // 他に必要なフィールドがあれば追加
+            })
+        });
+        if (!res.ok) {
+            console.warn('⚠️ サーバーへの条文追加に失敗:', article.lawName, article.articleNumber, res.status);
+        }
+    } catch (e) {
+        console.warn('⚠️ サーバーへの条文追加リクエスト失敗:', e);
+    }
+}
+    
+    // スコア更新
+    gameState.score += earnedScore;
     
     showCorrectFeedback();
     showCorrectCircleAnimation(); // ○付けアニメーションを表示
