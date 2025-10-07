@@ -5,10 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "c:\\Users\\PC_User\\Desktop\\Atashinchi-study\\node-v20.17.0-win-x64\\npm.cmd run build && c:\\Users\\PC_User\\Desktop\\Atashinchi-study\\node-v20.17.0-win-x64\\node.exe server.js",
-    "build": "c:\\Users\\PC_User\\Desktop\\Atashinchi-study\\node-v20.17.0-win-x64\\node.exe scripts/build-case-index.js",
-    "test": "c:\\Users\\PC_User\\Desktop\\Atashinchi-study\\node-v20.17.0-win-x64\\npm.cmd test",
-    "dev": "c:\\Users\\PC_User\\Desktop\\Atashinchi-study\\node-v20.17.0-win-x64\\node.exe server.js"
+    "start": "npm run build && node server.js",
+    "build": "node scripts/build-case-index.js",
+    "test": "npm test",
+    "dev": "node server.js"
   },
   "keywords": ["law", "education", "japan", "legal", "atashinchi", "study",  "family"],
   "author": "Atashin'chi Study Team",
