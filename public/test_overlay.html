@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答案オーバーレイテスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/answerOverlay.css">
+    <style>
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            background-color: #FFFBEB; 
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">答案オーバーレイテスト</h1>
+        
+        <div class="bg-white rounded-lg p-6 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4">民法第1条について論述せよ</h2>
+            <p class="text-gray-700 mb-6">この法律は、個人の尊厳と両性の本質的平等を旨として、解釈しなければならない。</p>
+            
+            <button 
+                class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md"
+                onclick="startAnswerCorrectionMode(0, 0)">
+                ✍️ 答案添削モード
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // 模擬クイズデータ
+        window.currentCaseData = {
+            quiz: [{
+                title: "民法第1条について",
+                subProblems: [{
+                    title: "基本原理の論述",
+                    problem: "民法第1条の「個人の尊厳」と「両性の本質的平等」について、具体例を交えながら800字程度で論述してください。",
+                    hasAnswerSheet: true
+                }]
+            }]
+        };
+    </script>
+    <script src="pages/answerOverlay.js" type="module"></script>
+</body>
+</html>

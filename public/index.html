@@ -1,0 +1,2037 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>あたしンち学習アプリ - 法学をもっと身近に！</title>    <!-- Favicon設定（複数形式で確実に適用） -->
+    <link rel="icon" type="image/x-icon" href="/yuzu.ico?v=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="/yuzu.ico?v=1.0">
+    <link rel="icon" type="image/vnd.microsoft.icon" href="/yuzu.ico?v=1.0">
+    <link rel="icon" sizes="16x16" href="/yuzu.ico?v=1.0">
+    <link rel="icon" sizes="32x32" href="/yuzu.ico?v=1.0">    <link rel="apple-touch-icon" href="/yuzu.ico?v=1.0">
+    <meta name="msapplication-TileImage" content="/yuzu.ico?v=1.0">
+    <meta name="msapplication-TileColor" content="#FEF3C7">
+    <meta name="theme-color" content="#FEF3C7">
+      <script src="https://cdn.tailwindcss.com"></script>
+      <script>
+        // Tailwind CSS の本番環墁E��告を抑制�E�開発中のため�E�E
+        const originalWarn = console.warn;
+        console.warn = function(message) {
+          if (typeof message === 'string' && message.includes('should not be used in production')) {
+            return;
+          }
+          originalWarn.apply(console, arguments);
+        };
+      </script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 答案オーバ�EレイのCSS -->
+    <link rel="stylesheet" href="css/answerOverlay.css">
+    
+    <!-- 現代皁E��チE��インCSS -->
+    <link rel="stylesheet" href="css/modern-design.css">
+    
+    <style>
+        /* 基本スタイル */
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            /* 背景は modern-design.css で管琁E*/
+        }
+        .main-container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            /* そ�E他�Eスタイルは modern-design.css で管琁E*/
+        }
+
+        /* カードとタブ�Eスタイル */
+        .case-card { 
+            transition: transform 0.2s, box-shadow 0.2s; 
+        }
+        .case-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+        }
+        .tab-button.active { 
+            background-color: #F9A825; 
+            color: white; 
+            font-weight: 700; 
+        }
+
+        /* キャラクターアイコンのスタイル */
+        .character-icon { 
+            width: 80px;
+            height: 80px;
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 3px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
+        /* 吹き�Eし�Eスタイル */
+        .chat-bubble { 
+            max-width: 80%; 
+        }
+        .chat-bubble-left { 
+            background-color: #ffffff; 
+        }
+        .chat-bubble-right { 
+            background-color: #D1FAE5; 
+        }
+        
+        /* 画像反転用のクラス */
+        .flipped {
+            transform: scaleX(-1);
+        }
+
+        /* ☁E�E☁EEmbed要素用スタイル ☁E�E☁E*/
+        /* 外�Eの枠を完�Eに排除 - containerとframeは透�EなラチE��ーのみ */
+        .embed-container {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            max-width: none !important;
+            width: auto !important;
+            height: auto !important;
+            min-width: unset !important;
+            box-sizing: content-box !important;
+            display: block !important;
+        }
+
+        /* embed-frame: 完�Eに透�Eな要素、枠なぁE*/
+        .embed-frame {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .embed-frame .embed-content {
+            background: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+            width: auto !important;
+            height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            text-align: left !important;
+            box-sizing: content-box !important;
+        }
+
+        .embed-frame .embed-content svg {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block !important;
+        }
+
+        .embed-frame .embed-content table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 11px !important;
+        }
+
+        .embed-frame .embed-content table th,
+        .embed-frame .embed-content table td {
+            padding: 8px 12px !important;
+            text-align: left !important;
+            border-bottom: 1px solid #e5e7eb !important;
+        }
+
+        .embed-frame .embed-content table th {
+            background-color: #f3f4f6 !important;
+            font-weight: 600 !important;
+        }
+
+        /* Board形弁E 外�Eの枠を排除、contentのみに裁E��を適用 */
+        .embed-container[data-format="board"] {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            width: auto !important;
+            max-width: none !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            box-sizing: content-box !important;
+        }
+
+        .embed-container[data-format="board"] .embed-frame .embed-content {
+            background: linear-gradient(135deg, #1a4d3a 0%, #0f2f1f 100%) !important; /* 濁E��緑色の黒板 */
+            border: 6px solid #bfbfbf !important; /* 太め�E銀色ボ�Eダー */
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+            color: #ffffff !important;
+            padding: 20px !important;
+        }
+
+        .embed-container[data-format="board"] .embed-frame .embed-content h4 {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+            margin-bottom: 8px !important;
+        }
+
+        .embed-container[data-format="board"] .embed-frame .embed-content {
+            font-family: 'Courier New', monospace !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        /* ☁E�E☁EEmbed Header: シンプルで統一されたデザイン�E��Eformat共通！E☁E�E☁E*/
+        .embed-header {
+            /* 完�Eに刁E��されたシンプルな枠 */
+            background: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 4px !important;
+            padding: 12px 16px !important;
+            margin-bottom: 8px !important;
+            
+            /* シンプルなフォント設宁E*/
+            font-family: system-ui, -apple-system, sans-serif !important;
+            
+            /* 冁E��間隔調整 */
+            display: block !important;
+            box-sizing: border-box !important;
+        }
+
+        .embed-header h4 {
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            color: #212529 !important;
+            margin: 0 0 4px 0 !important;
+            padding: 0 !important;
+            line-height: 1.4 !important;
+        }
+
+        .embed-header p {
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            color: #6c757d !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.3 !important;
+        }
+
+        /* 全てのformat共送E header部刁E�E同じチE��イン */
+        .embed-container .embed-header,
+        .embed-container[data-format="board"] .embed-header,
+        .embed-container[data-format="document"] .embed-header,
+        .embed-container[data-format="character-diagram"] .embed-header {
+            background: #f8f9fa !important;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 4px !important;
+            padding: 12px 16px !important;
+            margin-bottom: 8px !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
+        }
+
+    /* ヘッダとコンチE��チE�Eスタイルを�E離しました。タイトル/説明には .embed-header を使用します、E*/
+        .embed-container[data-format="document"] .embed-frame .embed-content h4 {
+            font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Times New Roman', serif !important;
+            font-weight: 700 !important;
+            color: #111827 !important;
+            text-align: left !important;
+        }
+
+        .embed-container[data-format="document"] .embed-frame .embed-content {
+            font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Times New Roman', serif !important;
+            font-size: 16px !important;
+            line-height: 1.8 !important;
+            color: #111827 !important;
+            padding: 18px !important;
+            text-align: left !important;
+            white-space: normal !important;
+            background: #ffffff !important;
+            border: 1px solid #e6e6e6 !important;
+        }
+        
+        /* ☁E�E☁EBoard形式�E黒板表示スタイル - 外�E枠削除済み ☁E�E☁E*/
+        
+        /* board冁E�EコンチE��チE��h4はembed-content冁E��限定して適用 */
+        .embed-container[data-format="board"] .embed-content h4 {
+            color: #ffffff !important; /* 白ぁE��ョーク斁E��E*/
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; /* チョーク感�Eある影 */
+            margin-bottom: 8px !important; /* 下�Eージンを減らぁE*/
+        }
+        
+        .embed-container[data-format="board"] .embed-content {
+            background: transparent !important;
+            color: #ffffff !important; /* 白ぁE��ョーク斁E��E*/
+            font-family: 'Courier New', monospace !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            padding: 16px 20px !important; /* 上下パチE��ングを減らぁE*/
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; /* チョーク感�Eある影 */
+            margin: 0 !important; /* マ�Eジンを削除 */
+            height: auto !important; /* 高さを�E動に */
+            min-height: auto !important; /* 最小高さ制限を解除 */
+        }
+
+        /* Embed content フレーム */
+
+        /* ☁E�E☁EDocument形式（書類系�E�を明朝体にする ☁E�E☁E*/
+        .embed-container[data-format="document"] {
+            /* 外�E枠を排除 */
+            max-width: none !important;
+            background: none !important;
+            border: none !important;
+        }
+
+        /* document冁E�EコンチE��チE��h4はembed-content冁E��限定して適用 */
+        .embed-container[data-format="document"] .embed-content h4 {
+            font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Times New Roman', serif !important;
+            font-weight: 700 !important;
+            color: #111827 !important;
+            text-align: left !important;
+        }
+
+        .embed-container[data-format="document"] .embed-content {
+            font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Times New Roman', serif !important; /* 明朝体系 */
+            font-size: 16px !important;
+            line-height: 1.8 !important;
+            color: #111827 !important;
+            padding: 18px !important;
+            text-align: left !important;
+            white-space: normal !important; /* 改行を許可 */
+        }
+
+        /* ☁E�E☁ESNS形式�E投稿表示スタイル ☁E�E☁E*/
+        .embed-container[data-format="sns"] {
+            /* 外�E枠を排除 */
+            background: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            width: auto !important;
+            max-width: none !important;
+            min-width: unset !important;
+            height: auto !important;
+            min-height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        .embed-container[data-format="sns"] h4 {
+            color: #14171a !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            margin-bottom: 8px !important;
+            margin-top: 0 !important;
+            text-align: left !important;
+        }
+        
+        .embed-container[data-format="sns"] p {
+            color: #657786 !important;
+            font-size: 0.875rem !important;
+            margin-bottom: 12px !important;
+            margin-top: 0 !important;
+            text-align: left !important;
+            white-space: normal !important;
+        }
+        
+        .embed-container[data-format="sns"] .embed-content {
+            background: #f7f9fa !important;
+            border: 1px solid #e1e8ed !important;
+            border-radius: 8px !important;
+            padding: 16px !important;
+            margin: 0 !important;
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+            color: #14171a !important;
+            text-align: left !important;
+            white-space: pre-line !important; /* 改行を保持 */
+            height: auto !important; /* 高さを�E容に合わせる */
+            min-height: auto !important; /* 最小高さ制限を解除 */
+        }
+        
+        /* ☁E�E☁EPrint形式�E印刷物表示スタイル ☁E�E☁E*/
+        .embed-container[data-format="print"] {
+            /* 外�E枠を排除 */
+            background: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            width: auto !important;
+            max-width: none !important;
+            min-width: unset !important;
+            height: auto !important;
+            min-height: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        .embed-container[data-format="print"] h4 {
+            color: #000000 !important; /* 黒文孁E*/
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 16px !important;
+            margin-top: 0 !important;
+            text-align: center !important;
+            font-family: '�E��E� 明朝', 'MS Mincho', 'Yu Mincho', '游明朝', serif !important;
+            border-bottom: 1px solid #333333 !important; /* タイトル下緁E*/
+            padding-bottom: 8px !important;
+        }
+        
+        .embed-container[data-format="print"] p {
+            color: #333333 !important;
+            font-size: 0.875rem !important;
+            margin-bottom: 12px !important;
+            margin-top: 0 !important;
+            text-align: center !important;
+            font-family: '�E��E� 明朝', 'MS Mincho', 'Yu Mincho', '游明朝', serif !important;
+            white-space: normal !important;
+        }
+        
+        .embed-container[data-format="print"] .embed-content {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 16px 0 !important;
+            margin: 0 !important;
+            font-size: 14px !important;
+            line-height: 1.8 !important; /* 印刷物らしぁE��間 */
+            color: #000000 !important; /* 黒文孁E*/
+            text-align: left !important;
+            white-space: pre-line !important; /* 改行を保持 */
+            height: auto !important;
+            min-height: auto !important;
+            font-family: '�E��E� 明朝', 'MS Mincho', 'Yu Mincho', '游明朝', serif !important;
+        }
+
+        /* EmbedコンチE��チE�EのHTMLスタイルを強制適用 */
+        .embed-content div[style] {
+            all: revert !important;
+        }
+
+        /* AIの回答デコレーション用クラス */
+        .ai-reply-strong { 
+            font-weight: 800; 
+            color: #D97706; 
+        }
+
+        /* AI添削用のスタイル */
+        .ai-correction-status {
+            margin: 10px 0;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 全体コメンチE*/
+        .overall-comment {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .overall-comment h4 {
+            color: #374151;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .overall-comment div {
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        /* ユーチE��リチE��クラス */
+        .focus-ring:focus {
+            outline: 2px solid #F9A825;
+            outline-offset: 2px;
+        }
+
+        .btn-hover:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* スクロールバ�Eのカスタマイズ */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* ☁E�E☁Eキャラクター図表用スタイル ☁E�E☁E*/
+        .character-diagram {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .character-node {
+            display: inline-block;
+            position: relative;
+            margin: 15px;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .character-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            margin: 0 auto 8px;
+            display: block;
+            object-fit: cover;
+            background: #f3f4f6;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .character-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .character-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1f2937;
+            max-width: 80px;
+            margin: 0 auto;
+            line-height: 1.2;
+        }
+        
+        .diagram-arrow {
+            display: inline-block;
+            font-size: 24px;
+            color: #6b7280;
+            margin: 0 10px;
+            vertical-align: middle;
+        }
+        
+        .diagram-row {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .diagram-subgraph {
+            border: 2px dashed #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #fffbeb;
+        }
+        
+        .diagram-subgraph-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .character-fallback-emoji {
+            font-size: 40px;
+            display: none;
+            margin: 10px auto;
+        }
+
+        /* ☁E�E☁E条斁E��示パネル専用スタイル ☁E�E☁E*/
+        #article-panel {
+            max-height: 90vh;
+            z-index: 1100;
+        }
+        
+        /* パネルヘッダーの固宁E*/
+        #article-panel .bg-blue-500 {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            margin: 0;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        
+        /* 条斁E�E容エリアの調整 */
+        #article-content {
+            flex: 1;
+            min-height: 200px;
+            max-height: none;
+        }
+        
+        /* 二重カチE��強調スタイル */
+        .double-parentheses-highlight {
+            font-weight: bold;
+            color: #1d4ed8;
+            background-color: #dbeafe;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        #article-panel .transition-all {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .show-article-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .show-article-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .show-article-btn:hover::before {
+            left: 100%;
+        }
+
+        /* ☁E�E☁Eバ�Eチャルキーボ�Eド専用スタイル ☁E�E☁E*/
+        .virtual-key {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease-in-out;
+        }
+
+        .virtual-key:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .virtual-key:active {
+            transform: scale(0.95) translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #virtual-backspace, #virtual-clear {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease-in-out;
+        }
+
+        #virtual-backspace:hover, #virtual-clear:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        #virtual-backspace:active, #virtual-clear:active {
+            transform: scale(0.95) translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* タチE��チE��イス対忁E*/
+        @media (hover: none) and (pointer: coarse) {
+            .virtual-key, #virtual-backspace, #virtual-clear {
+                padding: 12px;
+                font-size: 18px;
+            }
+            
+            .virtual-key:active, #virtual-backspace:active, #virtual-clear:active {
+                background-color: #dbeafe !important;
+                transform: scale(0.95);
+            }
+        }
+
+        /* 小さぁE��面での調整 */
+        @media (max-width: 480px) {
+            #article-panel {
+                width: 95vw;
+                right: 2.5vw;
+                top: 2vh;
+                max-height: 90vh;
+            }
+            
+            .virtual-key {
+                padding: 8px;
+                font-size: 16px;
+            }
+            
+            #virtual-backspace, #virtual-clear {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
+
+        /* ☁E�E☁E答案用紙拡大表示スタイル ☁E�E☁E*/
+        .answer-sheet-overlay {
+            position: fixed;
+            top: 0;
+            left: 420px; /* 条斁E��ネルの幁E�E右にシフト */
+            width: calc(100% - 420px); /* 幁E��調整 */
+            height: 100%;
+            background: none; /* 背景を削除 */
+            display: flex;
+            justify-content: flex-start; /* 左寁E��に変更 */
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .answer-sheet-container {
+            display: flex;
+            width: 100%; /* 幁E��最大に */
+            max-width: none; /* 最大幁E��限を削除 */
+            height: 95vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            margin-left: 20px; /* 左マ�Eジンを追加 */
+        }
+
+        .answer-sheet-paper {
+            flex: 1; /* 残りのスペ�Eスをすべて使用 */
+            background: white;
+            padding: 30px;
+            border-right: 2px solid #e5e7eb;
+            overflow-y: auto;
+            position: relative; /* 添削オーバ�Eレイ用 */
+        }
+
+        .answer-sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .answer-sheet-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .answer-sheet-close {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .answer-sheet-close:hover {
+            background: #dc2626;
+        }
+
+        .answer-sheet-grid {
+            display: grid;
+            grid-template-columns: repeat(30, 1fr);
+            grid-template-rows: repeat(23, 1fr);
+            gap: 1px;
+            background-color: #ddd;
+            margin-bottom: 20px;
+            height: 700px; /* さらに拡大 */
+            width: 100%;
+            max-width: 800px; /* さらに拡大 */
+            margin: 0 auto 20px auto;
+            border: 2px solid #333;
+        }
+
+        .answer-sheet-cell {
+            background: white;
+            border-top: none;
+            border-bottom: 1px solid #999;
+            border-left: none;
+            border-right: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-family: '�E��E� 明朝', 'MS Mincho', 'Yu Mincho', '游明朝', serif;
+            color: #333;
+            line-height: 1;
+            padding: 1px;
+            min-height: 20px;
+            position: relative;
+            writing-mode: horizontal-tb;
+        }
+
+        /* 30斁E��ごとに横線を引く�E�各行�E最後�Eセルのみ下�Eーダー�E�E*/
+        .answer-sheet-cell:nth-child(30n) {
+            border-bottom: 2px solid #666;
+        }
+
+        .answer-sheet-cell.filled {
+            background-color: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .character-response-panel {
+            flex: 0 0 320px; /* 幁E��拡大 */
+            background: #f8fafc;
+            padding: 0; /* パディングを削除 */
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .character-response-header {
+            display: none; /* ヘッダーを非表示 */
+        }
+
+        .character-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3b82f6;
+        }
+
+        .character-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .character-response-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .character-response-text {
+            line-height: 1.7;
+            color: #374151;
+        }
+
+        .show-answer-sheet-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            margin-left: 10px;
+        }
+
+        .show-answer-sheet-btn:hover {
+            background: #059669;
+        }
+
+        /* ☁E�E☁E添削機�E専用スタイル ☁E�E☁E*/
+        .correction-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .correction-mark {
+            position: absolute;
+            pointer-events: auto;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            padding: 2px 4px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        /* 削除緁E*/
+        .correction-delete {
+            background: rgba(255, 0, 0, 0.2);
+            color: #dc2626;
+            text-decoration: line-through;
+            border: 1px solid #dc2626;
+        }
+
+        /* 追訁E*/
+        .correction-add {
+            background: rgba(0, 128, 255, 0.1);
+            color: #2563eb;
+            border: 1px solid #2563eb;
+        }
+
+        /* 忁E��論点ハイライチE*/
+        .correction-essential {
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid #dc2626;
+        }
+
+        /* 加点要素ハイライチE*/
+        .correction-bonus {
+            background: rgba(0, 128, 255, 0.15);
+            border: 2px solid #2563eb;
+        }
+
+        /* 改喁E��ハイライチE*/
+        .correction-improve {
+            background: rgba(255, 165, 0, 0.15);
+            border: 2px solid #f59e0b;
+        }
+
+        /* 良ぁE��ハイライチE*/
+        .correction-good {
+            background: rgba(34, 197, 94, 0.15);
+            border: 2px solid #22c55e;
+        }
+
+        /* 点数表示 */
+        .score-display {
+            background: #f0f0f0;
+            color: black;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-number {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .score-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 余白コメンチE*/
+        .margin-comment {
+            position: absolute;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #92400e;
+            max-width: 200px;
+            z-index: 20;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            line-height: 1.3;
+        }
+
+        .margin-comment:before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 4px solid transparent;
+            border-right-color: #f59e0b;
+        }
+
+        /* 添削�Eタン */
+        .correction-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .correction-btn:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
+        }
+
+        /* 添削�E侁E*/
+        .correction-legend {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 4px 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* 埋め込みチャチE��エリア専用スタイル */
+        #embedded-chat-area {
+            background: white !important;
+            border-radius: 0 !important;
+            padding: 15px !important;
+            height: 100% !important; /* 全高を使用 */
+            overflow-y: auto !important;
+            border: none !important;
+            margin: 0 !important;
+            flex: 1 !important; /* 残りのスペ�Eスをすべて使用 */
+        }
+
+        #embedded-chat-area .flex {
+            margin-bottom: 10px !important;
+        }
+
+        #embedded-chat-area img {
+            max-width: 40px !important;
+            max-height: 40px !important;
+        }
+
+        #embedded-chat-area .text-sm {
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+        }
+
+        /* レスポンシブ対忁E*/
+        @media (max-width: 1200px) {
+            .answer-sheet-overlay {
+                left: 0; /* 小画面では允E�E位置に戻ぁE*/
+                width: 100%;
+                background-color: rgba(0, 0, 0, 0.8); /* 小画面では背景を復活 */
+                justify-content: center;
+            }
+            
+            .answer-sheet-container {
+                flex-direction: column;
+                height: 95vh;
+                width: 98%;
+                max-width: 1400px;
+                margin-left: 0;
+            }
+            
+            .answer-sheet-paper {
+                flex: 1;
+                border-right: none;
+                border-bottom: 2px solid #e5e7eb;
+            }
+            
+            .character-response-panel {
+                flex: 0 0 200px;
+                border-left: none;
+                border-top: none;
+            }
+            
+            .answer-sheet-grid {
+                height: 400px;
+                max-width: 450px;
+            }
+        }
+
+        /* ☁E�E☁E答案例コメント表示用スタイル ☁E�E☁E*/
+        .example-comment-highlight {
+            background: rgba(255, 235, 59, 0.3);
+            border: 2px solid #fbc02d;
+        }
+
+        .example-margin-comment {
+            background: #fff3cd;
+            border: 1px solid #fbc02d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #856404;
+            max-width: 200px;
+            line-height: 1.4;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .example-margin-comment .comment-number {
+            background: #fbc02d;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        /* ☁E�E☁E添削機�E専用スタイル ☁E�E☁E*/
+        /* ☁E�E☁E新しいチE��スト表示形式スタイル ☁E�E☁E*/
+        .answer-text-area {
+            flex: 1;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: '�E��E� 明朝', 'MS Mincho', 'Yu Mincho', '游明朝', serif;
+            position: relative;
+            min-height: 600px;
+        }
+
+        .answer-lines {
+            line-height: 1.8;
+            font-size: 16px;
+            color: black;
+        }
+
+        .answer-line {
+            border-bottom: 1px solid #ccc;
+            padding: 8px 0;
+            min-height: 30px;
+            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-family: '�E��E� 明朝', 'MS Mincho', 'Yu Mincho', '游明朝', serif;
+        }
+
+        .answer-line:nth-child(5n) {
+            border-bottom: 2px solid #666;
+        }
+
+        /* 添削ハイライト用スタイル�E�テキスト表示�E�E*/
+        .correction-highlight {
+            position: relative;
+            padding: 2px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .correction-highlight:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 添削タイプ別の色設定（�Eるく鮮めE��に�E�E*/
+        .correction-essential {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid #ef4444;
+            color: #dc2626;
+        }
+
+        .correction-bonus {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 2px solid #3b82f6;
+            color: #1d4ed8;
+        }
+
+        .correction-good {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #22c55e;
+            color: #16a34a;
+        }
+
+        .correction-improve {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            color: #d97706;
+        }
+
+        .correction-delete {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid #ef4444;
+            color: #dc2626;
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        /* 添削�Eーカー */
+        .correction-margin-marker {
+            display: inline-block;
+            margin-left: 8px;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            will-change: transform, opacity;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* 添削コメントエリア */
+        .correction-comments-area {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        .correction-comments-area h4 {
+            color: black;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        .correction-comment {
+            animation: slideInRight 0.3s ease-out;
+            will-change: transform, opacity;
+        }
+
+        @keyframes slideInRight {
+            from { 
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .comment-text {
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* レスポンシブ対忁E*/
+        @media (max-width: 1024px) {
+            .answer-sheet-main {
+                flex-direction: column !important;
+            }
+            
+            .correction-comments-area {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-top: 20px !important;
+                border-left: none !important;
+                border-top: 2px solid #ddd !important;
+                padding-left: 0 !important;
+                padding-top: 20px !important;
+            }
+        }
+
+        /* ダークモード対応（オプション�E�E*/
+        @media (prefers-color-scheme: dark) {
+            .answer-text-area {
+                background: #1f2937;
+                border-color: #4b5563;
+                color: #f9fafb;
+            }
+            
+            .answer-line {
+                border-bottom-color: #4b5563;
+            }
+            
+            .correction-comments-area {
+                background: #374151;
+                color: #f9fafb;
+            }
+        }
+
+        /* ============ ダークモード実裁E============ */
+        #dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999999;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e5e7eb;
+            border-radius: 50%;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 26px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        #dark-mode-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+        
+        body.dark-mode #dark-mode-toggle {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #475569;
+        }
+        
+        /* ダークモード時のbody背景（色のみ変更） */
+        body.dark-mode {
+            background-image: linear-gradient(to bottom, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+            /* background-image のみ変更し、animation や position などは一切変更しない */
+        }
+        
+        body.dark-mode::after {
+            /* 背景画像の明るさのみ調整（opacityとfilterのみ） */
+            opacity: 0.2 !important;
+            filter: brightness(0.4) saturate(0.5) !important;
+            /* position, width, height, bottom, left などのレイアウトプロパティは絶対に変更しない */
+        }
+        
+        /* ダークモード時のコンテナ（色のみ変更、レイアウトは一切変更しない） */
+        body.dark-mode .main-container {
+            background-color: rgba(15, 23, 42, 0.85) !important;
+            /* backdrop-filter, border-radius, box-shadow, padding, margin などは変更しない */
+        }
+        
+        /* ダークモード時のカード（色のみ変更） */
+        body.dark-mode .case-card {
+            background-color: rgba(30, 41, 59, 0.9) !important;
+            border-color: rgba(71, 85, 105, 0.5) !important;
+            color: #e2e8f0 !important;
+        }
+        
+        body.dark-mode .case-card:hover {
+            background-color: rgba(41, 55, 78, 0.95) !important;
+            /* transform, box-shadow などは通常モードと同じ */
+        }
+        
+        /* ダークモード時のタブ（色のみ変更） */
+        body.dark-mode .tab-button {
+            background-color: rgba(30, 41, 59, 0.8) !important;
+            color: #cbd5e1 !important;
+            border-color: rgba(71, 85, 105, 0.6) !important;
+        }
+        
+        body.dark-mode .tab-button.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: #111827 !important;
+        }
+        
+        /* ダークモード時のテキスト（カレンダーモーダルは除外） */
+        body.dark-mode h1:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode h2:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode h3:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode h4:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode h5:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode h6:not(#today-calendar-modal):not(#today-calendar-modal *) {
+            color: #f1f5f9 !important;
+        }
+        
+        body.dark-mode p:not(.story-blank-button):not(.story-blank-button *):not(.explanation-blank-button):not(.explanation-blank-button *):not([class*="qa-"]):not([class*="qa-"] *):not([class*="article-"]):not([class*="article-"] *):not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode span:not(.story-blank-button):not(.story-blank-button *):not(.explanation-blank-button):not(.explanation-blank-button *):not([class*="qa-"]):not([class*="qa-"] *):not([class*="article-"]):not([class*="article-"] *):not(.blank-placeholder):not(.blank-answer):not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode div:not(.story-blank-button):not(.story-blank-button *):not(.explanation-blank-button):not(.explanation-blank-button *):not([class*="qa-"]):not([class*="qa-"] *):not([class*="article-"]):not([class*="article-"] *):not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode label:not(.story-blank-button):not(.story-blank-button *):not(.explanation-blank-button):not(.explanation-blank-button *):not([class*="qa-"]):not([class*="qa-"] *):not([class*="article-"]):not([class*="article-"] *):not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode li:not(.story-blank-button):not(.story-blank-button *):not(.explanation-blank-button):not(.explanation-blank-button *):not([class*="qa-"]):not([class*="qa-"] *):not([class*="article-"]):not([class*="article-"] *):not(#today-calendar-modal):not(#today-calendar-modal *) {
+            color: #e2e8f0 !important;
+        }
+        
+        /* ダークモード時の強制チE��スト表示 */
+        body.dark-mode .case-title,
+        body.dark-mode .story-text,
+        body.dark-mode .question-text,
+        body.dark-mode .explanation-text {
+            color: #f1f5f9 !important;
+        }
+        
+
+        
+        /* ダークモード時のリンク */
+        body.dark-mode a {
+            color: #60a5fa !important;
+        }
+        
+        body.dark-mode a:hover {
+            color: #93c5fd !important;
+        }
+        
+        /* ダークモード時の吹き出し（色のみ変更） */
+        body.dark-mode .chat-bubble {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 100%) !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            border-color: rgba(148, 163, 184, 0.4) !important;
+            color: #f1f5f9 !important;
+        }
+
+        body.dark-mode .chat-bubble-left {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.92) 100%) !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            border-color: rgba(148, 163, 184, 0.4) !important;
+            color: #f1f5f9 !important;
+        }
+        
+        body.dark-mode .chat-bubble-right {
+            background: linear-gradient(135deg, rgba(12, 74, 57, 0.92) 0%, rgba(15, 118, 110, 0.92) 100%) !important;
+            background-color: rgba(12, 74, 57, 0.92) !important;
+            border-color: rgba(74, 222, 128, 0.5) !important;
+            color: #f1f5f9 !important;
+        }
+
+        /* ダークモード時のセリフ吹き出し（左側） */
+        body.dark-mode [id^="dialogue-area-"] .bg-white {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            border-color: rgba(148, 163, 184, 0.4) !important;
+        }
+
+        /* ダークモード時のセリフ吹き出し（右側） */
+        body.dark-mode [id^="dialogue-area-"] .bg-green-100 {
+            background-color: rgba(20, 83, 45, 0.9) !important;
+            border-color: rgba(74, 222, 128, 0.4) !important;
+        }
+
+        body.dark-mode [id^="dialogue-area-"] .text-gray-800,
+        body.dark-mode [id^="dialogue-area-"] .text-green-800 {
+            color: #f8fafc !important;
+        }
+
+        body.dark-mode [id^="dialogue-area-"] .dialogue-content {
+            color: #e2e8f0 !important;
+        }
+        
+        /* ダークモード時の吹き�Eし�EチE��スチE*/
+        body.dark-mode .chat-bubble-left *,
+        body.dark-mode .chat-bubble-right * {
+            color: #f1f5f9 !important;
+        }
+        
+        /* ダークモード時の黁E��背景エリア�E�穴埋め部刁E��E- 完�E強制�E��Eタン除外！E*/
+        body.dark-mode .bg-yellow-50:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode .bg-yellow-100:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode .bg-yellow-200:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode .bg-yellow-300:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [style*="background-color: rgb(254, 252, 232)"]:not(button):not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [style*="background-color: rgb(254, 249, 195)"]:not(button):not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [style*="background-color: rgb(253, 246, 178)"]:not(button):not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [style*="background: rgb(254, 252, 232)"]:not(button):not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [style*="background: rgb(254, 249, 195)"]:not(button):not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [style*="background: rgb(253, 246, 178)"]:not(button):not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode span[style*="rgb(254, 252, 232)"]:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode span[style*="rgb(254, 249, 195)"]:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode span[style*="rgb(253, 246, 178)"]:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode span[style*="254, 252, 232"]:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode span[style*="254, 249, 195"]:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode span[style*="253, 246, 178"]:not(.story-blank-button):not(.explanation-blank-button),
+        body.dark-mode [class*="yellow"]:not(button):not(.story-blank-button):not(.explanation-blank-button) {
+            background-color: #854d0e !important;
+            background: #854d0e !important;
+            color: #fde047 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;
+        }
+        
+        body.dark-mode .bg-yellow-50 *,
+        body.dark-mode .bg-yellow-100 *,
+        body.dark-mode .bg-yellow-200 *,
+        body.dark-mode .bg-yellow-300 * {
+            color: #fde047 !important;
+            font-weight: 700 !important;
+        }
+        
+        /* ダークモード時の緑背景エリア�E�穴埋め部刁E��E- 完�E強制�E��Eタン除外！E*/
+        body.dark-mode .bg-green-50:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode .bg-green-100:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode .bg-green-200:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode .bg-green-300:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [style*="background-color: rgb(220, 252, 231)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [style*="background-color: rgb(187, 247, 208)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [style*="background-color: rgb(134, 239, 172)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [style*="background: rgb(220, 252, 231)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [style*="background: rgb(187, 247, 208)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [style*="background: rgb(134, 239, 172)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode span[style*="rgb(220, 252, 231)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode span[style*="rgb(187, 247, 208)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode span[style*="rgb(134, 239, 172)"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode span[style*="220, 252, 231"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode span[style*="187, 247, 208"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode span[style*="134, 239, 172"]:not(button):not([class*="qa-"]):not([class*="article-"]),
+        body.dark-mode [class*="green"]:not(button):not([class*="qa-"]):not([class*="article-"]) {
+            background-color: #14532d !important;
+            background: #14532d !important;
+            color: #4ade80 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;
+        }
+        
+        body.dark-mode .bg-green-50 *,
+        body.dark-mode .bg-green-100 *,
+        body.dark-mode .bg-green-200 *,
+        body.dark-mode .bg-green-300 * {
+            color: #4ade80 !important;
+            font-weight: 700 !important;
+        }
+        
+        /* ダークモード時の青背景エリア */
+        body.dark-mode .bg-blue-50,
+        body.dark-mode .bg-blue-100 {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            color: #93c5fd !important;
+            font-weight: 600 !important;
+        }
+        
+        body.dark-mode .bg-blue-50 *,
+        body.dark-mode .bg-blue-100 * {
+            color: #93c5fd !important;
+            font-weight: 600 !important;
+        }
+        
+        /* ============ ハイライト部刁E�E趁E��力上書ぁE============ */
+        
+        /* あらめE��黁E��系背景を強制ダーク匁E*/
+        body.dark-mode span[style*="yellow"],
+        body.dark-mode div[style*="yellow"],
+        body.dark-mode mark,
+        body.dark-mode *[style*="254, 252, 232"],
+        body.dark-mode *[style*="254, 249, 195"],
+        body.dark-mode *[style*="253, 246, 178"],
+        body.dark-mode *[style*="255, 251, 235"],
+        body.dark-mode *[style*="255, 243, 205"] {
+            background: #854d0e !important;
+            background-color: #854d0e !important;
+            color: #fde047 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+        }
+        
+        /* あらめE��緑系背景を強制ダーク匁E*/
+        body.dark-mode span[style*="green"],
+        body.dark-mode div[style*="green"],
+        body.dark-mode *[style*="220, 252, 231"],
+        body.dark-mode *[style*="187, 247, 208"],
+        body.dark-mode *[style*="134, 239, 172"] {
+            background: #14532d !important;
+            background-color: #14532d !important;
+            color: #4ade80 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+        }
+        
+        /* ハイライト�Eのネストされた要素 */
+        body.dark-mode span[style*="254, 252, 232"] *,
+        body.dark-mode span[style*="254, 249, 195"] *,
+        body.dark-mode span[style*="yellow"] * {
+            color: #fde047 !important;
+        }
+        
+        body.dark-mode span[style*="220, 252, 231"] *,
+        body.dark-mode span[style*="187, 247, 208"] *,
+        body.dark-mode span[style*="green"] * {
+            color: #4ade80 !important;
+        }
+        
+        /* ダークモード時の入力フィールチE*/
+        /* 検索フィールド、テキストエリア、セレクトボックス（色のみ変更） */
+        body.dark-mode input:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode textarea:not(#today-calendar-modal):not(#today-calendar-modal *),
+        body.dark-mode select:not(#today-calendar-modal):not(#today-calendar-modal *) {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            color: #f1f5f9 !important;
+            border-color: rgba(71, 85, 105, 0.5) !important;
+        }
+        
+        /* セレクトボックスのオプション */
+        body.dark-mode select:not(#today-calendar-modal):not(#today-calendar-modal *) option {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+        
+        body.dark-mode input::placeholder,
+        body.dark-mode textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+        
+        /* ダークモード時のボタン（Q&A、条文、空欄ボタン、カレンダーボタンを完全除外） */
+        body.dark-mode button:not(#dark-mode-toggle):not(.tab-button):not(.story-blank-button):not(.explanation-blank-button):not([class*="qa-"]):not([class*="article-"]):not(.article-ref-btn):not(#today-calendar-modal):not(#today-calendar-modal *) {
+            color: #e2e8f0 !important;
+        }
+        
+        /* ============ 空欄ボタンを通常モードと完全一致させる ============ */
+        
+        /* 通常の空欁E�Eタン */
+        body.dark-mode .story-blank-button,
+        body.dark-mode .explanation-blank-button {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+            border: 2px solid #f59e0b !important;
+            color: #92400e !important;
+            box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2) !important;
+            text-shadow: none !important;
+        }
+        
+        body.dark-mode .story-blank-button .blank-placeholder,
+        body.dark-mode .explanation-blank-button .blank-placeholder,
+        body.dark-mode .story-blank-button .blank-answer,
+        body.dark-mode .explanation-blank-button .blank-answer {
+            color: #92400e !important;
+            text-shadow: none !important;
+        }
+        
+        /* opened状態（黁E���E�E*/
+        body.dark-mode .story-blank-button.opened,
+        body.dark-mode .explanation-blank-button.opened {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+            border-color: #d97706 !important;
+            color: #92400e !important;
+        }
+        
+        body.dark-mode .story-blank-button.opened .blank-placeholder,
+        body.dark-mode .explanation-blank-button.opened .blank-placeholder,
+        body.dark-mode .story-blank-button.opened .blank-answer,
+        body.dark-mode .explanation-blank-button.opened .blank-answer {
+            color: #92400e !important;
+        }
+        
+        /* revealed状態（緑色�E�E*/
+        body.dark-mode .story-blank-button.revealed,
+        body.dark-mode .explanation-blank-button.revealed {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+            border-color: #10b981 !important;
+            color: #047857 !important;
+        }
+        
+        body.dark-mode .story-blank-button.revealed .blank-placeholder,
+        body.dark-mode .explanation-blank-button.revealed .blank-placeholder,
+        body.dark-mode .story-blank-button.revealed .blank-answer,
+        body.dark-mode .explanation-blank-button.revealed .blank-answer {
+            color: #047857 !important;
+        }
+        
+        /* 条斁E��含むボタン�E�青色�E�E*/
+        body.dark-mode .story-blank-button.article-blank,
+        body.dark-mode .explanation-blank-button.article-blank {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+            border-color: #3b82f6 !important;
+            color: #1e40af !important;
+        }
+        
+        body.dark-mode .story-blank-button.article-blank .blank-placeholder,
+        body.dark-mode .explanation-blank-button.article-blank .blank-placeholder,
+        body.dark-mode .story-blank-button.article-blank .blank-answer,
+        body.dark-mode .explanation-blank-button.article-blank .blank-answer {
+            color: #1e40af !important;
+        }
+        
+        /* 条斁E��含むボタン opened状慁E*/
+        body.dark-mode .story-blank-button.article-blank.opened,
+        body.dark-mode .explanation-blank-button.article-blank.opened {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+            border-color: #d97706 !important;
+            color: #92400e !important;
+        }
+        
+        body.dark-mode .story-blank-button.article-blank.opened .blank-placeholder,
+        body.dark-mode .explanation-blank-button.article-blank.opened .blank-placeholder,
+        body.dark-mode .story-blank-button.article-blank.opened .blank-answer,
+        body.dark-mode .explanation-blank-button.article-blank.opened .blank-answer {
+            color: #92400e !important;
+        }
+        
+        /* 条斁E��含むボタン revealed状慁E*/
+        body.dark-mode .story-blank-button.article-blank.revealed,
+        body.dark-mode .explanation-blank-button.article-blank.revealed {
+            background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important;
+            border-color: #2563eb !important;
+            color: #1e3a8a !important;
+        }
+        
+        body.dark-mode .story-blank-button.article-blank.revealed .blank-placeholder,
+        body.dark-mode .explanation-blank-button.article-blank.revealed .blank-placeholder,
+        body.dark-mode .story-blank-button.article-blank.revealed .blank-answer,
+        body.dark-mode .explanation-blank-button.article-blank.revealed .blank-answer {
+            color: #1e3a8a !important;
+        }
+        
+        /* 条斁E��照ボタンも通常モードと同じ色に */
+        body.dark-mode .article-ref-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: white !important;
+            border: 1px solid #1d4ed8 !important;
+            text-shadow: none !important;
+        }
+        
+        /* ダークモード時の雲 */
+        body.dark-mode .cloud {
+            opacity: 0.05 !important;
+            filter: brightness(0.3) !important;
+        }
+        
+        /* ============ タブ�Eタン統一スタイル - アニメーションなぁE============ */
+        .simple-tab-hover {
+            transition: all 0.2s ease;
+        }
+        
+        .simple-tab-hover:hover {
+            opacity: 0.85;
+        }
+        
+        /* ============ 白ぁE��景を完�Eに排除 - 趁E��力版 ============ */
+        
+        /* あらめE��白背景を強制皁E��ダーク匁E*/
+        body.dark-mode *[style*="background: white"],
+        body.dark-mode *[style*="background: #fff"],
+        body.dark-mode *[style*="background: #ffffff"],
+        body.dark-mode *[style*="background-color: white"],
+        body.dark-mode *[style*="background-color: #fff"],
+        body.dark-mode *[style*="background-color: #ffffff"],
+        body.dark-mode *[style*="background-color: rgb(255, 255, 255)"],
+        body.dark-mode *[style*="background: rgb(255, 255, 255)"] {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            color: #e2e8f0 !important;
+        }
+        
+        /* Tailwindクラス */
+        body.dark-mode .bg-white {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+        }
+        
+        /* グレー背景もダークに */
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100,
+        body.dark-mode .bg-gray-200 {
+            background-color: rgba(30, 41, 59, 0.8) !important;
+        }
+        
+        /* 明るいクリーム色背景もダーク化 */
+        body.dark-mode *[style*="#fffbeb"],
+        body.dark-mode *[style*="#fff3cd"],
+        body.dark-mode *[style*="rgb(255, 251, 235)"],
+        body.dark-mode *[style*="rgb(255, 243, 205)"] {
+            background-color: rgba(234, 179, 8, 0.2) !important;
+            color: #fde047 !important;
+        }
+        
+        /* ============ EMBED要素を完全強制ダーク化 ============ */
+        body.dark-mode .embed-container,
+        body.dark-mode .embed-container[style],
+        body.dark-mode div[class*="embed"] {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+        }
+        
+        body.dark-mode .embed-frame,
+        body.dark-mode .embed-frame[style] {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+        }
+        
+        body.dark-mode .embed-content,
+        body.dark-mode .embed-content[style] {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            color: #e2e8f0 !important;
+        }
+        
+        body.dark-mode .embed-header,
+        body.dark-mode .embed-header[style] {
+            background-color: rgba(30, 41, 59, 0.85) !important;
+            border-color: rgba(71, 85, 105, 0.6) !important;
+            color: #e2e8f0 !important;
+        }
+        
+        /* embed冁E�EすべてのチE��スト（最優先！E*/
+        body.dark-mode .embed-container *,
+        body.dark-mode .embed-frame *,
+        body.dark-mode .embed-content *,
+        body.dark-mode .embed-header * {
+            color: #e2e8f0 !important;
+        }
+        
+        /* embedのtitleとdescriptionを暗くする */
+        body.dark-mode .embed-header h4,
+        body.dark-mode .embed-header .text-gray-800 {
+            background-color: rgba(15, 23, 42, 0.9) !important;
+            color: #f1f5f9 !important;
+            border-color: rgba(71, 85, 105, 0.7) !important;
+        }
+        
+        body.dark-mode .embed-header p,
+        body.dark-mode .embed-header .text-gray-600 {
+            background-color: rgba(30, 41, 59, 0.85) !important;
+            color: #cbd5e1 !important;
+            border-color: rgba(71, 85, 105, 0.6) !important;
+        }
+        
+        /* embed冁E��背景が白のspan要素を強制上書ぁE*/
+        body.dark-mode .embed-content span[style*="background"],
+        body.dark-mode .embed-content div[style*="background"] {
+            background: transparent !important;
+        }
+        
+        /* embed冁E�EチE�Eブル */
+        body.dark-mode .embed-content table {
+            background-color: rgba(30, 41, 59, 0.8) !important;
+        }
+        
+        body.dark-mode .embed-content table th {
+            background-color: rgba(51, 65, 85, 0.9) !important;
+            color: #f1f5f9 !important;
+            border-color: rgba(71, 85, 105, 0.6) !important;
+        }
+        
+        body.dark-mode .embed-content table td {
+            background-color: rgba(30, 41, 59, 0.6) !important;
+            color: #e2e8f0 !important;
+            border-color: rgba(71, 85, 105, 0.4) !important;
+        }
+        
+        /* Board形式�Eembed */
+        body.dark-mode .embed-container[data-format="board"] .embed-content {
+            background: linear-gradient(135deg, #0f2f1f 0%, #0a1f15 100%) !important;
+            background-color: #0f2f1f !important;
+            border-color: #475569 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Document形式�Eembed */
+        body.dark-mode .embed-container[data-format="document"],
+        body.dark-mode .embed-container[data-format="document"] .embed-frame,
+        body.dark-mode .embed-container[data-format="document"] .embed-content,
+        body.dark-mode .embed-container[data-format="document"] .embed-header {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            color: #e2e8f0 !important;
+        }
+        
+        body.dark-mode .embed-container[data-format="document"] * {
+            color: #e2e8f0 !important;
+        }
+        
+        /* Print形式�Eembed */
+        body.dark-mode .embed-container[data-format="print"],
+        body.dark-mode .embed-container[data-format="print"] .embed-frame,
+        body.dark-mode .embed-container[data-format="print"] .embed-content {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            color: #e2e8f0 !important;
+        }
+        
+        body.dark-mode .embed-container[data-format="print"] * {
+            color: #e2e8f0 !important;
+        }
+        
+        /* 学習記録カード（色のみ変更�E�E*/
+        body.dark-mode .learning-log-card,
+        body.dark-mode .learning-record,
+        body.dark-mode .study-record {
+            background-color: rgba(30, 41, 59, 0.9) !important;
+            border-color: rgba(71, 85, 105, 0.5) !important;
+        }
+        
+        /* モジュール検索エリア�E�色のみ変更�E�E*/
+        body.dark-mode .module-search,
+        body.dark-mode .search-container,
+        body.dark-mode .filter-container {
+            background-color: rgba(30, 41, 59, 0.9) !important;
+            border-color: rgba(71, 85, 105, 0.5) !important;
+        }
+        
+        /* カード要素は個別に色を設定する（汎用ルールを削除） */
+        
+        /* ボ�Eダーカラーは個別に忁E��な要素のみ設定（汎用ルールを削除�E�E*/
+        
+        /* rounded要素は形状を変更しなぁE��削除�E�E*/
+        
+        /* shadow要素は影を変更しなぁE��削除�E�E*/
+        
+        /* カレンダーモーダルは色のみ明示皁E��設定（デザインは一刁E��更しなぁE��E*/
+        /* 背景色のみ設宁E*/
+        body.dark-mode #today-calendar-modal > div {
+            background-color: white !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-white {
+            background-color: white !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-gray-100 {
+            background-color: #f3f4f6 !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-gray-50 {
+            background-color: #f9fafb !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-gray-200 {
+            background-color: #e5e7eb !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-blue-100 {
+            background-color: #dbeafe !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-blue-500 {
+            background-color: #3b82f6 !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .bg-green-50 {
+            background-color: #f0fdf4 !important;
+        }
+        
+        /* チE��スト色のみ設宁E*/
+        body.dark-mode #today-calendar-modal .text-gray-800 {
+            color: #1f2937 !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .text-gray-700 {
+            color: #374151 !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .text-white {
+            color: white !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .text-blue-800 {
+            color: #1e40af !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .text-green-800 {
+            color: #166534 !important;
+        }
+        
+        /* ボ�Eダー色のみ設宁E*/
+        body.dark-mode #today-calendar-modal .border-gray-200 {
+            border-color: #e5e7eb !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .border-gray-300 {
+            border-color: #d1d5db !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .border-b {
+            border-bottom-color: #e5e7eb !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .border-blue-300 {
+            border-color: #93c5fd !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .border-blue-500 {
+            border-color: #3b82f6 !important;
+        }
+        
+        body.dark-mode #today-calendar-modal .border-green-400 {
+            border-color: #4ade80 !important;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <!-- ダークモード�E替ボタン -->
+    <button id="dark-mode-toggle" aria-label="ダークモード�E替">🌙</button>
+    
+    <!-- 雲のアニメーションレイヤー�E�EavaScriptで動的に大量生成！E-->
+    <div class="cloud-layer">
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+        <div class="cloud"></div>
+    </div>
+    
+    <div id="app" class="main-container p-4 md:p-8">
+        <!-- コンチE��チE�EJSによってここに描画されまぁE-->
+    </div>
+    
+    <script src="app.js" type="module" defer></script>
+    <script src="speedQuiz.js" type="module" defer></script>
+    <script src="cloudSystem.js" type="module" defer></script>
+    <script src="pages/answerOverlay.js" type="module" defer></script>
+
+    <!-- ダークモード制御スクリプト -->
+    <script>
+    (function() {
+        'use strict';
+        
+        const STORAGE_KEY = 'atashinchi-dark-mode';
+        
+        // ダークモード設宁E
+        function setDarkMode(enabled) {
+            if (enabled) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem(STORAGE_KEY, 'enabled');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem(STORAGE_KEY, 'disabled');
+            }
+            updateButton();
+        }
+        
+        // ボタンの表示更新
+        function updateButton() {
+            const btn = document.getElementById('dark-mode-toggle');
+            if (!btn) return;
+            
+            const isDark = document.body.classList.contains('dark-mode');
+            btn.textContent = isDark ? '☀️' : '🌙';
+            btn.setAttribute('aria-label', isDark ? 'ライトモードに切替' : 'ダークモードに切替');
+        }
+        
+        // トグル関数
+        function toggleDarkMode() {
+            const currentState = document.body.classList.contains('dark-mode');
+            setDarkMode(!currentState);
+        }
+        
+        // 初期匁E
+        function init() {
+            // 保存された設定を読み込み
+            const savedMode = localStorage.getItem(STORAGE_KEY);
+            
+            if (savedMode === 'enabled') {
+                setDarkMode(true);
+            } else if (savedMode === 'disabled') {
+                setDarkMode(false);
+            } else {
+                // シスチE��設定を確誁E
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                setDarkMode(prefersDark);
+            }
+            
+            // イベントリスナ�E設宁E
+            const toggleBtn = document.getElementById('dark-mode-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleDarkMode);
+            }
+        }
+        
+        // DOMContentLoaded時に初期匁E
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+        // グローバルに公閁E
+        window.toggleDarkMode = toggleDarkMode;
+    })();
+    </script>
+
+</body>
+</html>
