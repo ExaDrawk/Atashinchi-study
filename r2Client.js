@@ -1,6 +1,5 @@
-// d1Client.js - Cloudflare R2 API クライアント（旧D1対応）
-// Workers API経由でR2ストレージにアクセス
-// ※ファイル名は後方互換性のためd1Client.jsのまま
+// r2Client.js - Cloudflare R2 API クライアント
+// Workers API経由でR2ストレージにアクセス（旧d1Client.jsから移行）
 
 const R2_API_URL = process.env.D1_API_URL || 'https://study-app-api.drillstudy-api.workers.dev';
 
