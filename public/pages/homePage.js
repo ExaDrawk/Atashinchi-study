@@ -431,6 +431,9 @@ async function updateSpeedArticlePreview() {
         // モジュールをフィルタリング
         const currentSummaries = window.caseSummaries || (typeof caseSummaries !== 'undefined' ? caseSummaries : []);
         let filteredModules = [...currentSummaries];
+
+        console.log(`📊 条文プレビュー開始: caseSummaries=${currentSummaries.length}件`);
+
         if (categoryFilter) {
             filteredModules = filteredModules.filter(m => m.category === categoryFilter);
         }
@@ -438,7 +441,7 @@ async function updateSpeedArticlePreview() {
             filteredModules = filteredModules.filter(m => m.subfolder === subfolderFilter);
         }
 
-        console.log(`📊 条文プレビュー: ${filteredModules.length}モジュール対象`);
+        console.log(`📊 条文プレビュー: ${filteredModules.length}モジュール対象 (カテゴリ: ${categoryFilter || 'なし'}, サブフォルダ: ${subfolderFilter || 'なし'})`);
 
         if (filteredModules.length === 0) {
             container.innerHTML = '<span class="text-gray-400 text-sm">条件に一致するモジュールがありません</span>';
@@ -450,7 +453,16 @@ async function updateSpeedArticlePreview() {
         let articles = [];
         const currentLoaders = window.caseLoaders || (typeof caseLoaders !== 'undefined' ? caseLoaders : {});
         const seenArticles = new Set();
-        const supportedLaws = ['日本国憲法', '憲法', '民法', '刑法', '会社法', '商法', '民事訴訟法', '刑事訴訟法', '行政手続法', '行政不服審査法', '行政事件訴訟法'];
+
+        // サポートする法令リスト（拡張版）
+        const supportedLaws = [
+            '日本国憲法', '憲法', '民法', '刑法', '会社法', '商法', '民事訴訟法', '刑事訴訟法',
+            '行政手続法', '行政不服審査法', '行政事件訴訟法', '国家賠償法', '地方自治法',
+            '破産法', '民事再生法', '民事執行法', '民事保全法', '借地借家法', '信託法',
+            '少年法', '労働基準法', '労働契約法', '不正競争防止法', '独占禁止法'
+        ];
+
+        console.log(`📊 caseLoaders keys: ${Object.keys(currentLoaders).length}件`);
 
         for (const moduleSummary of filteredModules.slice(0, 20)) {
             try {
@@ -491,9 +503,12 @@ async function updateSpeedArticlePreview() {
 
         // ランクフィルタを適用（rankFiltersが選択されている場合のみ）
         if (settings.rankFilters && settings.rankFilters.length > 0) {
+            console.log(`📊 ランクフィルタ適用: ${settings.rankFilters.join(', ')}`);
+            const beforeCount = articles.length;
             try {
                 const statsRes = await fetch('/api/quiz-results/article-stats');
                 const articleStats = await statsRes.json();
+                console.log(`📊 ランク統計取得: ${Object.keys(articleStats).length}件`);
 
                 articles = articles.filter(article => {
                     const key = `${article.lawName}${article.articleNumber}条`;
@@ -501,9 +516,12 @@ async function updateSpeedArticlePreview() {
                     const rank = stat ? stat.rank : 'まだまだ';
                     return settings.rankFilters.includes(rank);
                 });
+                console.log(`📊 ランクフィルタ後: ${beforeCount}件 → ${articles.length}件`);
             } catch (err) {
                 console.warn('ランク統計の取得に失敗:', err);
             }
+        } else {
+            console.log(`📊 ランクフィルタなし`);
         }
 
         // 条文ボタンを生成（speedQuiz.jsのリザルト画面と同じスタイル）
