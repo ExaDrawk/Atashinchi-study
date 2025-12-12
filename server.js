@@ -1754,6 +1754,82 @@ app.get('/api/qa-progress', async (req, res) => {
     }
 });
 
+// ★★★ 全Q&A進捗取得API（D1連携・初期同期用） ★★★
+app.get('/api/qa-progress/all', async (req, res) => {
+    try {
+        const username = req.session?.username;
+
+        console.log('📊 全Q&A進捗取得 (user:', username || 'none', ')');
+
+        // ★★★ ログインユーザーがいればD1から全進捗を取得 ★★★
+        if (username && process.env.D1_API_URL) {
+            try {
+                const d1Result = await d1Client.getQAProgress(username);
+                if (d1Result.progress) {
+                    console.log(`✅ D1から全進捗取得: ${d1Result.progress.length}件`);
+                    return res.json({
+                        success: true,
+                        progress: d1Result.progress,
+                        source: 'd1'
+                    });
+                }
+            } catch (d1Error) {
+                console.warn('⚠️ D1からの取得失敗、ローカルにフォールバック:', d1Error.message);
+            }
+        }
+
+        // ★★★ ローカルファイルから全進捗を集約 ★★★
+        const progressDir = path.resolve('./data/qa-progress');
+        const allProgress = [];
+
+        try {
+            const files = await fs.readdir(progressDir);
+            const jsonFiles = files.filter(f => f.endsWith('.json'));
+
+            for (const file of jsonFiles) {
+                const moduleId = file.replace('.json', '').replace(/_/g, '/');
+                const filePath = path.join(progressDir, file);
+
+                try {
+                    const data = await fs.readFile(filePath, 'utf8');
+                    const progressData = JSON.parse(data);
+
+                    Object.entries(progressData).forEach(([qaId, qaData]) => {
+                        allProgress.push({
+                            module_id: moduleId,
+                            qa_id: parseInt(qaId, 10),
+                            status: qaData.status || '未',
+                            fill_drill: JSON.stringify(qaData.fillDrill || {})
+                        });
+                    });
+                } catch (readError) {
+                    // ファイル読み込みエラーは無視
+                }
+            }
+
+            res.json({
+                success: true,
+                progress: allProgress,
+                source: 'local'
+            });
+
+        } catch (dirError) {
+            res.json({
+                success: true,
+                progress: [],
+                source: 'empty'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ 全Q&A進捗取得エラー:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // ★★★ Q&A進捗保存API（D1対応） ★★★
 app.post('/api/qa-progress/save', async (req, res) => {
     try {

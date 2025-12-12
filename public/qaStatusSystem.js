@@ -51,15 +51,70 @@ class QAStatusSystem {
         return caseId + '.js';
     }
 
-    init() {
+    async init() {
         console.log('🔖 Q&Aステータスシステム初期化中...');
-        this.loadStatuses();
         this.setupGlobalEventListeners();
+
+        // ★★★ サーバーから進捗を読み込み（D1連携） ★★★
+        await this.syncFromServer();
+
+        this.loadStatuses();
 
         // 初期化後に色を適用
         setTimeout(() => {
             this.updateAllQALinkColors();
         }, 500);
+    }
+
+    /**
+     * サーバーから進捗データを読み込み、localStorageに同期
+     */
+    async syncFromServer() {
+        try {
+            console.log('🔄 サーバーから進捗を同期中...');
+            const response = await fetch('/api/qa-progress/all');
+
+            if (!response.ok) {
+                console.warn('⚠️ サーバーから進捗を取得できませんでした');
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.progress) {
+                let syncCount = 0;
+
+                // D1から取得したデータをlocalStorageに同期
+                if (Array.isArray(data.progress)) {
+                    data.progress.forEach(item => {
+                        const key = `qa_status_${item.module_id}_qa-${item.qa_id}`;
+                        const currentValue = localStorage.getItem(key);
+
+                        // サーバーのデータが新しい場合のみ更新
+                        if (item.status && this.statuses.includes(item.status)) {
+                            localStorage.setItem(key, item.status);
+                            syncCount++;
+                        }
+                    });
+                } else if (typeof data.progress === 'object') {
+                    // オブジェクト形式の場合
+                    Object.entries(data.progress).forEach(([moduleId, qaProgress]) => {
+                        Object.entries(qaProgress).forEach(([qaId, status]) => {
+                            const key = `qa_status_${moduleId}_qa-${qaId}`;
+                            if (this.statuses.includes(status)) {
+                                localStorage.setItem(key, status);
+                                syncCount++;
+                            }
+                        });
+                    });
+                }
+
+                console.log(`✅ サーバーから ${syncCount}件の進捗を同期しました (source: ${data.source || 'server'})`);
+            }
+        } catch (error) {
+            console.warn('⚠️ サーバー同期エラー:', error.message);
+            // エラーでもlocalStorageのデータで続行
+        }
     }
 
     /**
