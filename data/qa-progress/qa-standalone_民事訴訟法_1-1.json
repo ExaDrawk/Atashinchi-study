@@ -1,0 +1,317 @@
+[
+  {
+    "id": "1-1",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "{{訴訟判決}}とは、{{民事訴訟}}において、{{審判の対象となる権利義務又は法律関係}}の有無について{{判断せずに}}、{{訴訟要件}}が{{充足していないこと}}などを理由として下される判決をいう。{{本案判決}}とは、{{民事訴訟}}において{{訴訟の対象になっている権利又は法律関係}}の有無について{{判断を下す}}判決をいう。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "訴訟判決",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "民事訴訟",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "審判の対象となる権利義務又は法律関係",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "判断せずに",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "訴訟要件",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "充足していないこと",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "本案判決",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "民事訴訟",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "訴訟の対象になっている権利又は法律関係",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "判断を下す",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "訴訟判決"
+            },
+            {
+              "type": "text",
+              "text": "とは、"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "民事訴訟"
+            },
+            {
+              "type": "text",
+              "text": "において、"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "審判の対象となる権利義務又は法律関係"
+            },
+            {
+              "type": "text",
+              "text": "の有無について"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "判断せずに"
+            },
+            {
+              "type": "text",
+              "text": "、"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "訴訟要件"
+            },
+            {
+              "type": "text",
+              "text": "が"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "充足していないこと"
+            },
+            {
+              "type": "text",
+              "text": "などを理由として下される判決をいう。"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "本案判決"
+            },
+            {
+              "type": "text",
+              "text": "とは、"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "民事訴訟"
+            },
+            {
+              "type": "text",
+              "text": "において"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "訴訟の対象になっている権利又は法律関係"
+            },
+            {
+              "type": "text",
+              "text": "の有無について"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "判断を下す"
+            },
+            {
+              "type": "text",
+              "text": "判決をいう。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-12T06:41:01.775Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "○",
+                "feedback": "正解よ、タチバナ！ 訴訟判決は民事訴訟法の基本で、本案審理に入らず手続面で決着つける判決だから、この位置にぴったり当てはまるわ。",
+                "speaker": "山下",
+                "expression": "happy",
+                "userAnswer": "訴訟判決",
+                "correctAnswer": "訴訟判決"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "違うわよ。『訴訟提起』は当事者が訴えを起こす個別の行為だけど、正解は『民事訴訟』全体の場面を指すの。手続法の適用範囲を広く捉え間違えやすいところね。",
+                "speaker": "山下",
+                "expression": "serious",
+                "userAnswer": "訴訟提起",
+                "correctAnswer": "民事訴訟"
+              },
+              {
+                "id": "B3",
+                "result": "☓",
+                "feedback": "惜しいけど×よ。『訴訟要件』は訴訟を維持するための手続要件で、本案の『審判の対象となる権利義務又は法律関係』と混同しがち。訴訟判決は本案実体に入らず要件欠如で棄却するのよ。",
+                "speaker": "山下",
+                "expression": "thinking",
+                "userAnswer": "訴訟要件",
+                "correctAnswer": "審判の対象となる権利義務又は法律関係"
+              },
+              {
+                "id": "B4",
+                "result": "☓",
+                "feedback": "真逆よ！ 訴訟判決のポイントはまさに本案を『判断せずに』手続で終わらせること。『判断し』なんて入れると本案判決とごっちゃになるわ、注意して。",
+                "speaker": "山下",
+                "expression": "annoyed",
+                "userAnswer": "判断し",
+                "correctAnswer": "判断せずに"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "バッチリ正解！ 訴訟判決の典型理由として訴訟要件が挙がるし、この理解は却下判決や不受理判決の論点にも直結するわよ。",
+                "speaker": "山下",
+                "expression": "impressed",
+                "userAnswer": "訴訟要件",
+                "correctAnswer": "訴訟要件"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "不十分よ。『ない』じゃ曖昧で、訴訟要件の『充足していないこと』を正確に表現してない。答案では要件欠如の趣旨を明示的に示さないと採点者に見逃されるわ。",
+                "speaker": "山下",
+                "expression": "serious",
+                "userAnswer": "ない",
+                "correctAnswer": "充足していないこと"
+              },
+              {
+                "id": "B7",
+                "result": "○",
+                "feedback": "正解ね！ 本案判決は実体判断の核心で、この区別が民事訴訟法の構造理解に欠かせないわ。仮定訴訟や熟慮期間の論点でも活きてくるよ。",
+                "speaker": "山下",
+                "expression": "happy",
+                "userAnswer": "本案判決",
+                "correctAnswer": "本案判決"
+              },
+              {
+                "id": "B8",
+                "result": "☓",
+                "feedback": "違います。『請求原因』は本案の事実・立証部分で、正解の『民事訴訟』は訴訟全体の文脈。請求の提起から判断までの流れを混同しやすいのよね。",
+                "speaker": "山下",
+                "expression": "confused",
+                "userAnswer": "請求原因",
+                "correctAnswer": "民事訴訟"
+              },
+              {
+                "id": "B9",
+                "result": "☓",
+                "feedback": "全然違うわ。『理由』は訴状の記載事項だけど、本案判決が判断するのは『訴訟の対象になっている権利又は法律関係』の実体よ。訴状構造と混ぜないで。",
+                "speaker": "山下",
+                "expression": "annoyed",
+                "userAnswer": "理由",
+                "correctAnswer": "訴訟の対象になっている権利又は法律関係"
+              },
+              {
+                "id": "B10",
+                "result": "○",
+                "feedback": "正解よ！ 『判断を下す』と『くだされる』は本質的に同じ意味で、本案の核心である実体判断を示せてます。この視点は認容・棄却判決の分類にもつながるわ。",
+                "speaker": "山下",
+                "expression": "happy",
+                "userAnswer": "くだされる",
+                "correctAnswer": "判断を下す"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "訴訟判決と本案判決の区別は民事訴訟法の入口よ、手続要件と実体権利の違いをしっかり押さえないと論文で失点するわ。条文（民訴法136条・137条）と判例の却下・不受理パターンを繰り返し解いて、混同ポイントを潰していきなさい。次は完璧にいけるはずよ！",
+              "speaker": "山下",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "訴訟判決",
+            "B2": "訴訟提起",
+            "B3": "訴訟要件",
+            "B4": "判断し",
+            "B5": "訴訟要件",
+            "B6": "ない",
+            "B7": "本案判決",
+            "B8": "請求原因",
+            "B9": "理由",
+            "B10": "くだされる"
+          }
+        }
+      },
+      "updatedAt": "2025-12-12T06:41:01.775Z"
+    }
+  }
+]

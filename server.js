@@ -29,6 +29,7 @@ import {
     updateAllSupportedLaws
 } from './lawLoader.js';
 import { characters, COMMON_EXPRESSIONS } from './public/data/characters.js';
+import d1Client from './d1Client.js';
 
 dotenv.config();
 
@@ -1124,6 +1125,23 @@ app.get('/api/ping', (req, res) => {
     res.json({ pong: true, timestamp: new Date().toISOString() });
 });
 
+// ★★★ D1データベースステータス確認API ★★★
+app.get('/api/d1-status', async (req, res) => {
+    try {
+        const d1Health = await d1Client.checkD1Health();
+        res.json({
+            success: true,
+            d1: d1Health,
+            d1ApiUrl: process.env.D1_API_URL || 'not configured'
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // ★★★ AI切り替えAPI ★★★
 app.get('/api/ai-status', (req, res) => {
     const geminiAvailable = !!process.env.GEMINI_API_KEY;
@@ -1660,10 +1678,11 @@ AIとして文脈から「この列挙は順序が本質的か」を判断し、
     }
 });
 
-// ★★★ Q&A進捗取得API ★★★
+// ★★★ Q&A進捗取得API（D1対応） ★★★
 app.get('/api/qa-progress', async (req, res) => {
     try {
         const { relativePath } = req.query;
+        const username = req.session?.username;
 
         if (!relativePath) {
             return res.status(400).json({
@@ -1672,9 +1691,34 @@ app.get('/api/qa-progress', async (req, res) => {
             });
         }
 
-        console.log('📊 Q&A進捗取得:', relativePath);
+        console.log('📊 Q&A進捗取得:', relativePath, '(user:', username || 'none', ')');
 
-        // 進捗データファイルのパスを構築
+        // ★★★ ログインユーザーがいればD1から取得 ★★★
+        if (username && process.env.D1_API_URL) {
+            try {
+                const d1Result = await d1Client.getQAProgress(username, relativePath);
+                if (d1Result.progress && d1Result.progress.length > 0) {
+                    // D1の配列形式をオブジェクト形式に変換
+                    const progressObj = {};
+                    d1Result.progress.forEach(item => {
+                        progressObj[item.qa_id] = {
+                            status: item.status,
+                            fillDrill: JSON.parse(item.fill_drill || '{}')
+                        };
+                    });
+                    console.log(`✅ D1から進捗取得: ${d1Result.progress.length}件`);
+                    return res.json({
+                        success: true,
+                        progress: progressObj,
+                        source: 'd1'
+                    });
+                }
+            } catch (d1Error) {
+                console.warn('⚠️ D1からの取得失敗、ローカルにフォールバック:', d1Error.message);
+            }
+        }
+
+        // ★★★ ローカルファイルからの取得（フォールバック） ★★★
         const progressDir = path.resolve('./data/qa-progress');
         const safeFileName = relativePath.replace(/[/\\:*?"<>|]/g, '_') + '.json';
         const progressFilePath = path.join(progressDir, safeFileName);
@@ -1684,13 +1728,15 @@ app.get('/api/qa-progress', async (req, res) => {
             const progressData = JSON.parse(data);
             res.json({
                 success: true,
-                progress: progressData
+                progress: progressData,
+                source: 'local'
             });
         } catch (readError) {
             // ファイルが存在しない場合は空の進捗を返す
             res.json({
                 success: true,
-                progress: {}
+                progress: {},
+                source: 'empty'
             });
         }
 
@@ -1703,10 +1749,11 @@ app.get('/api/qa-progress', async (req, res) => {
     }
 });
 
-// ★★★ Q&A進捗保存API ★★★
+// ★★★ Q&A進捗保存API（D1対応） ★★★
 app.post('/api/qa-progress/save', async (req, res) => {
     try {
         const { relativePath, qaData } = req.body;
+        const username = req.session?.username;
 
         if (!relativePath) {
             return res.status(400).json({
@@ -1715,9 +1762,44 @@ app.post('/api/qa-progress/save', async (req, res) => {
             });
         }
 
-        console.log('💾 Q&A進捗保存:', relativePath);
+        console.log('💾 Q&A進捗保存:', relativePath, '(user:', username || 'none', ')');
 
-        // 進捗データディレクトリを確保
+        // ★★★ ログインユーザーがいればD1にも保存 ★★★
+        if (username && process.env.D1_API_URL && qaData) {
+            try {
+                // qaDataをD1形式に変換して保存
+                const progressList = [];
+                if (Array.isArray(qaData)) {
+                    qaData.forEach(item => {
+                        progressList.push({
+                            moduleId: relativePath,
+                            qaId: item.id || item.qaId,
+                            status: item.status || '未',
+                            fillDrill: item.fillDrill || {}
+                        });
+                    });
+                } else if (typeof qaData === 'object') {
+                    Object.entries(qaData).forEach(([qaId, data]) => {
+                        progressList.push({
+                            moduleId: relativePath,
+                            qaId: parseInt(qaId, 10),
+                            status: data.status || '未',
+                            fillDrill: data.fillDrill || {}
+                        });
+                    });
+                }
+
+                if (progressList.length > 0) {
+                    const d1Result = await d1Client.saveQAProgressBatch(username, progressList);
+                    console.log(`✅ D1に進捗保存: ${progressList.length}件`);
+                }
+            } catch (d1Error) {
+                console.warn('⚠️ D1への保存失敗:', d1Error.message);
+                // D1への保存失敗してもローカル保存は続行
+            }
+        }
+
+        // ★★★ ローカルファイルにも保存（フォールバック・バックアップ） ★★★
         const progressDir = path.resolve('./data/qa-progress');
         try {
             await fs.access(progressDir);
@@ -1725,16 +1807,15 @@ app.post('/api/qa-progress/save', async (req, res) => {
             await fs.mkdir(progressDir, { recursive: true });
         }
 
-        // ファイルパスを構築
         const safeFileName = relativePath.replace(/[/\\:*?"<>|]/g, '_') + '.json';
         const progressFilePath = path.join(progressDir, safeFileName);
 
-        // データを保存
         await fs.writeFile(progressFilePath, JSON.stringify(qaData, null, 2), 'utf8');
 
         res.json({
             success: true,
-            message: 'Q&A進捗を保存しました'
+            message: 'Q&A進捗を保存しました',
+            savedTo: username ? 'd1+local' : 'local'
         });
 
     } catch (error) {

@@ -1,0 +1,13 @@
+name = "study-app-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "study-app-db"
+database_id = "847ffdd6-aa90-4e43-b43c-31eeed765264"
+
+[vars]
+# API認証キー（Render.comからの呼び出し時に使用）
+# 実際の値はwrangler secretで設定
+# API_SECRET = "your-secret-key"
