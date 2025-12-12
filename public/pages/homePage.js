@@ -4696,8 +4696,10 @@ async function updateInlineSpeedQuizForModules() {
     console.log('⚡ モジュールから条文を抽出中...');
 
     // 現在表示されているモジュールカードからデータを取得
-    const moduleCards = document.querySelectorAll('.case-card[data-case-id]');
+    const moduleCards = document.querySelectorAll('[data-case-id]');
     const moduleIds = Array.from(moduleCards).map(card => card.dataset.caseId).filter(id => id);
+
+    console.log(`⚡ 表示中のモジュールカード: ${moduleCards.length}件, モジュールID: ${moduleIds.length}件`);
 
     if (moduleIds.length === 0) {
         container.innerHTML = `
@@ -4708,20 +4710,28 @@ async function updateInlineSpeedQuizForModules() {
         return;
     }
 
-    // caseIndexからモジュールデータを取得
-    const modules = [];
-    if (window.caseIndex && window.caseIndex.cases) {
-        moduleIds.forEach(id => {
-            const mod = window.caseIndex.cases.find(c => c.id === id);
-            if (mod) modules.push(mod);
-        });
+    // caseLoadersから動的にQ&Aデータを取得
+    const allQAs = [];
+    for (const id of moduleIds) {
+        try {
+            const loader = (window.caseLoaders || {})[id];
+            if (loader) {
+                const mod = await loader();
+                const moduleData = mod.default || mod;
+                if (moduleData?.questionsAndAnswers) {
+                    allQAs.push(...moduleData.questionsAndAnswers);
+                }
+            }
+        } catch (error) {
+            console.warn(`⚠️ モジュール ${id} のQ&A取得失敗:`, error.message);
+        }
     }
 
-    // モジュールから条文を抽出
-    const articleRefs = extractArticleReferencesFromModules(modules);
+    // Q&Aから条文を抽出
+    const articleRefs = extractArticleReferencesFromQAs(allQAs);
     const uniqueCount = articleRefs.length;
 
-    console.log(`⚡ 抽出された条文参照: ${uniqueCount}件`);
+    console.log(`⚡ 抽出された条文参照: ${uniqueCount}件 (Q&A総数: ${allQAs.length}件)`);
 
     if (uniqueCount === 0) {
         container.innerHTML = `
@@ -4900,14 +4910,21 @@ async function fetchArticlesForInlineSpeedQuiz(articleRefs) {
                 continue;
             }
 
-            // 参照された条文のみフィルタ
+            // 参照された条文のみフィルタ（柔軟なマッチング）
             const articleNumsArray = Array.from(articleNums);
             const matchedArticles = lawArticles.filter(art => {
-                const artNum = String(art.articleNumber);
-                return articleNumsArray.includes(artNum);
+                // articleNumberの様々な形式に対応
+                const artNum = String(art.articleNumber || art.article_number || art.num || '');
+                // 数字のみを抽出して比較
+                const artNumClean = artNum.replace(/[^0-9]/g, '');
+
+                return articleNumsArray.some(refNum => {
+                    const refNumClean = String(refNum).replace(/[^0-9]/g, '');
+                    return artNumClean === refNumClean || artNum === refNum;
+                });
             });
 
-            console.log(`⚡ ${lawName} でマッチした条文: ${matchedArticles.length}件`);
+            console.log(`⚡ ${lawName} でマッチした条文: ${matchedArticles.length}件 (APIから取得: ${lawArticles.length}件, 参照: ${articleNumsArray.length}件)`);
 
             matchedArticles.forEach(art => {
                 articles.push({

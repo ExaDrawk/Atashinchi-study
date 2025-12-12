@@ -66,11 +66,13 @@ export default {
     { type: 'dialogue', speaker: 'ゆかりん', expression: 'happy', dialogue: '一緒に答案構成の練習もしようよ、みかん。共犯論、今のうちに固めちゃおう。' }
   ],
   studyRecords: [
-    {
-      date: "2025-12-06",
-      timestamp: "2025-12-06T13:55:44.255Z",
-      title: "教唆・幇助と故意のズレ",
-      moduleId: "刑法/4.修正された構成要件/4.32-39"
-    }
-  ]
+        {
+            date: "2025-12-12",
+            timestamp: "2025-12-12T15:44:11.268Z"
+        },
+        {
+            date: "2025-12-06",
+            timestamp: "2025-12-06T13:55:44.255Z"
+        }
+    ]
 };
