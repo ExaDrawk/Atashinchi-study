@@ -1,0 +1,621 @@
+[
+  {
+    "id": "財産犯-3",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "事後強盗罪の法的性質をいかに解するかが問題となる。この点、同罪は{{「窃盗」}}という犯人の{{人的関係}}である{{特殊な地位}}を基礎として、{{窃盗の機会}}という{{緊迫した状況下}}での{{暴行・脅迫}}を{{強盗}}と{{同視}}する点に固有の罪質がある。したがって、同罪は{{窃盗犯人}}を主体とする{{真正身分犯}}（{{構成的身分犯}}）と解すべきである。そうだとすれば、{{非身分者}}（{{窃盗に関与していない者}}）であっても、{{身分者}}（{{窃盗犯人}}）と{{共謀}}して{{暴行・脅迫}}に{{加功}}した場合には、{{刑法65条1項}}の適用により、事後強盗罪の{{共同正犯}}が成立する。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "「窃盗」",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "人的関係",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "特殊な地位",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "窃盗の機会",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "緊迫した状況下",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "暴行・脅迫",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "強盗",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "同視",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "窃盗犯人",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "真正身分犯",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "構成的身分犯",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "非身分者",
+              "prompt": "空欄B12",
+              "placeholder": ""
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "窃盗に関与していない者",
+              "prompt": "空欄B13",
+              "placeholder": ""
+            },
+            {
+              "id": "B14",
+              "label": "(14)",
+              "answer": "身分者",
+              "prompt": "空欄B14",
+              "placeholder": ""
+            },
+            {
+              "id": "B15",
+              "label": "(15)",
+              "answer": "窃盗犯人",
+              "prompt": "空欄B15",
+              "placeholder": ""
+            },
+            {
+              "id": "B16",
+              "label": "(16)",
+              "answer": "共謀",
+              "prompt": "空欄B16",
+              "placeholder": ""
+            },
+            {
+              "id": "B17",
+              "label": "(17)",
+              "answer": "暴行・脅迫",
+              "prompt": "空欄B17",
+              "placeholder": ""
+            },
+            {
+              "id": "B18",
+              "label": "(18)",
+              "answer": "加功",
+              "prompt": "空欄B18",
+              "placeholder": ""
+            },
+            {
+              "id": "B19",
+              "label": "(19)",
+              "answer": "刑法65条1項",
+              "prompt": "空欄B19",
+              "placeholder": ""
+            },
+            {
+              "id": "B20",
+              "label": "(20)",
+              "answer": "共同正犯",
+              "prompt": "空欄B20",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "事後強盗罪の法的性質をいかに解するかが問題となる。この点、同罪は"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "「窃盗」"
+            },
+            {
+              "type": "text",
+              "text": "という犯人の"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "人的関係"
+            },
+            {
+              "type": "text",
+              "text": "である"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "特殊な地位"
+            },
+            {
+              "type": "text",
+              "text": "を基礎として、"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "窃盗の機会"
+            },
+            {
+              "type": "text",
+              "text": "という"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "緊迫した状況下"
+            },
+            {
+              "type": "text",
+              "text": "での"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "暴行・脅迫"
+            },
+            {
+              "type": "text",
+              "text": "を"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "強盗"
+            },
+            {
+              "type": "text",
+              "text": "と"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "同視"
+            },
+            {
+              "type": "text",
+              "text": "する点に固有の罪質がある。したがって、同罪は"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "窃盗犯人"
+            },
+            {
+              "type": "text",
+              "text": "を主体とする"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "真正身分犯"
+            },
+            {
+              "type": "text",
+              "text": "（"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "構成的身分犯"
+            },
+            {
+              "type": "text",
+              "text": "）と解すべきである。そうだとすれば、"
+            },
+            {
+              "type": "blank",
+              "id": "B12",
+              "label": "(12)",
+              "placeholder": "",
+              "answer": "非身分者"
+            },
+            {
+              "type": "text",
+              "text": "（"
+            },
+            {
+              "type": "blank",
+              "id": "B13",
+              "label": "(13)",
+              "placeholder": "",
+              "answer": "窃盗に関与していない者"
+            },
+            {
+              "type": "text",
+              "text": "）であっても、"
+            },
+            {
+              "type": "blank",
+              "id": "B14",
+              "label": "(14)",
+              "placeholder": "",
+              "answer": "身分者"
+            },
+            {
+              "type": "text",
+              "text": "（"
+            },
+            {
+              "type": "blank",
+              "id": "B15",
+              "label": "(15)",
+              "placeholder": "",
+              "answer": "窃盗犯人"
+            },
+            {
+              "type": "text",
+              "text": "）と"
+            },
+            {
+              "type": "blank",
+              "id": "B16",
+              "label": "(16)",
+              "placeholder": "",
+              "answer": "共謀"
+            },
+            {
+              "type": "text",
+              "text": "して"
+            },
+            {
+              "type": "blank",
+              "id": "B17",
+              "label": "(17)",
+              "placeholder": "",
+              "answer": "暴行・脅迫"
+            },
+            {
+              "type": "text",
+              "text": "に"
+            },
+            {
+              "type": "blank",
+              "id": "B18",
+              "label": "(18)",
+              "placeholder": "",
+              "answer": "加功"
+            },
+            {
+              "type": "text",
+              "text": "した場合には、"
+            },
+            {
+              "type": "blank",
+              "id": "B19",
+              "label": "(19)",
+              "placeholder": "",
+              "answer": "刑法65条1項"
+            },
+            {
+              "type": "text",
+              "text": "の適用により、事後強盗罪の"
+            },
+            {
+              "type": "blank",
+              "id": "B20",
+              "label": "(20)",
+              "placeholder": "",
+              "answer": "共同正犯"
+            },
+            {
+              "type": "text",
+              "text": "が成立する。"
+            }
+          ]
+        },
+        "3": {
+          "text": "窃盗行為に関与していない者が、窃盗犯人と共謀の上、事後強盗の「暴行」のみに関与した場合（途中関与）、事後強盗罪の共同正犯が成立するか。いわゆる身分犯説の立場から説明しなさい。\n\n{{事後強盗罪の法的性質をいかに解するかが問題となる。この点、同罪は「窃盗」という犯人の人的関係である特殊な地位を基礎として、窃盗の機会という緊迫した状況下での暴行・脅迫を強盗と同視する点に固有の罪質がある。したがって、同罪は窃盗犯人を主体とする真正身分犯（構成的身分犯）と解すべきである。そうだとすれば、非身分者（窃盗に関与していない者）であっても、身分者（窃盗犯人）と共謀して暴行・脅迫に加功した場合には、【刑法65条1項】の適用により、事後強盗罪の共同正犯が成立する。}}",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "事後強盗罪の法的性質をいかに解するかが問題となる。この点、同罪は「窃盗」という犯人の人的関係である特殊な地位を基礎として、窃盗の機会という緊迫した状況下での暴行・脅迫を強盗と同視する点に固有の罪質がある。したがって、同罪は窃盗犯人を主体とする真正身分犯（構成的身分犯）と解すべきである。そうだとすれば、非身分者（窃盗に関与していない者）であっても、身分者（窃盗犯人）と共謀して暴行・脅迫に加功した場合には、【刑法65条1項】の適用により、事後強盗罪の共同正犯が成立する。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-09T05:26:11.946Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "○",
+                "feedback": "正解よ、みかん。事後強盗罪は窃盗という前行為を基礎とするから、ここに「窃盗」を入れるのはぴったり。この理解は強盗罪全体の派生関係を押さえるのに役立つわね。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "窃盗",
+                "correctAnswer": "「窃盗」"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "ここは間違いよ。『人的関係』が正解で、窃盗犯人と被害者の間の関係を指すの。『真正身分犯』は後半の罪質分類だから混同しやすいけど、司法試験では基礎概念を順に積み上げて論じる視点が大事よ。",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "真正身分犯",
+                "correctAnswer": "人的関係"
+              },
+              {
+                "id": "B3",
+                "result": "☓",
+                "feedback": "ううん、違うわ。『特殊な地位』が正しくて、窃盗犯人が持つ地位のこと。『身分犯説』は解釈論の立場で、罪の構造説明に使う言葉じゃないの。身分犯の類型で何と何を区別するかを意識してね。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "身分犯説",
+                "correctAnswer": "特殊な地位"
+              },
+              {
+                "id": "B4",
+                "result": "☓",
+                "feedback": "惜しいけど違うわよ。『窃盗の機会』が正解で、窃盗後に生じる具体的な機会を意味するの。単に『窃盗』だと前行為自体を繰り返しちゃうから、事後強盗の独自性を捉え損ねるの。制度趣旨は緊迫状況の利用よ。",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": "窃盗",
+                "correctAnswer": "窃盗の機会"
+              },
+              {
+                "id": "B5",
+                "result": "☓",
+                "feedback": "間違いね。『緊迫した状況下』が正しくて、窃盗後の被害者との心理的緊張を表すわ。『身分』だけだと抽象的すぎて、強盗との同視の理由がぼやける。論文では状況描写が採点ポイントよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "身分",
+                "correctAnswer": "緊迫した状況下"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "ここは『暴行・脅迫』よ。『行為』だと強盗の構成要件を曖昧にしちゃうの。刑法236条の暴行・脅迫を明示的に使うのが正しく、混同しやすいのは強盗罪の一般論だけど事後特有の文脈を忘れずに。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "行為",
+                "correctAnswer": "暴行・脅迫"
+              },
+              {
+                "id": "B7",
+                "result": "○",
+                "feedback": "正解だわ。事後強盗の暴行・脅迫を強盗と同視するのが罪質の核心で、この言葉でつなぐと論理がスッキリするの。他の身分犯との比較論に活きるわよ。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "強盗",
+                "correctAnswer": "強盗"
+              },
+              {
+                "id": "B8",
+                "result": "○",
+                "feedback": "いいわよ、『同視』でぴったり。法的には等価視する趣旨だから、この表現で事後強盗の独立性を示せる。共同正犯の議論に直結する大事なポイントね。",
+                "speaker": "ゆかりん",
+                "expression": "impressed",
+                "userAnswer": "同視",
+                "correctAnswer": "同視"
+              },
+              {
+                "id": "B9",
+                "result": "○",
+                "feedback": "正解！窃盗犯人を主体とするのが身分犯の鍵で、この主体性を押さえると非身分者の共犯論が展開しやすくなるわ。刑法総論の応用に繋がる理解よ。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "窃盗犯人",
+                "correctAnswer": "窃盗犯人"
+              },
+              {
+                "id": "B10",
+                "result": "○",
+                "feedback": "よくできたわね。真正身分犯として位置づけると、構成的身分犯との対比が明確に。司法試験では身分犯分類の正確さが減点回避のコツよ。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "真正身分犯",
+                "correctAnswer": "真正身分犯"
+              },
+              {
+                "id": "B11",
+                "result": "☓",
+                "feedback": "違うのよ、『構成的身分犯』が正解。『身分犯説』は犯人側の解釈立場で、罪の類型じゃないわ。真正/準真正との区別を混同しやすいけど、論文では分類語を厳密に使って。",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "身分犯説",
+                "correctAnswer": "構成的身分犯"
+              },
+              {
+                "id": "B12",
+                "result": "○",
+                "feedback": "正解よ、『窃盗犯人でないもの』は非身分者にぴったり同義。この対比で65条共同正犯の成立根拠が明確になるわ。身分犯全般の共犯論に使える視点ね。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "窃盗犯人でないもの",
+                "correctAnswer": "非身分者"
+              },
+              {
+                "id": "B13",
+                "result": "☓",
+                "feedback": "これは無効か不明だけど、正しくは『窃盗に関与していない者』よ。非身分者の典型例で、共謀の前提を具体化するの。抽象的にせず具体例を挙げる癖をつけてね。",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": {
+                  "id": "B13",
+                  "text": ""
+                },
+                "correctAnswer": "窃盗に関与していない者"
+              },
+              {
+                "id": "B14",
+                "result": "○",
+                "feedback": "いいわ、『窃盗犯人』が身分者そのもの。この身分/非身分対比が共同正犯の趣旨を体現してるのよ。地位利用犯の総論に活きるわ。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "窃盗犯人",
+                "correctAnswer": "身分者"
+              },
+              {
+                "id": "B15",
+                "result": "☓",
+                "feedback": "不明だけど正しくは『窃盗犯人』。身分者の再確認で論理が締まるの。繰り返しで混同しやすい箇所よ、丁寧に書くのが論文のコツ。",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": {
+                  "id": "B15",
+                  "text": ""
+                },
+                "correctAnswer": "窃盗犯人"
+              },
+              {
+                "id": "B16",
+                "result": "○",
+                "feedback": "正解ね。共謀で非身分者が加わるのが65条の典型パターン。この理解は教唆・幇助との区別に繋がるわよ。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "共謀",
+                "correctAnswer": "共謀"
+              },
+              {
+                "id": "B17",
+                "result": "☓",
+                "feedback": "間違いよ、『暴行・脅迫』が正解。『相手方』だと行為側面を飛ばしちゃうの。強盗の要件を正しく嵌め込むのが司法試験の視点ね。",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "相手方",
+                "correctAnswer": "暴行・脅迫"
+              },
+              {
+                "id": "B18",
+                "result": "☓",
+                "feedback": "ここは『加功』よ。『暴行又は脅迫を』だと行為を具体化しすぎて冗長。共同正犯の「共同実行」に必要な寄与を簡潔に示す言葉を選んで。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "暴行又は脅迫を",
+                "correctAnswer": "加功"
+              },
+              {
+                "id": "B19",
+                "result": "○",
+                "feedback": "正解だわ、刑法65条1項で身分犯の共同正犯を処理する根拠条文。この条文引用で実務的説得力が増すのよ。",
+                "speaker": "ゆかりん",
+                "expression": "impressed",
+                "userAnswer": "刑法65条1項",
+                "correctAnswer": "刑法65条1項"
+              },
+              {
+                "id": "B20",
+                "result": "○",
+                "feedback": "完璧よ、『共同正犯』で締めくくり。この結論が事後強盗の罪質を体現してるわ。地位犯の共犯論が他の犯罪でも使える基盤になるわね。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "共同正犯",
+                "correctAnswer": "共同正犯"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "みかん、事後強盗罪の核心は窃盗犯人の身分を基礎に暴行・脅迫を強盗同視する真正身分犯という罪質よ。この理解を押さえれば、非身分者の65条共同正犯が論理的に成立するわ。基礎概念の混同が多いから、身分犯の類型（真正・準真正・構成的）を総論で繰り返し整理してね。論文では各語句の制度的役割を順に説明する流れを意識すると採点者ウケ良くなるわよ。",
+              "speaker": "ゆかりん",
+              "expression": "serious",
+              "relatedQAs": [
+                "id:刑法.身分犯.1",
+                "id:刑法.強盗罪.5",
+                "id:刑法.共同正犯.2"
+              ]
+            }
+          },
+          "answers": {
+            "B1": "窃盗",
+            "B2": "真正身分犯",
+            "B3": "身分犯説",
+            "B4": "窃盗",
+            "B5": "身分",
+            "B6": "行為",
+            "B7": "強盗",
+            "B8": "同視",
+            "B9": "窃盗犯人",
+            "B10": "真正身分犯",
+            "B11": "身分犯説",
+            "B12": "窃盗犯人でないもの",
+            "B13": "",
+            "B14": "窃盗犯人",
+            "B15": "",
+            "B16": "共謀",
+            "B17": "相手方",
+            "B18": "暴行又は脅迫を",
+            "B19": "刑法65条1項",
+            "B20": "共同正犯"
+          }
+        }
+      },
+      "updatedAt": "2025-12-09T05:26:11.946Z"
+    }
+  }
+]

@@ -1,460 +1,108 @@
 {
-  "2025-08-30": [
+  "2025-12-05": [
     {
-      "articleNumber": "行政事件訴訟法32条",
-      "score": 190,
-      "isCorrect": true
+      "articleNumber": "刑事訴訟法338条",
+      "score": 4,
+      "timestamp": "2025-12-05T08:39:33.655Z"
     },
     {
-      "articleNumber": "行政事件訴訟法33条",
-      "score": 190,
-      "isCorrect": true
+      "articleNumber": "刑法159条",
+      "score": 3,
+      "timestamp": "2025-12-05T08:39:41.210Z"
     },
     {
-      "articleNumber": "行政事件訴訟法25条",
-      "score": 170,
-      "isCorrect": true
+      "articleNumber": "民事訴訟法247条",
+      "score": 2,
+      "timestamp": "2025-12-05T08:39:49.932Z"
+    },
+    {
+      "articleNumber": "刑法257条",
+      "score": 0,
+      "timestamp": "2025-12-05T08:39:58.283Z"
+    },
+    {
+      "articleNumber": "刑事訴訟法99条",
+      "score": 0,
+      "timestamp": "2025-12-05T08:40:06.179Z"
+    },
+    {
+      "articleNumber": "刑法244条",
+      "score": 1,
+      "timestamp": "2025-12-05T10:11:58.922Z"
     }
   ],
-  "2025-08-31": [
+  "2025-12-06": [
     {
-      "articleNumber": "刑事訴訟法309条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "刑法61条",
+      "score": 5,
+      "timestamp": "2025-12-06T14:08:50.689Z"
     },
     {
-      "articleNumber": "刑事訴訟法309条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "刑法96条",
+      "score": 5,
+      "timestamp": "2025-12-06T16:15:12.226Z"
     },
     {
-      "articleNumber": "刑事訴訟法309条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法395条",
+      "score": 3,
+      "timestamp": "2025-12-06T16:15:19.516Z"
     },
     {
-      "articleNumber": "刑事訴訟法309条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法709条",
+      "score": 9,
+      "timestamp": "2025-12-06T16:15:22.347Z"
     },
     {
-      "articleNumber": "刑事訴訟法307条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法1条",
+      "score": 9,
+      "timestamp": "2025-12-06T16:16:47.257Z"
     },
     {
-      "articleNumber": "刑事訴訟法307条",
+      "articleNumber": "民法94条",
       "score": 0,
-      "isCorrect": false
+      "timestamp": "2025-12-06T16:16:52.821Z"
     },
     {
-      "articleNumber": "刑事訴訟法307条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法333条",
+      "score": 6,
+      "timestamp": "2025-12-06T16:16:59.129Z"
     },
     {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法94条",
+      "score": 8,
+      "timestamp": "2025-12-06T16:17:04.531Z"
     },
     {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法1条",
+      "score": 10,
+      "timestamp": "2025-12-06T16:17:06.762Z"
     },
     {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法333条",
+      "score": 10,
+      "timestamp": "2025-12-06T16:17:08.580Z"
     },
     {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法317条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟規則207条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "刑法61条",
+      "score": 1,
+      "timestamp": "2025-12-06T16:17:25.855Z"
     }
   ],
-  "2025-09-25": [
+  "2025-12-07": [
     {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法333条",
+      "score": 8,
+      "timestamp": "2025-12-07T03:06:22.589Z"
     },
     {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
+      "articleNumber": "民法94条",
+      "score": 9,
+      "timestamp": "2025-12-07T03:06:25.856Z"
     },
     {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 120,
-      "isCorrect": true
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 100,
-      "isCorrect": true
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 150,
-      "isCorrect": true
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 200,
-      "isCorrect": true
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 0,
-      "isCorrect": false
-    }
-  ],
-  "2025-09-26": [
-    {
-      "articleNumber": "刑事訴訟法199条",
-      "score": 130,
-      "isCorrect": true
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法218条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法197条",
-      "score": 120,
-      "isCorrect": true
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 0,
-      "isCorrect": false
-    },
-    {
-      "articleNumber": "刑事訴訟法189条",
-      "score": 100,
-      "isCorrect": true
+      "articleNumber": "民法1条",
+      "score": 10,
+      "timestamp": "2025-12-07T03:06:28.147Z"
     }
   ]
 }

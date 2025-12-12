@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q&A管理 - あたしンち学習アプリ</title>
+    <link rel="icon" type="image/x-icon" href="/yuzu.ico?v=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .file-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .json-textarea {
+            background: #0f172a;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .json-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .subject-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* 科目カラーはhomePage.jsのCATEGORY_COLORSから動的に適用 */
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 2000;
+            animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s forwards;
+        }
+
+        .toast-success {
+            background: var(--success);
+        }
+
+        .toast-error {
+            background: var(--danger);
+        }
+
+        .toast-warning {
+            background: var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+
+<body class="p-6">
+    <!-- ヘッダー -->
+    <header class="glass-card p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-2xl">🏠</a>
+                <div>
+                    <h1
+                        class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                        📚 Q&A管理
+                    </h1>
+                    <p class="text-sm text-gray-400 mt-1">司法試験対策Q&Aファイルの管理</p>
+                </div>
+            </div>
+            <button onclick="openAddModal()" class="btn-primary flex items-center gap-2">
+                <span class="text-xl">➕</span>
+                <span>新規Q&A追加</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 統計情報 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="stats-card">
+            <div class="stats-number" id="total-files">-</div>
+            <div class="text-sm text-gray-400">ファイル数</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-number" id="total-questions">-</div>
+            <div class="text-sm text-gray-400">総問題数</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-number" id="total-subjects">-</div>
+            <div class="text-sm text-gray-400">科目数</div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-number" id="avg-questions">-</div>
+            <div class="text-sm text-gray-400">平均問題数/ファイル</div>
+        </div>
+    </div>
+
+    <!-- フィルター -->
+    <div class="mb-6 flex flex-wrap gap-2" id="filter-container">
+        <button class="filter-btn active" data-subject="all">すべて</button>
+    </div>
+
+    <!-- ファイル一覧 -->
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            <span>📁</span>
+            <span>Q&Aファイル一覧</span>
+        </h2>
+        <div id="file-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="flex items-center justify-center py-12">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 追加モーダル -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <span>➕</span>
+                    <span>新規Q&A追加</span>
+                </h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2 text-gray-300">JSONをペースト</label>
+                <textarea id="json-input" class="json-textarea w-full h-96 p-4" placeholder='{
+  "subject": "刑法",
+  "version": "1.0",
+  "lastUpdated": "2025-12-09",
+  "subcategories": {
+    "": "サブカテゴリー名"
+  },
+  "questions": {
+    "1": {
+      "rank": "A",
+      "question": "問題文",
+      "answer": "解答"
+    }
+  }
+}'></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2 text-gray-300">ファイル名（任意）</label>
+                <input type="text" id="file-name-input" class="json-textarea w-full p-3"
+                    placeholder="自動生成（例: 刑法_9.json）">
+                <p class="text-xs text-gray-500 mt-1">空の場合、科目名とサブカテゴリー番号から自動生成されます</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="pasteFromClipboard()" class="btn-success flex items-center gap-2">
+                    <span>📋</span>
+                    <span>クリップボードから貼り付け</span>
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="closeAddModal()"
+                        class="px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition">
+                        キャンセル
+                    </button>
+                    <button onclick="addQAFile()" class="btn-primary">
+                        追加する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2" id="detail-title">
+                    <span>📄</span>
+                    <span>ファイル詳細</span>
+                </h2>
+                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+
+            <div id="detail-content" class="mb-6">
+                <!-- 動的に内容が入る -->
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeDetailModal()"
+                    class="px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 削除確認モーダル -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="text-center">
+                <div class="text-6xl mb-4">⚠️</div>
+                <h2 class="text-2xl font-bold mb-4">削除の確認</h2>
+                <p class="text-gray-400 mb-6" id="delete-message">
+                    このファイルを削除しますか？この操作は取り消せません。
+                </p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="closeDeleteModal()"
+                        class="px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition">
+                        キャンセル
+                    </button>
+                    <button onclick="confirmDelete()" class="btn-danger px-6 py-3">
+                        削除する
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ★★★ homePage.jsからCATEGORY_COLORSとgetCategoryColorをインポート ★★★
+        import { CATEGORY_COLORS, getCategoryColor } from './homePage.js';
+
+        // 科目バッジのスタイルを取得
+        function getSubjectBadgeStyle(subject) {
+            const colorInfo = getCategoryColor(subject);
+            return `background-color: ${colorInfo.bgColor}; color: ${colorInfo.color}; border: 1px solid ${colorInfo.borderColor};`;
+        }
+
+        // 状態管理
+        let qaFiles = [];
+        let currentFilter = 'all';
+        let fileToDelete = null;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQAFiles();
+        });
+
+        // Q&Aファイル一覧の読み込み
+        async function loadQAFiles() {
+            try {
+                const response = await fetch('/api/qa/files');
+                const data = await response.json();
+
+                if (data.success) {
+                    qaFiles = data.files;
+                    updateStats();
+                    updateFilters();
+                    renderFileList();
+                } else {
+                    showToast('ファイル一覧の取得に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('読み込みエラー:', error);
+                showToast('読み込みエラーが発生しました', 'error');
+            }
+        }
+
+        // 統計情報の更新
+        function updateStats() {
+            const totalFiles = qaFiles.length;
+            const totalQuestions = qaFiles.reduce((sum, f) => sum + f.questionCount, 0);
+            const subjects = [...new Set(qaFiles.map(f => f.subject))];
+            const avgQuestions = totalFiles > 0 ? Math.round(totalQuestions / totalFiles) : 0;
+
+            document.getElementById('total-files').textContent = totalFiles;
+            document.getElementById('total-questions').textContent = totalQuestions;
+            document.getElementById('total-subjects').textContent = subjects.length;
+            document.getElementById('avg-questions').textContent = avgQuestions;
+        }
+
+        // フィルターボタンの更新
+        function updateFilters() {
+            const subjects = [...new Set(qaFiles.map(f => f.subject))].sort();
+            const container = document.getElementById('filter-container');
+
+            container.innerHTML = `<button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" data-subject="all" onclick="setFilter('all')">すべて</button>`;
+
+            subjects.forEach(subject => {
+                const count = qaFiles.filter(f => f.subject === subject).length;
+                container.innerHTML += `
+                    <button class="filter-btn ${currentFilter === subject ? 'active' : ''}" 
+                        data-subject="${subject}" onclick="setFilter('${subject}')">
+                        ${subject} (${count})
+                    </button>
+                `;
+            });
+        }
+
+        // フィルター設定
+        function setFilter(subject) {
+            currentFilter = subject;
+            updateFilters();
+            renderFileList();
+        }
+
+        // ファイル一覧のレンダリング
+        function renderFileList() {
+            const container = document.getElementById('file-list');
+            const filteredFiles = currentFilter === 'all'
+                ? qaFiles
+                : qaFiles.filter(f => f.subject === currentFilter);
+
+            if (filteredFiles.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-400">
+                        <div class="text-4xl mb-4">📭</div>
+                        <p>該当するファイルがありません</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredFiles.map(file => {
+                const subcategoryNames = Object.values(file.subcategories).join(', ') || '未設定';
+                const badgeStyle = getSubjectBadgeStyle(file.subject);
+                return `
+                    <div class="file-card p-4">
+                        <div class="flex items-start justify-between mb-3">
+                            <span class="subject-badge" style="${badgeStyle}">${file.subject}</span>
+                            <span class="text-xs text-gray-500">${file.lastUpdated}</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">${file.fileName}</h3>
+                        <p class="text-sm text-gray-400 mb-3">${subcategoryNames}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">
+                                <span class="text-indigo-400 font-bold">${file.questionCount}</span>
+                                <span class="text-gray-500">問</span>
+                            </span>
+                            <div class="flex gap-2">
+                                <button onclick="viewDetail('${file.fileName}')" 
+                                    class="text-sm px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 transition">
+                                    詳細
+                                </button>
+                                <button onclick="openDeleteModal('${file.fileName}')" 
+                                    class="text-sm px-3 py-1 rounded bg-red-900 hover:bg-red-800 text-red-300 transition">
+                                    削除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // モーダル操作
+        function openAddModal() {
+            document.getElementById('add-modal').classList.add('active');
+            document.getElementById('json-input').value = '';
+            document.getElementById('file-name-input').value = '';
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.remove('active');
+        }
+
+        function openDeleteModal(fileName) {
+            fileToDelete = fileName;
+            document.getElementById('delete-message').textContent =
+                `「${fileName}」を削除しますか？この操作は取り消せません。`;
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+            fileToDelete = null;
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        // クリップボードから貼り付け
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('json-input').value = text;
+                showToast('クリップボードから貼り付けました', 'success');
+            } catch (error) {
+                showToast('クリップボードへのアクセスが拒否されました', 'error');
+            }
+        }
+
+        // Q&Aファイルの追加
+        async function addQAFile() {
+            const jsonInput = document.getElementById('json-input').value.trim();
+            const fileNameInput = document.getElementById('file-name-input').value.trim();
+
+            if (!jsonInput) {
+                showToast('JSONを入力してください', 'warning');
+                return;
+            }
+
+            try {
+                // JSON検証
+                JSON.parse(jsonInput);
+            } catch (error) {
+                showToast('JSONの形式が正しくありません', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/qa/files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonData: jsonInput,
+                        fileName: fileNameInput || undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`${data.fileName} を追加しました（${data.questionCount}問）`, 'success');
+                    closeAddModal();
+                    loadQAFiles();
+                } else {
+                    showToast(data.error || '追加に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('追加エラー:', error);
+                showToast('追加エラーが発生しました', 'error');
+            }
+        }
+
+        // 削除の確認
+        async function confirmDelete() {
+            if (!fileToDelete) return;
+
+            try {
+                const response = await fetch(`/api/qa/files/${encodeURIComponent(fileToDelete)}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`${fileToDelete} を削除しました`, 'success');
+                    closeDeleteModal();
+                    loadQAFiles();
+                } else {
+                    showToast(data.error || '削除に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('削除エラー:', error);
+                showToast('削除エラーが発生しました', 'error');
+            }
+        }
+
+        // 詳細表示
+        async function viewDetail(fileName) {
+            try {
+                const response = await fetch(`/api/qa/files/${encodeURIComponent(fileName)}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    showToast('ファイルの取得に失敗しました', 'error');
+                    return;
+                }
+
+                const data = result.data;
+                const questions = data.questions || {};
+                const questionList = Object.entries(questions).map(([id, q]) => `
+                    <div class="bg-gray-800 rounded-lg p-3 mb-2">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs px-2 py-1 rounded ${q.rank === 'A' ? 'bg-red-600' : q.rank === 'B' ? 'bg-yellow-600' : 'bg-gray-600'}">${q.rank || '?'}</span>
+                            <span class="text-gray-400 text-sm">Q${id}</span>
+                        </div>
+                        <p class="text-sm mb-2">${q.question}</p>
+                        <details class="text-xs text-gray-400">
+                            <summary class="cursor-pointer hover:text-gray-300">解答を表示</summary>
+                            <p class="mt-2 pl-2 border-l-2 border-gray-600">${q.answer}</p>
+                        </details>
+                    </div>
+                `).join('');
+
+                document.getElementById('detail-title').innerHTML = `
+                    <span>📄</span>
+                    <span>${fileName}</span>
+                `;
+
+                document.getElementById('detail-content').innerHTML = `
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-indigo-400">${data.subject}</div>
+                            <div class="text-xs text-gray-500">科目</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-green-400">${Object.keys(questions).length}</div>
+                            <div class="text-xs text-gray-500">問題数</div>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-purple-400">${data.version || '1.0'}</div>
+                            <div class="text-xs text-gray-500">バージョン</div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="font-bold mb-2">サブカテゴリー</h3>
+                        <p class="text-gray-400">${Object.entries(data.subcategories || {}).map(([k, v]) => `${k ? k + ':' : ''} ${v}`).join(', ') || '未設定'}</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-2">問題一覧</h3>
+                        <div class="max-h-96 overflow-y-auto pr-2">
+                            ${questionList || '<p class="text-gray-500">問題がありません</p>'}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('detail-modal').classList.add('active');
+            } catch (error) {
+                console.error('詳細取得エラー:', error);
+                showToast('詳細の取得に失敗しました', 'error');
+            }
+        }
+
+        // トースト通知
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ★★★ グローバルスコープに関数を公開（onclick属性から呼び出すため） ★★★
+        window.openAddModal = openAddModal;
+        window.closeAddModal = closeAddModal;
+        window.openDeleteModal = openDeleteModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.closeDetailModal = closeDetailModal;
+        window.pasteFromClipboard = pasteFromClipboard;
+        window.addQAFile = addQAFile;
+        window.confirmDelete = confirmDelete;
+        window.viewDetail = viewDetail;
+        window.setFilter = setFilter;
+    </script>
+</body>
+
+</html>

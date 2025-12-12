@@ -1,0 +1,452 @@
+{
+  "version": 1,
+  "relativePath": "刑事訴訟法/1.捜査/1.108-116",
+  "updatedAt": "2025-11-18T14:14:54.724Z",
+  "qa": {
+    "108": {
+      "fillDrill": {
+        "generatedAt": "2025-11-17T08:10:36.082Z",
+        "clearedLevels": [],
+        "templates": {
+          "1": {
+            "level": 1,
+            "focus": "逮捕に伴う捜索・差押えの要件",
+            "sections": [
+              {
+                "title": "逮捕に伴う捜索・差押えの基本要件",
+                "summary": "刑事訴訟法220条は、逮捕の現場において、令状なしに捜索・差押えを可能にする特則です。この規定は、令状主義の厳格な原則に対する例外であるため、その適用要件は厳格に解釈されます。特に、逮捕の類型、捜索・差押えの必要性、そして実施場所の3点が重要な論点となります。",
+                "tips": [
+                  "刑事訴訟法220条は、逮捕に伴う緊急性を考慮した規定であり、通常逮捕、現行犯逮捕、緊急逮捕のいずれの逮捕類型にも適用され得ることを理解しましょう。",
+                  "「必要があるとき」とは、逮捕の状況において、証拠隠滅や逃亡の防止などの目的のために直ちに捜索・差押えを行う必要性を指します。",
+                  "「逮捕の現場」の範囲については、判例によって限定的な解釈が示されているため、その意味を正確に把握しておくことが重要です。"
+                ],
+                "importance": "★★★"
+              }
+            ],
+            "blanks": [
+              {
+                "id": "B1",
+                "prompt": "通常逮捕の根拠となる条文番号は？",
+                "answer": "199条",
+                "placeholder": "条文番号"
+              },
+              {
+                "id": "B2",
+                "prompt": "〇〇により被疑者を逮捕する場合の「〇〇」に当てはまる語句は？",
+                "answer": "規定",
+                "placeholder": "名詞"
+              },
+              {
+                "id": "B3",
+                "prompt": "逮捕される人の一般的な呼称は？",
+                "answer": "被疑者",
+                "placeholder": "名詞"
+              },
+              {
+                "id": "B4",
+                "prompt": "被疑者を〇〇場合、〇〇に当てはまる動詞は？",
+                "answer": "逮捕する",
+                "placeholder": "動詞"
+              },
+              {
+                "id": "B5",
+                "prompt": "犯罪行為を現に行った者を指す語句は？",
+                "answer": "現行犯人",
+                "placeholder": "名詞"
+              },
+              {
+                "id": "B6",
+                "prompt": "現行犯人を〇〇する場合、〇〇に当てはまる動詞は？",
+                "answer": "逮捕する",
+                "placeholder": "動詞"
+              },
+              {
+                "id": "B7",
+                "prompt": "緊急逮捕の根拠となる条文番号は？",
+                "answer": "210条",
+                "placeholder": "条文番号"
+              },
+              {
+                "id": "B8",
+                "prompt": "〇〇により被疑者を逮捕する場合の「〇〇」に当てはまる語句は？",
+                "answer": "規定",
+                "placeholder": "名詞"
+              },
+              {
+                "id": "B9",
+                "prompt": "逮捕される人の一般的な呼称は？",
+                "answer": "被疑者",
+                "placeholder": "名詞"
+              },
+              {
+                "id": "B10",
+                "prompt": "被疑者を〇〇する場合、〇〇に当てはまる動詞は？",
+                "answer": "逮捕する",
+                "placeholder": "動詞"
+              },
+              {
+                "id": "B11",
+                "prompt": "捜索・差押えを行ううえで求められる状況を指す名詞は？",
+                "answer": "必要",
+                "placeholder": "名詞"
+              },
+              {
+                "id": "B12",
+                "prompt": "捜索・差押えが行われる場所を指す語句は？",
+                "answer": "逮捕の現場",
+                "placeholder": "場所"
+              }
+            ],
+            "evaluationRubric": {
+              "overall": "逮捕に伴う捜索・差押えの要件について、3つの主要な観点（逮捕の類型、必要性、場所）を正確に理解し、関連する条文やキーワードを適切に記述できているかを確認します。特に、令状主義の例外としての本条の意義を理解しているかが重要です。",
+              "perBlank": "各空欄において、問われている条文番号、名詞、動詞、場所を示す語句が正確に記述されているかを評価します。特に、条文番号の正確性、および「必要があるとき」や「逮捕の現場」といった概念の核心を捉えたキーワードを選択できているかを重視します。"
+            },
+            "inlineBody": [
+              {
+                "type": "text",
+                "text": "逮捕に伴う捜索・差押え（刑事訴訟法220条）の要件は、以下の3点です。"
+              },
+              {
+                "type": "text",
+                "text": "まず、逮捕の類型として、以下のいずれかに該当することです。"
+              },
+              {
+                "type": "text",
+                "text": "1. 刑事訴訟法"
+              },
+              {
+                "type": "blank",
+                "id": "B1",
+                "label": "(1)",
+                "placeholder": "条文番号",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "の"
+              },
+              {
+                "type": "blank",
+                "id": "B2",
+                "label": "(2)",
+                "placeholder": "名詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "により"
+              },
+              {
+                "type": "blank",
+                "id": "B3",
+                "label": "(3)",
+                "placeholder": "名詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "を"
+              },
+              {
+                "type": "blank",
+                "id": "B4",
+                "label": "(4)",
+                "placeholder": "動詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "場合"
+              },
+              {
+                "type": "text",
+                "text": "2. "
+              },
+              {
+                "type": "blank",
+                "id": "B5",
+                "label": "(5)",
+                "placeholder": "名詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "を"
+              },
+              {
+                "type": "blank",
+                "id": "B6",
+                "label": "(6)",
+                "placeholder": "動詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "場合"
+              },
+              {
+                "type": "text",
+                "text": "3. 又は、刑事訴訟法"
+              },
+              {
+                "type": "blank",
+                "id": "B7",
+                "label": "(7)",
+                "placeholder": "条文番号",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "の"
+              },
+              {
+                "type": "blank",
+                "id": "B8",
+                "label": "(8)",
+                "placeholder": "名詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "により"
+              },
+              {
+                "type": "blank",
+                "id": "B9",
+                "label": "(9)",
+                "placeholder": "名詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "を"
+              },
+              {
+                "type": "blank",
+                "id": "B10",
+                "label": "(10)",
+                "placeholder": "動詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "場合。"
+              },
+              {
+                "type": "text",
+                "text": "次に、捜索・差押えを行う"
+              },
+              {
+                "type": "blank",
+                "id": "B11",
+                "label": "(11)",
+                "placeholder": "名詞",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "があることです。"
+              },
+              {
+                "type": "text",
+                "text": "最後に、捜索・差押えが"
+              },
+              {
+                "type": "blank",
+                "id": "B12",
+                "label": "(12)",
+                "placeholder": "場所",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "で行われることです。"
+              }
+            ],
+            "writingGoals": [
+              "刑事訴訟法220条の条文知識が正確であるかを確認する。",
+              "逮捕に伴う捜索・差押えの3つの主要要件（逮捕の類型、必要性、場所）を漏れなく記述する。",
+              "各要件に関連するキーワードを適切に選択し、説明できているかを確認する。"
+            ],
+            "qaId": 108,
+            "moduleId": "刑事訴訟法/1.捜査/1.108-116",
+            "moduleTitle": "逮捕に伴う捜索・差押え",
+            "relativePath": "刑事訴訟法/1.捜査/1.108-116",
+            "question": "逮捕に伴う捜索・差押え（【刑事訴訟法220条】）の要件について説明しなさい。",
+            "canonicalAnswer": "① 「【刑事訴訟法199条】の規定により被疑者を逮捕する場合」。「現行犯人を逮捕する場合」又は「【刑事訴訟法210条】の規定により被疑者を逮捕する場合」\n② 「必要があるとき」\n③ 「逮捕の現場」",
+            "canonicalBlanks": [
+              {
+                "id": "B1",
+                "answer": "【刑事訴訟法199条】",
+                "raw": "{{【刑事訴訟法199条】}}"
+              },
+              {
+                "id": "B2",
+                "answer": "規定",
+                "raw": "{{規定}}"
+              },
+              {
+                "id": "B3",
+                "answer": "被疑者",
+                "raw": "{{被疑者}}"
+              },
+              {
+                "id": "B4",
+                "answer": "逮捕する場合",
+                "raw": "{{逮捕する場合}}"
+              },
+              {
+                "id": "B5",
+                "answer": "現行犯人",
+                "raw": "{{現行犯人}}"
+              },
+              {
+                "id": "B6",
+                "answer": "逮捕する場合",
+                "raw": "{{逮捕する場合}}"
+              },
+              {
+                "id": "B7",
+                "answer": "【刑事訴訟法210条】",
+                "raw": "{{【刑事訴訟法210条】}}"
+              },
+              {
+                "id": "B8",
+                "answer": "規定",
+                "raw": "{{規定}}"
+              },
+              {
+                "id": "B9",
+                "answer": "被疑者",
+                "raw": "{{被疑者}}"
+              },
+              {
+                "id": "B10",
+                "answer": "逮捕する場合",
+                "raw": "{{逮捕する場合}}"
+              },
+              {
+                "id": "B11",
+                "answer": "必要があるとき",
+                "raw": "{{必要があるとき}}"
+              },
+              {
+                "id": "B12",
+                "answer": "逮捕の現場",
+                "raw": "{{逮捕の現場}}"
+              }
+            ],
+            "generatedAt": "2025-11-17T08:35:34.442Z"
+          }
+        },
+        "attempts": {
+          "1": {
+            "timestamp": "2025-11-17T08:38:06.817Z",
+            "answers": {
+              "B1": "220条",
+              "B2": "逮捕",
+              "B3": "被疑者を",
+              "B4": "逮捕する",
+              "B5": "逮捕",
+              "B6": "行おうとする",
+              "B7": "199",
+              "B8": "逮捕",
+              "B9": "",
+              "B10": "",
+              "B11": "行う必要性",
+              "B12": "逮捕の現場"
+            },
+            "evaluation": {
+              "overall": {
+                "passed": false,
+                "score": 0,
+                "summary": "一部の空欄でキーワードが不足しています。",
+                "nextStep": "不足している語句を復習し、再挑戦してください。"
+              },
+              "blanks": [
+                {
+                  "id": "B1",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B2",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B3",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B4",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B5",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B6",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B7",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B8",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B9",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B10",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B11",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B12",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                }
+              ]
+            },
+            "overallResult": null
+          }
+        }
+      },
+      "lastUpdated": "2025-11-17T08:38:06.825Z"
+    },
+    "112": {
+      "check": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+      "lastUpdated": "2025-11-18T14:14:54.722Z"
+    }
+  }
+}

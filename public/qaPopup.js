@@ -143,19 +143,13 @@ async function recreateQAPopup({ popupId, qaIndex, qNumber, quizIndex, subIndex 
  * @returns {string} ポップアップHTML
  */
 function createQAPopupHTML(popupId, qNumber, qaQuestion, qaAnswer, statusButtons, rankBadge = '') {
-    // 条文パネルの表示状態に応じて位置を決定
+    // Q&Aは常に右側に表示、条文パネルは左側
     let positionStyle = '';
     let maxHeightStyle = '';
     
-    if (isArticlePanelVisible()) {
-        // 両方表示：Q&Aは51vhから下に配置
-        positionStyle = `top: 51vh; left: 1rem; right: auto; transform: none; width: ${ARTICLE_PANEL_WIDTH};`;
-        maxHeightStyle = `max-height: calc(100vh - 51vh - 0rem);`;
-    } else {
-        // Q&Aのみ表示：上部に配置、制限なし
-        positionStyle = `top: 1rem; left: 1rem; right: auto; transform: none; width: ${ARTICLE_PANEL_WIDTH};`;
-        maxHeightStyle = `max-height: calc(100vh - 2rem);`;
-    }
+    // Q&Aは右側に固定
+    positionStyle = `top: 1rem; right: 1rem; left: auto; transform: none; width: ${ARTICLE_PANEL_WIDTH};`;
+    maxHeightStyle = `max-height: calc(100vh - 2rem);`;
     
     return `
         <div id="${popupId}" class="qa-ref-popup fixed bg-white border border-yellow-400 rounded-lg shadow-lg p-4" style="${positionStyle} ${maxHeightStyle} overflow-y: auto; z-index: 1100001;">
@@ -198,30 +192,13 @@ function createQAPopupHTML(popupId, qNumber, qaQuestion, qaAnswer, statusButtons
 function updateQAPopupPosition(popup) {
     if (!popup) return;
     
-    // 条文パネルの表示状態に応じて位置を調整
-    if (isArticlePanelVisible()) {
-        // 両方表示：Q&Aは51vhから下に配置
-        popup.style.top = '51vh';
-        popup.style.left = '1rem';
-        popup.style.right = 'auto';
-        popup.style.transform = 'none';
-        popup.style.width = ARTICLE_PANEL_WIDTH;
-        
-        const availableHeight = window.innerHeight * 0.49 - 0; // 49vh - 0px余裕
-        popup.style.maxHeight = `${availableHeight}px`;
-        
-        // 条文パネルも50vh制限に戻す
-        updateArticlePanelLayout();
-    } else {
-        // Q&Aのみ表示：上部に配置、制限なし
-        popup.style.top = '1rem';
-        popup.style.left = '1rem';
-        popup.style.right = 'auto';
-        popup.style.transform = 'none';
-        popup.style.width = ARTICLE_PANEL_WIDTH;
-        
-        popup.style.maxHeight = 'calc(100vh - 2rem)';
-    }
+    // Q&Aは常に右側に表示
+    popup.style.top = '1rem';
+    popup.style.right = '1rem';
+    popup.style.left = 'auto';
+    popup.style.transform = 'none';
+    popup.style.width = ARTICLE_PANEL_WIDTH;
+    popup.style.maxHeight = 'calc(100vh - 2rem)';
 }
 
 /**

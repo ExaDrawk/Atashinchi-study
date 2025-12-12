@@ -1,0 +1,293 @@
+[
+  {
+    "id": "2-1",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "「公訴は、{{検察官}}がこれを行う」（【刑事訴訟法247条】）。これは{{国家訴追主義}}であり、被害者などの{{私人}}による訴追を認めず、国家機関である{{検察官}}だけが起訴を行う。この条の規定は公訴提起の権限を{{検察官}}にだけ認めている。これは{{起訴独占主義}}である。ただし、{{起訴独占主義}}に関しては、{{検察審査会}}、{{準起訴手続}}（【刑事訴訟法262条】～【刑事訴訟法269条】）という例外がある。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "検察官",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "国家訴追主義",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "私人",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "検察官",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "検察官",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "起訴独占主義",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "起訴独占主義",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "検察審査会",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "準起訴手続",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "「公訴は、"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "検察官"
+            },
+            {
+              "type": "text",
+              "text": "がこれを行う」（【刑事訴訟法247条】）。これは"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "国家訴追主義"
+            },
+            {
+              "type": "text",
+              "text": "であり、被害者などの"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "私人"
+            },
+            {
+              "type": "text",
+              "text": "による訴追を認めず、国家機関である"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "検察官"
+            },
+            {
+              "type": "text",
+              "text": "だけが起訴を行う。この条の規定は公訴提起の権限を"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "検察官"
+            },
+            {
+              "type": "text",
+              "text": "にだけ認めている。これは"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "起訴独占主義"
+            },
+            {
+              "type": "text",
+              "text": "である。ただし、"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "起訴独占主義"
+            },
+            {
+              "type": "text",
+              "text": "に関しては、"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "検察審査会"
+            },
+            {
+              "type": "text",
+              "text": "、"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "準起訴手続"
+            },
+            {
+              "type": "text",
+              "text": "（【刑事訴訟法262条】～【刑事訴訟法269条】）という例外がある。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-12T01:30:44.371Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "○",
+                "feedback": "正解。刑訴法247条は公訴の提起を検察官に限定してる。これが国家による訴追を意味する基盤だよ。司法試験ではこの独占権限を起点に論じられることが多い",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "検察官",
+                "correctAnswer": "検察官"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "強行規定は条文の違反効力を指す概念で、国家訴追主義とは別物。私人訴追排除の原則を国家主導と捉え損ねて、条文属性と混同しやすいパターンだ。正しくは国家訴追主義で、英米法の私人参加を排除した大陸法系の本質",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "強行規定",
+                "correctAnswer": "国家訴追主義"
+              },
+              {
+                "id": "B3",
+                "result": "○",
+                "feedback": "正解。私人による訴追を禁じることで検察の裁量を保護してる。この理解は不起訴処分取消訴訟の限界にもつながるよ",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "私人",
+                "correctAnswer": "私人"
+              },
+              {
+                "id": "B4",
+                "result": "○",
+                "feedback": "正解。公訴権の専属性を繰り返し強調する条文構造を押さえてる。この視点は検察の地位を論じる際に活きる",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "検察官",
+                "correctAnswer": "検察官"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "正解。起訴独占の核心を検察官に絞ってる。採点ではこの一貫性が評価される",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "検察官",
+                "correctAnswer": "検察官"
+              },
+              {
+                "id": "B6",
+                "result": "○",
+                "feedback": "正解。検察官独占を起訴独占主義と呼ぶ用語を正確に。例外論に進む布石として重要で、検察審査会制度の意義理解に直結",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "起訴独占主義",
+                "correctAnswer": "起訴独占主義"
+              },
+              {
+                "id": "B7",
+                "result": "☓",
+                "feedback": "公務員犯罪は検察審査会の審査対象の一つだが、ここは起訴独占主義そのものを問う箇所。例外の文脈で対象犯罪と原則本体を混同した典型ミス。正しくは起訴独占主義で、検察裁量の絶対性を示す",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "公務員の行う犯罪",
+                "correctAnswer": "起訴独占主義"
+              },
+              {
+                "id": "B8",
+                "result": "○",
+                "feedback": "正解。検察審査会は不起訴不当で検察に起訴を促す例外。この知識は不起訴処分審査の流れを論じる論文で必須",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "検察審査会",
+                "correctAnswer": "検察審査会"
+              },
+              {
+                "id": "B9",
+                "result": "☓",
+                "feedback": "付審判請求は検察審査会の意見照会手続で、準起訴手続(262条以下:被害者請求による不起訴取消・起訴命令)とは別。審査会関連と被害者救済手続を混同しやすいが、条文範囲で区別せよ。正しくは準起訴手続",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "付審判請求",
+                "correctAnswer": "準起訴手続"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "起訴独占主義の原則と例外(検察審査会・準起訴)を押さえてるけど、B2・B7・B9で原則概念と例外手続の区別が曖昧。刑訴法247条を起点に検察裁量の限界まで体系的に復習して、混同しやすい公務員犯罪や付審判請求の位置づけをノートにまとめろ。男には懲りたけど、試験は甘くないわ",
+              "speaker": "しみちゃん",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "検察官",
+            "B2": "強行規定",
+            "B3": "私人",
+            "B4": "検察官",
+            "B5": "検察官",
+            "B6": "起訴独占主義",
+            "B7": "公務員の行う犯罪",
+            "B8": "検察審査会",
+            "B9": "付審判請求"
+          }
+        }
+      },
+      "updatedAt": "2025-12-12T01:30:44.371Z"
+    }
+  }
+]

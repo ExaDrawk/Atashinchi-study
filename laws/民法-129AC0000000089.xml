@@ -6537,7 +6537,7 @@
                       <Item Num="4">
                         <ItemTitle>四</ItemTitle>
                         <ItemSentence>
-                          <Sentence Num="1" WritingMode="vertical">第一号の申立てに基づく競売の手続を取り消す旨の決定（民事執行法第百八十八条において準用する同法第六十三条第三項若しくは第六十八条の三第三項の規定又は同法第百八十三条第一項第五号の謄本が提出された場合における同条第二項の規定による決定を除く。）が確定したとき。</Sentence>
+                          <Sentence Num="1" WritingMode="vertical">第一号の申立てに基づく競売の手続を取り消す旨の決定（民事執行法第百八十八条において準用する同法第六十三条第三項若しくは第六十八条の三第三項の規定又は同法第百八十三条第一項第二号ニに掲げる文書が提出された場合における同条第二項の規定による決定を除く。）が確定したとき。</Sentence>
                         </ItemSentence>
                       </Item>
                     </Paragraph>
@@ -18665,25 +18665,18 @@
                             <Sentence Num="1" WritingMode="vertical">遺言者が遺言の趣旨を公証人に口授すること。</Sentence>
                           </ItemSentence>
                         </Item>
-                        <Item Num="3">
-                          <ItemTitle>三</ItemTitle>
-                          <ItemSentence>
-                            <Sentence Num="1" WritingMode="vertical">公証人が、遺言者の口述を筆記し、これを遺言者及び証人に読み聞かせ、又は閲覧させること。</Sentence>
-                          </ItemSentence>
-                        </Item>
-                        <Item Num="4">
-                          <ItemTitle>四</ItemTitle>
-                          <ItemSentence>
-                            <Sentence Function="main" Num="1" WritingMode="vertical">遺言者及び証人が、筆記の正確なことを承認した後、各自これに署名し、印を押すこと。</Sentence>
-                            <Sentence Function="proviso" Num="2" WritingMode="vertical">ただし、遺言者が署名することができない場合は、公証人がその事由を付記して、署名に代えることができる。</Sentence>
-                          </ItemSentence>
-                        </Item>
-                        <Item Num="5">
-                          <ItemTitle>五</ItemTitle>
-                          <ItemSentence>
-                            <Sentence Num="1" WritingMode="vertical">公証人が、その証書は前各号に掲げる方式に従って作ったものである旨を付記して、これに署名し、印を押すこと。</Sentence>
-                          </ItemSentence>
-                        </Item>
+                      </Paragraph>
+                      <Paragraph Num="2">
+                        <ParagraphNum>２</ParagraphNum>
+                        <ParagraphSentence>
+                          <Sentence Num="1" WritingMode="vertical">前項の公正証書は、公証人法（明治四十一年法律第五十三号）の定めるところにより作成するものとする。</Sentence>
+                        </ParagraphSentence>
+                      </Paragraph>
+                      <Paragraph Num="3">
+                        <ParagraphNum>３</ParagraphNum>
+                        <ParagraphSentence>
+                          <Sentence Num="1" WritingMode="vertical">第一項第一号の証人については、公証人法第三十条に規定する証人とみなして、同法の規定（同法第三十五条第三項の規定を除く。）を適用する。</Sentence>
+                        </ParagraphSentence>
                       </Paragraph>
                     </Article>
                     <Article Num="969_2">
@@ -18692,20 +18685,13 @@
                       <Paragraph Num="1">
                         <ParagraphNum/>
                         <ParagraphSentence>
-                          <Sentence Num="1" WritingMode="vertical">口がきけない者が公正証書によって遺言をする場合には、遺言者は、公証人及び証人の前で、遺言の趣旨を通訳人の通訳により申述し、又は自書して、前条第二号の口授に代えなければならない。</Sentence>
-                          <Sentence Num="2" WritingMode="vertical">この場合における同条第三号の規定の適用については、同号中「口述」とあるのは、「通訳人の通訳による申述又は自書」とする。</Sentence>
+                          <Sentence Num="1" WritingMode="vertical">口がきけない者が公正証書によって遺言をする場合には、遺言者は、公証人及び証人の前で、遺言の趣旨を通訳人の通訳により申述し、又は自書して、前条第一項第二号の口授に代えなければならない。</Sentence>
                         </ParagraphSentence>
                       </Paragraph>
                       <Paragraph Num="2">
                         <ParagraphNum>２</ParagraphNum>
                         <ParagraphSentence>
-                          <Sentence Num="1" WritingMode="vertical">前条の遺言者又は証人が耳が聞こえない者である場合には、公証人は、同条第三号に規定する筆記した内容を通訳人の通訳により遺言者又は証人に伝えて、同号の読み聞かせに代えることができる。</Sentence>
-                        </ParagraphSentence>
-                      </Paragraph>
-                      <Paragraph Num="3">
-                        <ParagraphNum>３</ParagraphNum>
-                        <ParagraphSentence>
-                          <Sentence Num="1" WritingMode="vertical">公証人は、前二項に定める方式に従って公正証書を作ったときは、その旨をその証書に付記しなければならない。</Sentence>
+                          <Sentence Num="1" WritingMode="vertical">公証人は、前項に定める方式に従って公正証書を作ったときは、その旨をその証書に記載し、又は記録しなければならない。</Sentence>
                         </ParagraphSentence>
                       </Paragraph>
                     </Article>
@@ -18969,7 +18955,7 @@
                         <ParagraphNum/>
                         <ParagraphSentence>
                           <Sentence Num="1" WritingMode="vertical">日本の領事の駐在する地に在る日本人が公正証書又は秘密証書によって遺言をしようとするときは、公証人の職務は、領事が行う。</Sentence>
-                          <Sentence Num="2" WritingMode="vertical">この場合においては、第九百六十九条第四号又は第九百七十条第一項第四号の規定にかかわらず、遺言者及び証人は、第九百六十九条第四号又は第九百七十条第一項第四号の印を押すことを要しない。</Sentence>
+                          <Sentence Num="2" WritingMode="vertical">この場合においては、第九百七十条第一項第四号の規定にかかわらず、遺言者及び証人は、同号の印を押すことを要しない。</Sentence>
                         </ParagraphSentence>
                       </Paragraph>
                     </Article>

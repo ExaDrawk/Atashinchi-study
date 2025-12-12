@@ -1,0 +1,730 @@
+[
+  {
+    "id": "1-22",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "故意責任の本質は、{{犯罪事実}}の{{認識（認容）}}によって、{{規範}}に直面し、{{反対動機}}が形成できるのに、あえて犯罪に及んだことに対する{{道義的非難}}である。そして、犯罪事実は刑法上{{構成要件}}として類型化されているから、{{構成要件}}に{{実質的な重なり合い}}が認められる場合には、その限度で{{反対動機}}を形成することができる。したがって、{{構成要件}}の範囲内で{{主観}}と{{客観}}が一致することを要求し、{{構成要件}}の範囲内での一致がない場合、{{故意}}は否定されるのが原則であるが、{{構成要件}}の{{重なり合い}}が認められる場合には、その範囲で{{故意}}を認めるべきである（{{法定的符合説}}、最決昭54.3.27、最決昭61.6.9）。なお、かかる{{重なり合い}}は、①{{行為態様}}と②{{保護法益}}の共通性で判断すべきである。cf. {{法定刑}}が同一の場合、客観的に生じた罪が成立すると考えるのが判例（最決昭54.3.27）。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "犯罪事実",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "認識（認容）",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "規範",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "反対動機",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "道義的非難",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "構成要件",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "構成要件",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "実質的な重なり合い",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "反対動機",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "構成要件",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "主観",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "客観",
+              "prompt": "空欄B12",
+              "placeholder": ""
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "構成要件",
+              "prompt": "空欄B13",
+              "placeholder": ""
+            },
+            {
+              "id": "B14",
+              "label": "(14)",
+              "answer": "故意",
+              "prompt": "空欄B14",
+              "placeholder": ""
+            },
+            {
+              "id": "B15",
+              "label": "(15)",
+              "answer": "構成要件",
+              "prompt": "空欄B15",
+              "placeholder": ""
+            },
+            {
+              "id": "B16",
+              "label": "(16)",
+              "answer": "重なり合い",
+              "prompt": "空欄B16",
+              "placeholder": ""
+            },
+            {
+              "id": "B17",
+              "label": "(17)",
+              "answer": "故意",
+              "prompt": "空欄B17",
+              "placeholder": ""
+            },
+            {
+              "id": "B18",
+              "label": "(18)",
+              "answer": "法定的符合説",
+              "prompt": "空欄B18",
+              "placeholder": ""
+            },
+            {
+              "id": "B19",
+              "label": "(19)",
+              "answer": "重なり合い",
+              "prompt": "空欄B19",
+              "placeholder": ""
+            },
+            {
+              "id": "B20",
+              "label": "(20)",
+              "answer": "行為態様",
+              "prompt": "空欄B20",
+              "placeholder": ""
+            },
+            {
+              "id": "B21",
+              "label": "(21)",
+              "answer": "保護法益",
+              "prompt": "空欄B21",
+              "placeholder": ""
+            },
+            {
+              "id": "B22",
+              "label": "(22)",
+              "answer": "法定刑",
+              "prompt": "空欄B22",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "故意責任の本質は、"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "犯罪事実"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "認識（認容）"
+            },
+            {
+              "type": "text",
+              "text": "によって、"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "規範"
+            },
+            {
+              "type": "text",
+              "text": "に直面し、"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "反対動機"
+            },
+            {
+              "type": "text",
+              "text": "が形成できるのに、あえて犯罪に及んだことに対する"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "道義的非難"
+            },
+            {
+              "type": "text",
+              "text": "である。そして、犯罪事実は刑法上"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "構成要件"
+            },
+            {
+              "type": "text",
+              "text": "として類型化されているから、"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "構成要件"
+            },
+            {
+              "type": "text",
+              "text": "に"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "実質的な重なり合い"
+            },
+            {
+              "type": "text",
+              "text": "が認められる場合には、その限度で"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "反対動機"
+            },
+            {
+              "type": "text",
+              "text": "を形成することができる。したがって、"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "構成要件"
+            },
+            {
+              "type": "text",
+              "text": "の範囲内で"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "主観"
+            },
+            {
+              "type": "text",
+              "text": "と"
+            },
+            {
+              "type": "blank",
+              "id": "B12",
+              "label": "(12)",
+              "placeholder": "",
+              "answer": "客観"
+            },
+            {
+              "type": "text",
+              "text": "が一致することを要求し、"
+            },
+            {
+              "type": "blank",
+              "id": "B13",
+              "label": "(13)",
+              "placeholder": "",
+              "answer": "構成要件"
+            },
+            {
+              "type": "text",
+              "text": "の範囲内での一致がない場合、"
+            },
+            {
+              "type": "blank",
+              "id": "B14",
+              "label": "(14)",
+              "placeholder": "",
+              "answer": "故意"
+            },
+            {
+              "type": "text",
+              "text": "は否定されるのが原則であるが、"
+            },
+            {
+              "type": "blank",
+              "id": "B15",
+              "label": "(15)",
+              "placeholder": "",
+              "answer": "構成要件"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B16",
+              "label": "(16)",
+              "placeholder": "",
+              "answer": "重なり合い"
+            },
+            {
+              "type": "text",
+              "text": "が認められる場合には、その範囲で"
+            },
+            {
+              "type": "blank",
+              "id": "B17",
+              "label": "(17)",
+              "placeholder": "",
+              "answer": "故意"
+            },
+            {
+              "type": "text",
+              "text": "を認めるべきである（"
+            },
+            {
+              "type": "blank",
+              "id": "B18",
+              "label": "(18)",
+              "placeholder": "",
+              "answer": "法定的符合説"
+            },
+            {
+              "type": "text",
+              "text": "、最決昭54.3.27、最決昭61.6.9）。なお、かかる"
+            },
+            {
+              "type": "blank",
+              "id": "B19",
+              "label": "(19)",
+              "placeholder": "",
+              "answer": "重なり合い"
+            },
+            {
+              "type": "text",
+              "text": "は、①"
+            },
+            {
+              "type": "blank",
+              "id": "B20",
+              "label": "(20)",
+              "placeholder": "",
+              "answer": "行為態様"
+            },
+            {
+              "type": "text",
+              "text": "と②"
+            },
+            {
+              "type": "blank",
+              "id": "B21",
+              "label": "(21)",
+              "placeholder": "",
+              "answer": "保護法益"
+            },
+            {
+              "type": "text",
+              "text": "の共通性で判断すべきである。cf. "
+            },
+            {
+              "type": "blank",
+              "id": "B22",
+              "label": "(22)",
+              "placeholder": "",
+              "answer": "法定刑"
+            },
+            {
+              "type": "text",
+              "text": "が同一の場合、客観的に生じた罪が成立すると考えるのが判例（最決昭54.3.27）。"
+            }
+          ]
+        },
+        "3": {
+          "text": "{{故意責任}}の本質は、{{犯罪事実の認識（認容）}}によって{{規範に直面し、反対動機が形成できるのに、あえて犯罪に及んだことに対する道義的非難}}である。犯罪事実は刑法上{{構成要件}}として類型化されているから、{{構成要件に実質的な重なり合い}}が認められる場合にはその限度で{{反対動機を形成}}することができる。したがって、{{構成要件の範囲内}}で主観と客観が一致することを要求し、一致がない場合{{故意は否定}}されるのが原則であるが、重なり合いが認められる場合にはその範囲で{{故意を認めるべき}}である（{{法定的符合説}}、最決昭54.3.27、最決昭61.6.9）。かかる重なり合いは{{①行為態様}}と{{②保護法益}}の共通性で判断すべきである。cf.{{法定刑が同一}}の場合、客観的に生じた罪が成立すると考えるのが判例（最決昭54.3.27）。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "故意責任"
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "犯罪事実の認識（認容）"
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "規範に直面し、反対動機が形成できるのに、あえて犯罪に及んだことに対する道義的非難"
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "構成要件"
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "構成要件に実質的な重なり合い"
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "反対動機を形成"
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "構成要件の範囲内"
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "故意は否定"
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "故意を認めるべき"
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "法定的符合説"
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "①行為態様"
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "②保護法益"
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "法定刑が同一"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-08T12:11:45.044Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "☓",
+                "feedback": "ううん、行為者じゃなくて「犯罪事実」だよ。犯罪事実は行為者が認識すべき客観的な事実の全体を指すの。行為者は単に主語であって、故意の本質である認識の対象じゃないんだから、混同しちゃダメだよ。法定的符合説ではこの犯罪事実の認識が鍵になるの",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "行為者",
+                "correctAnswer": "犯罪事実"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "責任能力は責任要素で、故意の認識（認容）とは別物だよ。故意は行為者が犯罪事実を認識してあえて実行したことに対する非難だから、責任能力は道義的非難の前提だけどここでは認識の話なの。責任阻却と故意を混ぜやすいけど、区別してね",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "責任能力",
+                "correctAnswer": "認識（認容）"
+              },
+              {
+                "id": "B3",
+                "result": "○",
+                "feedback": "正解だよ！規範は道義的非難の基盤で、行為者が犯罪事実を認識した時に直面する法秩序の意識を意味するの。この理解は違法性の認識ともつながって、責任論全体に活きるよ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "規範",
+                "correctAnswer": "規範"
+              },
+              {
+                "id": "B4",
+                "result": "△",
+                "feedback": "惜しいね、「反対意思」じゃなくて「反対動機」よ。意思は抽象的だけど、動機は規範認識から生じる具体的な心理的抵抗を指すの。法定的符合説で重なり合いが認められるとこの動機が形成できるって趣旨だから、細かいニュアンスを押さえて",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": "反対意思",
+                "correctAnswer": "反対動機"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "正解！道義的非難は故意責任の核心で、認識しつつあえて犯したことへの倫理的糾弾よ。この視点は過失責任との対比で重要で、論文では責任主義の根拠説明に使えるよ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "道義的非難",
+                "correctAnswer": "道義的非難"
+              },
+              {
+                "id": "B6",
+                "result": "○",
+                "feedback": "正解だよ。構成要件は犯罪事実を類型化したものだから、認識の対象としてぴったり。この認識は客観的違法性判断にもつながるの",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "構成要件",
+                "correctAnswer": "構成要件"
+              },
+              {
+                "id": "B7",
+                "result": "○",
+                "feedback": "うん、正解！構成要件の重なり合いが故意の成否を決める基点よ。法定的符合説の運用でこの類型性が活きるわ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "構成要件",
+                "correctAnswer": "構成要件"
+              },
+              {
+                "id": "B8",
+                "result": "☓",
+                "feedback": "「反する」じゃなくて「実質的な重なり合い」だよ。構成要件同士が形式的にじゃなく実質的に共通する場合を指すの。「反する」はむしろ違反の意味で逆だから、判例の趣旨（最決昭54.3.27）を勘違いしやすいところね",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "反する",
+                "correctAnswer": "実質的な重なり合い"
+              },
+              {
+                "id": "B9",
+                "result": "△",
+                "feedback": "また「反対意思」かな？ 正しくは「反対動機」で、重なり合いにより形成可能な心理的抵抗のこと。意思だけだと不十分で、動機の形成可能性が法定的符合説のポイントよ。似た言葉で惑わされやすいわ",
+                "speaker": "ゆかりん",
+                "expression": "sigh",
+                "userAnswer": "反対意思",
+                "correctAnswer": "反対動機"
+              },
+              {
+                "id": "B10",
+                "result": "○",
+                "feedback": "正解！構成要件の範囲内で主観客観一致を要求するのが原則。この原則理解は未必の故意の立証にも役立つよ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "構成要件",
+                "correctAnswer": "構成要件"
+              },
+              {
+                "id": "B11",
+                "result": "○",
+                "feedback": "うん、主観の認識部分よ。正解！これが客観的事実と一致しないと故意否定だから、論文の故意認定で必須",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "主観",
+                "correctAnswer": "主観"
+              },
+              {
+                "id": "B12",
+                "result": "○",
+                "feedback": "正解だよ、客観は犯罪事実の現実性。この主観客観一致は故意の基本構造で、過失犯との区別に活きるわ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "客観",
+                "correctAnswer": "客観"
+              },
+              {
+                "id": "B13",
+                "result": "○",
+                "feedback": "構成要件の範囲内一致が原則、正解！例外の重なり合いを理解する基盤になるよ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "構成要件",
+                "correctAnswer": "構成要件"
+              },
+              {
+                "id": "B14",
+                "result": "○",
+                "feedback": "故意の否定原則、正解！これを押さえれば法定的符合説の例外運用が明確になるわ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "故意",
+                "correctAnswer": "故意"
+              },
+              {
+                "id": "B15",
+                "result": "○",
+                "feedback": "正解よ、構成要件の重なり合いが故意を認める根拠。この判例運用は複数構成要件該当の論文で使える",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "構成要件",
+                "correctAnswer": "構成要件"
+              },
+              {
+                "id": "B16",
+                "result": "○",
+                "feedback": "重なり合い、正解！行為態様・保護法益の共通で判断。これが判例基準の核心よ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "重なり合い",
+                "correctAnswer": "重なり合い"
+              },
+              {
+                "id": "B17",
+                "result": "○",
+                "feedback": "故意を認めるべき、正解！このバランスが責任の本質を表すわ",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "故意",
+                "correctAnswer": "故意"
+              },
+              {
+                "id": "B18",
+                "result": "☓",
+                "feedback": "「[object Object]」って何かな？ 正しくは「法定的符合説」で、構成要件の形式一致じゃなく実質重なりを重視する立場よ。最決引用からもわかるように、故意の柔軟認定の理論的根拠だよ。技術ミスかもだけど、用語覚えてね",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": {
+                  "id": "B18",
+                  "text": ""
+                },
+                "correctAnswer": "法定的符合説"
+              },
+              {
+                "id": "B19",
+                "result": "☓",
+                "feedback": "「判断要素」じゃなくて「重なり合い」よ。重なり合い自体が基準で、①行為態様②保護法益で具体化するの。抽象的に捉えちゃうと混同しやすいわ",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "判断要素",
+                "correctAnswer": "重なり合い"
+              },
+              {
+                "id": "B20",
+                "result": "☓",
+                "feedback": "主観じゃなくて「行為態様」だよ。行為態様は客観的行為類型で、重なり合いの判断要素。主観と混同すると故意の客観的限界を見失うから、判例基準をしっかり押さえようね",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "主観",
+                "correctAnswer": "行為態様"
+              },
+              {
+                "id": "B21",
+                "result": "☓",
+                "feedback": "客観じゃなくて「保護法益」よ。保護法益の共通性が重なり合いのもう一つの要素で、刑法の目的同一性を示すの。主客観の言葉と混ぜやすいけど、区別して",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "客観",
+                "correctAnswer": "保護法益"
+              },
+              {
+                "id": "B22",
+                "result": "△",
+                "feedback": "「刑罰」は近いけど「法定刑」よ。同一法定刑なら客観的重なりを推認する判例（最決昭54.3.27）があるの。刑罰は広義だけど、ここは条文上の刑の同一性を指すわ",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "刑罰",
+                "correctAnswer": "法定刑"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "故意責任の本質と法定的符合説のポイントは、構成要件の実質的重なり合いによる反対動機形成可能性よ。主観客観の基本と判例基準（行為態様・保護法益）を押さえれば論文で強いわ。間違ったところは責任要素や主客観の混同が多いから、刑法総論の責任論を体系的に復習してね。ふふ、次はきっと完璧だよ",
+              "speaker": "ゆかりん",
+              "expression": "encouraging",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "行為者",
+            "B2": "責任能力",
+            "B3": "規範",
+            "B4": "反対意思",
+            "B5": "道義的非難",
+            "B6": "構成要件",
+            "B7": "構成要件",
+            "B8": "反する",
+            "B9": "反対意思",
+            "B10": "構成要件",
+            "B11": "主観",
+            "B12": "客観",
+            "B13": "構成要件",
+            "B14": "故意",
+            "B15": "構成要件",
+            "B16": "重なり合い",
+            "B17": "故意",
+            "B18": "",
+            "B19": "判断要素",
+            "B20": "主観",
+            "B21": "客観",
+            "B22": "刑罰"
+          }
+        }
+      },
+      "updatedAt": "2025-12-08T12:15:11.515Z"
+    }
+  }
+]

@@ -1,0 +1,181 @@
+[
+  {
+    "id": "2-5",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "検察官による{{公訴権}}の行使が{{権限の濫用}}といえる場合には、{{裁判所}}は{{形式裁判}}({{公訴棄却}})で訴訟手続を打ち切るべきであるという主張をいう。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "公訴権",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "権限の濫用",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "裁判所",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "形式裁判",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "公訴棄却",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "検察官による"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "公訴権"
+            },
+            {
+              "type": "text",
+              "text": "の行使が"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "権限の濫用"
+            },
+            {
+              "type": "text",
+              "text": "といえる場合には、"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "裁判所"
+            },
+            {
+              "type": "text",
+              "text": "は"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "形式裁判"
+            },
+            {
+              "type": "text",
+              "text": "("
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "公訴棄却"
+            },
+            {
+              "type": "text",
+              "text": ")で訴訟手続を打ち切るべきであるという主張をいう。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-12T05:00:12.230Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "○",
+                "feedback": "正解だよ、みかん。公訴権は検察官の独占的権限だから、ここで検察官の行使が問題になるのは当然の論理展開だ。",
+                "speaker": "しみちゃん",
+                "expression": "impressed",
+                "userAnswer": "公訴権",
+                "correctAnswer": "公訴権"
+              },
+              {
+                "id": "B2",
+                "result": "△",
+                "feedback": "惜しいけど、「権限の濫用」と具体的に書かないと不十分。単に「濫用である」だと行政法の裁量濫用と混同しがちで、刑訴法の公訴権特有の文脈がぼやけるよ。",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "濫用である",
+                "correctAnswer": "権限の濫用"
+              },
+              {
+                "id": "B3",
+                "result": "☓",
+                "feedback": "検察官じゃなくて裁判所だよ。公訴権は検察独占だけど、濫用審査は裁判所の専権事項で、検察自身が判断できない仕組みを忘れがち。",
+                "speaker": "しみちゃん",
+                "expression": "annoyed",
+                "userAnswer": "検察官",
+                "correctAnswer": "裁判所"
+              },
+              {
+                "id": "B4",
+                "result": "☓",
+                "feedback": "形式裁判のところに公訴棄却を入れたのは逆だね。公訴棄却は形式裁判による手続打ち切り手段の一つで、論文では形式裁判→具体例の順で整理するのが採点者の好む視点。",
+                "speaker": "しみちゃん",
+                "expression": "thinking",
+                "userAnswer": "公訴棄却",
+                "correctAnswer": "形式裁判"
+              },
+              {
+                "id": "B5",
+                "result": "☓",
+                "feedback": "公訴棄却の箇所に形式裁判を入れたのも混同。形式裁判は公訴の欠陥審査全般を指し、公訴棄却は権限濫用時の具体的手当だから、区別を明確にしないと失点源。",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "形式裁判",
+                "correctAnswer": "公訴棄却"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "この問題の核心は刑訴法351条の公訴棄却が権限濫用審査の形式裁判として機能する点で、検察独占と裁判所審査のバランスを押さえろ。公訴権と裁量濫用の違いを行政法と比較学習すると混同減るよ。次は類似の公訴維持審査問題を解いて、論点のつなぎ方を固めな。",
+              "speaker": "しみちゃん",
+              "expression": "cool",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "公訴権",
+            "B2": "濫用である",
+            "B3": "検察官",
+            "B4": "公訴棄却",
+            "B5": "形式裁判"
+          }
+        }
+      },
+      "updatedAt": "2025-12-12T05:00:12.230Z"
+    }
+  }
+]

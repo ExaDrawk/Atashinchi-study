@@ -233,7 +233,9 @@ function extractLawName(article) {
     return '不明な法令';
 }
 
-// グローバルに公開
+export { LAW_SETTINGS, getLawSettings, createDecorativeLawDisplay, extractLawName };
+
+// グローバルに公開（従来コードとの互換性のため）
 window.LAW_SETTINGS = LAW_SETTINGS;
 window.getLawSettings = getLawSettings;
 window.createDecorativeLawDisplay = createDecorativeLawDisplay;

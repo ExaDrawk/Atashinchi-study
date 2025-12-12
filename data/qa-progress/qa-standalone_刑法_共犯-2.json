@@ -1,0 +1,349 @@
+[
+  {
+    "id": "共犯-2",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "共同正犯等の{{共犯関係}}においては、共犯者間での{{相互の心理的補強}}（{{犯意の強化・維持}}）が{{犯罪実行}}を促進する重要な要素となるからである。\n特に、当初の暴行を主導して共犯者を{{興奮状態}}に陥らせたような場合、単に「やめろ」と告げて立ち去るだけでは、残された共犯者の{{犯行継続の意思}}（{{心理的因果性}}）を除去したとはいえず、{{結果発生}}への{{因果的寄与}}が残存していると評価される（最決平21.2.24等参照）。したがって、共犯者を{{物理的に制止}}するなど、犯行継続を{{断念させるに足りる措置}}が必要となる。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "共犯関係",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "相互の心理的補強",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "犯意の強化・維持",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "犯罪実行",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "興奮状態",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "犯行継続の意思",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "心理的因果性",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "結果発生",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "因果的寄与",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "物理的に制止",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "断念させるに足りる措置",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "共同正犯等の"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "共犯関係"
+            },
+            {
+              "type": "text",
+              "text": "においては、共犯者間での"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "相互の心理的補強"
+            },
+            {
+              "type": "text",
+              "text": "（"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "犯意の強化・維持"
+            },
+            {
+              "type": "text",
+              "text": "）が"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "犯罪実行"
+            },
+            {
+              "type": "text",
+              "text": "を促進する重要な要素となるからである。\n特に、当初の暴行を主導して共犯者を"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "興奮状態"
+            },
+            {
+              "type": "text",
+              "text": "に陥らせたような場合、単に「やめろ」と告げて立ち去るだけでは、残された共犯者の"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "犯行継続の意思"
+            },
+            {
+              "type": "text",
+              "text": "（"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "心理的因果性"
+            },
+            {
+              "type": "text",
+              "text": "）を除去したとはいえず、"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "結果発生"
+            },
+            {
+              "type": "text",
+              "text": "への"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "因果的寄与"
+            },
+            {
+              "type": "text",
+              "text": "が残存していると評価される（最決平21.2.24等参照）。したがって、共犯者を"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "物理的に制止"
+            },
+            {
+              "type": "text",
+              "text": "するなど、犯行継続を"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "断念させるに足りる措置"
+            },
+            {
+              "type": "text",
+              "text": "が必要となる。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-09T04:51:18.426Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "△",
+                "feedback": "ふふ、密接な関係は共同正犯の成立要件としてよく出てくるけど、ここでは共犯者間の全体的な関係性を指す『共犯関係』がぴったりだよ。密接さはそれの一部で、判例の文脈ではより広い心理的連帯を強調してるの。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "密接な関係",
+                "correctAnswer": "共犯関係"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "共謀は共犯形成の初期段階で意思の連絡を図るものを言うけど、正解の『相互の心理的補強』は実行中に互いの犯意を支え合う継続的な心理的作用を指すのよ。共謀と混同しがちだけど、共同正犯では実行促進のメカニズムが鍵なんだ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "共謀",
+                "correctAnswer": "相互の心理的補強"
+              },
+              {
+                "id": "B3",
+                "result": "☓",
+                "feedback": "意思連絡は共謀時の要件で共犯の出発点だけど、『犯意の強化・維持』は実行過程で興奮を高めたり維持したりする心理的補強のこと。初めの意思疎通と実行中の動機付けを勘違いしやすいポイントね。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "意思連絡",
+                "correctAnswer": "犯意の強化・維持"
+              },
+              {
+                "id": "B4",
+                "result": "☓",
+                "feedback": "犯意は共犯の基本だけど、ここは心理的補強がもたらす結果として『犯罪実行』を促進することを言ってるの。犯意だけだと抽象的で、実行行為へのつながりが抜けちゃうわ。",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": "犯意",
+                "correctAnswer": "犯罪実行"
+              },
+              {
+                "id": "B5",
+                "result": "☓",
+                "feedback": "『犯罪者』じゃ抽象的すぎるよ、正解の『興奮状態』は主導者が共犯者を感情的に高ぶらせることで、離脱が難しくなる具体的な心理状態を指すの。暴行時のアドレナリンみたいなものをイメージしてね。",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "犯罪者",
+                "correctAnswer": "興奮状態"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "因果性は結果への帰属全体だけど、『犯行継続の意思』は残された共犯者の具体的な心理を指し、それが離脱の効果判断の核心。結果論じゃなく心理的中止事由の要件と混同しやすいのよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "因果性",
+                "correctAnswer": "犯行継続の意思"
+              },
+              {
+                "id": "B7",
+                "result": "☓",
+                "feedback": "危険性は行為処断の抽象的判断だけど、『心理的因果性』は共犯者間の特殊な心理連鎖による継続意思の誘発を言うの。共同正犯特有の離脱論で、通常の因果関係と区別して覚えておいて。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "危険性",
+                "correctAnswer": "心理的因果性"
+              },
+              {
+                "id": "B8",
+                "result": "△",
+                "feedback": "『結果』は近いけど、『結果発生』は死亡や傷害の具体的な生起を強調して、離脱後の因果的寄与を評価するの。論文ではこの精密さが採点で差がつくわよ。",
+                "speaker": "ゆかりん",
+                "expression": "impressed",
+                "userAnswer": "結果",
+                "correctAnswer": "結果発生"
+              },
+              {
+                "id": "B9",
+                "result": "△",
+                "feedback": "因果性は広い概念だけど、『因果的寄与』は離脱後も心理的影響で結果に貢献した度合いを具体的に言うの。最決平21.2.24みたいに、制止不足で寄与残存を判断するポイントね。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "因果性",
+                "correctAnswer": "因果的寄与"
+              },
+              {
+                "id": "B10",
+                "result": "△",
+                "feedback": "物理的に隔離は一例だけど、正解の『物理的に制止』は判例で求められる直接的な行動抑制を指すの。隔離だと後追い感が出て、即時性が足りないと見なされやすいわ。",
+                "speaker": "ゆかりん",
+                "expression": "annoyed",
+                "userAnswer": "物理的に隔離",
+                "correctAnswer": "物理的に制止"
+              },
+              {
+                "id": "B11",
+                "result": "△",
+                "feedback": "強制的に辞めさせるは物理的すぎて、『断念させるに足りる措置』の趣旨から外れちゃうよ。判例は心理的支配を断つ相当性を重視するから、状況に応じた効果的な防止が正解の理解ね。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "強制的に辞めさせる",
+                "correctAnswer": "断念させるに足りる措置"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "この問題の核心は共同正犯の離脱で、単なる「やめろ」じゃ心理的補強の影響が残り、結果への因果的寄与が否定できないって点よ。最決平21.2.24を軸に、共犯特有の心理的因果性を押さえて。次は判例の事案像をイメージしながら、離脱の『相当性』を一般論と具体例で整理すると論文で活きるわ。",
+              "speaker": "ゆかりん",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "密接な関係",
+            "B2": "共謀",
+            "B3": "意思連絡",
+            "B4": "犯意",
+            "B5": "犯罪者",
+            "B6": "因果性",
+            "B7": "危険性",
+            "B8": "結果",
+            "B9": "因果性",
+            "B10": "物理的に隔離",
+            "B11": "強制的に辞めさせる"
+          }
+        }
+      },
+      "updatedAt": "2025-12-09T04:51:18.427Z"
+    }
+  }
+]

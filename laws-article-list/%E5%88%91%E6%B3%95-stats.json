@@ -1,0 +1,74 @@
+[
+  {
+    "articleNumber": "157",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "lastResult": "incorrect",
+    "updatedAt": "2025-11-16T07:44:26.231Z"
+  },
+  {
+    "articleNumber": "181",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 0,
+    "incorrect": 1,
+    "lastResult": "incorrect",
+    "updatedAt": "2025-11-16T07:29:19.558Z"
+  },
+  {
+    "articleNumber": "177",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "lastResult": "correct",
+    "updatedAt": "2025-11-16T07:28:46.286Z"
+  },
+  {
+    "articleNumber": "255",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "lastResult": "correct",
+    "updatedAt": "2025-11-16T07:31:28.180Z"
+  },
+  {
+    "articleNumber": "246",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "lastResult": "correct",
+    "updatedAt": "2025-11-16T07:31:31.265Z"
+  },
+  {
+    "articleNumber": "54",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "lastResult": "correct",
+    "updatedAt": "2025-11-16T07:17:00.773Z"
+  },
+  {
+    "articleNumber": "249",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "lastResult": "correct",
+    "updatedAt": "2025-11-16T07:16:36.376Z"
+  },
+  {
+    "articleNumber": "252",
+    "paragraph": "1",
+    "attempts": 1,
+    "correct": 1,
+    "incorrect": 0,
+    "lastResult": "correct",
+    "updatedAt": "2025-11-16T07:31:09.321Z"
+  }
+]

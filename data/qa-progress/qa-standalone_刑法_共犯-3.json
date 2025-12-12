@@ -1,0 +1,523 @@
+[
+  {
+    "id": "共犯-3",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "共犯関係の{{解消}}は、{{因果性}}の{{遮断}}の有無により判断されるべきである。\nしたがって、単に{{気を失った}}というだけでは、それまでの共謀や実行行為によりもたらされた{{心理的・物理的な効果}}（{{正犯}}に犯行を継続させる{{危険性}}）が残存している限り、{{因果性}}は{{遮断}}されず、{{離脱}}は認められない（最決平14.4.16参照）。\nもっとも、{{主犯格}}の者が共犯者を{{暴行して失神させ放置する}}など、共犯関係が{{一方的に解消}}され、その後の犯行が排除された者の{{意思・関与}}と無関係に行われたと評価できる場合には、{{因果性}}が{{断絶}}し、{{離脱}}が認められる場合がある（名古屋高判平14.8.29）。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "解消",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "因果性",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "遮断",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "気を失った",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "心理的・物理的な効果",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "正犯",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "危険性",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "因果性",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "遮断",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "離脱",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "主犯格",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "暴行して失神させ放置する",
+              "prompt": "空欄B12",
+              "placeholder": ""
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "一方的に解消",
+              "prompt": "空欄B13",
+              "placeholder": ""
+            },
+            {
+              "id": "B14",
+              "label": "(14)",
+              "answer": "意思・関与",
+              "prompt": "空欄B14",
+              "placeholder": ""
+            },
+            {
+              "id": "B15",
+              "label": "(15)",
+              "answer": "因果性",
+              "prompt": "空欄B15",
+              "placeholder": ""
+            },
+            {
+              "id": "B16",
+              "label": "(16)",
+              "answer": "断絶",
+              "prompt": "空欄B16",
+              "placeholder": ""
+            },
+            {
+              "id": "B17",
+              "label": "(17)",
+              "answer": "離脱",
+              "prompt": "空欄B17",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "共犯関係の"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "解消"
+            },
+            {
+              "type": "text",
+              "text": "は、"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "因果性"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "遮断"
+            },
+            {
+              "type": "text",
+              "text": "の有無により判断されるべきである。\nしたがって、単に"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "気を失った"
+            },
+            {
+              "type": "text",
+              "text": "というだけでは、それまでの共謀や実行行為によりもたらされた"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "心理的・物理的な効果"
+            },
+            {
+              "type": "text",
+              "text": "（"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "正犯"
+            },
+            {
+              "type": "text",
+              "text": "に犯行を継続させる"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "危険性"
+            },
+            {
+              "type": "text",
+              "text": "）が残存している限り、"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "因果性"
+            },
+            {
+              "type": "text",
+              "text": "は"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "遮断"
+            },
+            {
+              "type": "text",
+              "text": "されず、"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "離脱"
+            },
+            {
+              "type": "text",
+              "text": "は認められない（最決平14.4.16参照）。\nもっとも、"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "主犯格"
+            },
+            {
+              "type": "text",
+              "text": "の者が共犯者を"
+            },
+            {
+              "type": "blank",
+              "id": "B12",
+              "label": "(12)",
+              "placeholder": "",
+              "answer": "暴行して失神させ放置する"
+            },
+            {
+              "type": "text",
+              "text": "など、共犯関係が"
+            },
+            {
+              "type": "blank",
+              "id": "B13",
+              "label": "(13)",
+              "placeholder": "",
+              "answer": "一方的に解消"
+            },
+            {
+              "type": "text",
+              "text": "され、その後の犯行が排除された者の"
+            },
+            {
+              "type": "blank",
+              "id": "B14",
+              "label": "(14)",
+              "placeholder": "",
+              "answer": "意思・関与"
+            },
+            {
+              "type": "text",
+              "text": "と無関係に行われたと評価できる場合には、"
+            },
+            {
+              "type": "blank",
+              "id": "B15",
+              "label": "(15)",
+              "placeholder": "",
+              "answer": "因果性"
+            },
+            {
+              "type": "text",
+              "text": "が"
+            },
+            {
+              "type": "blank",
+              "id": "B16",
+              "label": "(16)",
+              "placeholder": "",
+              "answer": "断絶"
+            },
+            {
+              "type": "text",
+              "text": "し、"
+            },
+            {
+              "type": "blank",
+              "id": "B17",
+              "label": "(17)",
+              "placeholder": "",
+              "answer": "離脱"
+            },
+            {
+              "type": "text",
+              "text": "が認められる場合がある（名古屋高判平14.8.29）。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-09T06:07:48.056Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "△",
+                "feedback": "みかん、離脱って言葉は後で出てくる大事な概念だけど、ここは共犯関係の『解消』が広い意味で使われてて、離脱はその結果として判断されるものなのよ。共犯の離脱は因果遮断を要件とするから、最初に『解消』の枠組みで考えるのが論文で採点者に好まれるわ",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "離脱",
+                "correctAnswer": "解消"
+              },
+              {
+                "id": "B2",
+                "result": "○",
+                "feedback": "正解よ、みかん！ 共犯の離脱判断は正に『因果性』の遮断有無で決まるの。刑法の共犯論で因果関係の継続が正犯の実行行為に及ぶかを問う核心だから、この理解は教義的離脱や幇助犯の継続にも活きるわね",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "因果性",
+                "correctAnswer": "因果性"
+              },
+              {
+                "id": "B3",
+                "result": "△",
+                "feedback": "除去は近いけど、判例の定番用語は『遮断』なのよ。みかん、因果性を『除去』って言うと自然因果の除去と混同しやすくて、共犯特有の『遮断』（正犯の実行を断つ意味）がぼやけちゃうわ。平14.4.16最決で明確に遮断って出てくるから覚えておいて",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "除去",
+                "correctAnswer": "遮断"
+              },
+              {
+                "id": "B4",
+                "result": "☓",
+                "feedback": "ううん、現場を離れただけじゃ離脱にならないのよ、みかん。単なる現場離脱は心理的効果が残るから因果継続しちゃうわ。気を失った場合でも効果残存で離脱否認なのが平14最決のポイントで、現場離脱は幇助の実行行為終了と混同しやすい間違いね",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "現場を離れた",
+                "correctAnswer": "気を失った"
+              },
+              {
+                "id": "B5",
+                "result": "☓",
+                "feedback": "因果性は抽象的すぎるわ、みかん。ここは具体的に共謀・実行が正犯に与える『心理的・物理的な効果』よ。この効果が正犯の犯行継続を支えてる限り因果遮断されないの。総論の因果性と共犯の効果を混ぜて考えがちだから、判例の文言をしっかり押さえて",
+                "speaker": "ゆかりん",
+                "expression": "confused",
+                "userAnswer": "因果性",
+                "correctAnswer": "心理的・物理的な効果"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "『他の共犯者』じゃなくて『正犯』よ、みかん。共犯関係では正犯（実行犯）の犯行継続を危険視するの。共犯者同士の区別なく『他の共犯者』にすると共同正犯論と混同しちゃうわ。離脱判断は正犯中心に因果を追うのが刑法のスタンダードね",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "他の共犯者",
+                "correctAnswer": "正犯"
+              },
+              {
+                "id": "B7",
+                "result": "△",
+                "feedback": "因果的寄与は正しい方向だけど、『危険性』が判例のキーワードなのよ、みかん。過去の共犯行為が正犯に与える継続『危険性』が残る限り離脱なし。このニュアンスを逃すと幇助の危険性論とごっちゃになりやすいわね",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "因果的寄与",
+                "correctAnswer": "危険性"
+              },
+              {
+                "id": "B8",
+                "result": "☓",
+                "feedback": "共犯関係の継続は結果で、ここは要件の『因果性』よ、みかん。関係が続いてるかどうかは因果遮断で決まるから逆でしょ？ 共犯の成立要件と離脱要件を混同しやすい典型的な落とし穴ね。まず因果を押さえて",
+                "speaker": "ゆかりん",
+                "expression": "annoyed",
+                "userAnswer": "共犯関係",
+                "correctAnswer": "因果性"
+              },
+              {
+                "id": "B9",
+                "result": "△",
+                "feedback": "解消はB1の用語だけど、ここは因果性の『遮断』なの。みかん、解消と遮断を入れ替えると共犯関係の解消（広い）と因果遮断（狭い）の区別が曖昧になっちゃうわ。論文では判例用語『遮断』を正確に使うのが高得点のコツよ",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "解消",
+                "correctAnswer": "遮断"
+              },
+              {
+                "id": "B10",
+                "result": "○",
+                "feedback": "正解！ 因果遮断されなければ『離脱』は認められないのよ。この論理構造が共犯論文の王道で、教義的離脱の要件説明に直結するわ、みかん",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "共犯関係の離脱",
+                "correctAnswer": "離脱"
+              },
+              {
+                "id": "B11",
+                "result": "△",
+                "feedback": "正犯は近いけど、『主犯格』の者が一方的に解消する場合を指すのよ、みかん。主犯格が共犯者を排除しないと因果断絶しない判例（名古屋高平14.8.29）のニュアンスよ。正犯と主犯格を同視すると事例の評価が甘くなるわ",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "正犯",
+                "correctAnswer": "主犯格"
+              },
+              {
+                "id": "B12",
+                "result": "☓",
+                "feedback": "これは何？ [object Object]って…みかん、暴行して失神させ放置するような積極排除行為が必要なのよ。それがないと一方的な解消じゃないわ。記述ミスしやすいけど、この具体例が因果断絶の限定的要件を示す大事なとこね",
+                "speaker": "ゆかりん",
+                "expression": "surprised",
+                "userAnswer": {
+                  "id": "B12",
+                  "text": ""
+                },
+                "correctAnswer": "暴行して失神させ放置する"
+              },
+              {
+                "id": "B13",
+                "result": "☓",
+                "feedback": "継続は逆よ、みかん。一方的に『解消』されないと因果が続くの。主犯格の積極行為で関係が一方的に切れる場合だけよ。この混同は離脱の双方向性を忘れてるからで、判例の趣旨は排除の徹底性ね",
+                "speaker": "ゆかりん",
+                "expression": "annoyed",
+                "userAnswer": "継続",
+                "correctAnswer": "一方的に解消"
+              },
+              {
+                "id": "B14",
+                "result": "△",
+                "feedback": "行為だけじゃ足りなくて、『意思・関与』が無関係なのよ、みかん。排除された共犯者の意思表示や関与が後犯行と切り離されることが因果断絶のポイント。行為中心に考えると過失犯論と混同しちゃうわ",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "行為",
+                "correctAnswer": "意思・関与"
+              },
+              {
+                "id": "B15",
+                "result": "☓",
+                "feedback": "共謀は過去の前提で、ここは判断基準の『因果性』よ、みかん。共謀の存在を要件に挙げるのは共犯成立時と混同しやすい間違いね。離脱は因果の現在継続を問うの",
+                "speaker": "ゆかりん",
+                "expression": "sigh",
+                "userAnswer": "共謀",
+                "correctAnswer": "因果性"
+              },
+              {
+                "id": "B16",
+                "result": "☓",
+                "feedback": "断絶が正しくて継続は真逆よ、みかん。一方的な解消で因果が『断絶』する場合に限るの。この逆転は肯定事例の趣旨を読み違えてるわ。名古屋高判の限定的肯定をしっかり押さえて",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "継続",
+                "correctAnswer": "断絶"
+              },
+              {
+                "id": "B17",
+                "result": "☓",
+                "feedback": "離脱が正解で、共同正犯は共犯形態よ、みかん。離脱成立で共同正犯から脱落できるの。形態論と離脱判断を混ぜると論文の構造が崩れやすいから、まず離脱要件を独立して考える癖を",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "共同正犯",
+                "correctAnswer": "離脱"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "みかん、共犯離脱の核心は因果性の遮断有無で、単純離脱じゃ足りず積極排除が必要って判例の積み重ねよ。平14最決と名古屋高判を軸に用語を正確に覚えて、論文では正犯中心の因果評価を展開すれば強いわ。次は離脱事例集で繰り返し書いてみてね",
+              "speaker": "ゆかりん",
+              "expression": "serious",
+              "relatedQAs": [
+                "刑法.共犯.離脱1",
+                "刑法.総論.因果関係2"
+              ]
+            }
+          },
+          "answers": {
+            "B1": "離脱",
+            "B2": "因果性",
+            "B3": "除去",
+            "B4": "現場を離れた",
+            "B5": "因果性",
+            "B6": "他の共犯者",
+            "B7": "因果的寄与",
+            "B8": "共犯関係",
+            "B9": "解消",
+            "B10": "共犯関係の離脱",
+            "B11": "正犯",
+            "B12": "",
+            "B13": "継続",
+            "B14": "行為",
+            "B15": "共謀",
+            "B16": "継続",
+            "B17": "共同正犯"
+          }
+        }
+      },
+      "updatedAt": "2025-12-09T06:07:48.057Z"
+    }
+  }
+]

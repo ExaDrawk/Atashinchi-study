@@ -323,7 +323,7 @@ def format_to_txt(data):
     # Quiz: always include when quiz array exists
     quizzes = data.get('quiz', [])
     if quizzes:
-        txt += "=== ミニ論文問題 ===\n\n"
+        txt += "=== クイズ演習 ===\n\n"
         for quiz in quizzes:
             txt += f"タイトル: {quiz.get('title', '')}\n"
             txt += f"ランク: {quiz.get('rank', '')}\n"

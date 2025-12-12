@@ -1,17 +1,21 @@
 // 行政事件訴訟法のスピード条文回答データ
 // 自動生成ファイル - 手動編集は推奨されません
-// 最終更新: 2025/8/31 1:40:22
+// 最終更新: 2025/11/16 20:09:01
 
 const lawData_speedQuizData = {
   "lawName": "行政事件訴訟法",
   "articles": {
     "2": {
       "1": {
-        "answered": 3,
-        "correct": 3,
-        "totalScore": 560,
-        "averageScore": 186.67,
-        "modules": []
+        "answered": 5,
+        "correct": 5,
+        "totalScore": 910,
+        "averageScore": 8,
+        "modules": [],
+        "recentScores": [
+          8
+        ],
+        "speedRank": "カンペキ"
       }
     },
     "3": {
@@ -19,44 +23,64 @@ const lawData_speedQuizData = {
         "answered": 6,
         "correct": 5,
         "totalScore": 820,
-        "averageScore": 136.67,
-        "modules": []
+        "averageScore": 3,
+        "modules": [],
+        "recentScores": [
+          3
+        ],
+        "speedRank": "あと少し"
       }
     },
     "4": {
       "1": {
-        "answered": 6,
-        "correct": 3,
-        "totalScore": 520,
-        "averageScore": 86.67,
-        "modules": []
+        "answered": 8,
+        "correct": 4,
+        "totalScore": 680,
+        "averageScore": 0,
+        "modules": [],
+        "recentScores": [
+          0
+        ],
+        "speedRank": "まだまだ"
       }
     },
     "5": {
       "1": {
-        "answered": 4,
-        "correct": 3,
-        "totalScore": 570,
-        "averageScore": 142.5,
-        "modules": []
+        "answered": 5,
+        "correct": 4,
+        "totalScore": 720,
+        "averageScore": 4,
+        "modules": [],
+        "recentScores": [
+          4
+        ],
+        "speedRank": "あと少し"
       }
     },
     "6": {
       "1": {
-        "answered": 3,
-        "correct": 3,
-        "totalScore": 540,
-        "averageScore": 180,
-        "modules": []
+        "answered": 4,
+        "correct": 4,
+        "totalScore": 660,
+        "averageScore": 6,
+        "modules": [],
+        "recentScores": [
+          6
+        ],
+        "speedRank": "あと少し"
       }
     },
     "8": {
       "1": {
-        "answered": 3,
-        "correct": 2,
-        "totalScore": 350,
-        "averageScore": 116.67,
-        "modules": []
+        "answered": 5,
+        "correct": 3,
+        "totalScore": 450,
+        "averageScore": 0,
+        "modules": [],
+        "recentScores": [
+          0
+        ],
+        "speedRank": "まだまだ"
       }
     },
     "9": {
@@ -64,35 +88,53 @@ const lawData_speedQuizData = {
         "answered": 6,
         "correct": 5,
         "totalScore": 830,
-        "averageScore": 138.33,
-        "modules": []
+        "averageScore": 3,
+        "modules": [],
+        "recentScores": [
+          3
+        ],
+        "speedRank": "あと少し"
       }
     },
     "10": {
       "1": {
-        "answered": 4,
-        "correct": 1,
-        "totalScore": 180,
-        "averageScore": 45,
-        "modules": []
+        "answered": 7,
+        "correct": 3,
+        "totalScore": 315,
+        "averageScore": 2.5,
+        "modules": [],
+        "recentScores": [
+          0,
+          5
+        ],
+        "speedRank": "まだまだ",
+        "lastUpdated": 1763291341410
       }
     },
     "25": {
       "1": {
-        "answered": 4,
-        "correct": 3,
-        "totalScore": 550,
-        "averageScore": 137.5,
-        "modules": []
+        "answered": 5,
+        "correct": 4,
+        "totalScore": 710,
+        "averageScore": 4,
+        "modules": [],
+        "recentScores": [
+          4
+        ],
+        "speedRank": "あと少し"
       }
     },
     "32": {
       "1": {
-        "answered": 9,
+        "answered": 11,
         "correct": 7,
         "totalScore": 1160,
-        "averageScore": 128.89,
-        "modules": []
+        "averageScore": 0,
+        "modules": [],
+        "recentScores": [
+          0
+        ],
+        "speedRank": "まだまだ"
       }
     },
     "33": {
@@ -100,17 +142,25 @@ const lawData_speedQuizData = {
         "answered": 9,
         "correct": 8,
         "totalScore": 1250,
-        "averageScore": 138.89,
-        "modules": []
+        "averageScore": 3,
+        "modules": [],
+        "recentScores": [
+          3
+        ],
+        "speedRank": "あと少し"
       }
     },
     "42": {
       "1": {
-        "answered": 4,
+        "answered": 5,
         "correct": 2,
         "totalScore": 250,
-        "averageScore": 62.5,
-        "modules": []
+        "averageScore": 0,
+        "modules": [],
+        "recentScores": [
+          0
+        ],
+        "speedRank": "まだまだ"
       }
     }
   }

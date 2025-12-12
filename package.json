@@ -5,13 +5,25 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "npm run build && node server.js",
+    "start": "node server.js",
     "start:local": "node scripts/build-case-index.js && node server.js",
     "build": "node scripts/build-case-index.js",
-    "test": "npm test",
+    "build:cases": "node scripts/build-case-index.js",
+    "test": "jest",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:headed": "npx playwright test --headed",
     "dev": "node server.js"
   },
-  "keywords": ["law", "education", "japan", "legal", "atashinchi", "study",  "family"],
+  "keywords": [
+    "law",
+    "education",
+    "japan",
+    "legal",
+    "atashinchi",
+    "study",
+    "family"
+  ],
   "author": "Atashin'chi Study Team",
   "license": "ISC",
   "repository": {
@@ -25,19 +37,24 @@
   "dependencies": {
     "@google/genai": "^1.5.1",
     "@google/generative-ai": "^0.24.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
-    "xml2js": "^0.6.2",
-    "cors": "^2.8.5",
+    "express-session": "^1.18.0",
     "helmet": "^7.0.0",
-    "compression": "^1.7.4",
-    "express-session": "^1.18.0"
+    "xml2js": "^0.6.2"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@playwright/mcp": "^0.0.49",
+    "@playwright/test": "^1.57.0",
+    "iconv-lite": "^0.7.0",
     "jest": "^29.7.0",
-    "jsdom": "^24.1.1"
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^24.1.1",
+    "playwright": "^1.57.0"
   }
 }

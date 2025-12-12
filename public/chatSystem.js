@@ -4,6 +4,7 @@ import { processArticleReferences, processAllReferences, setupArticleRefButtons 
 import { characters, generateLocationNarration, getGlobalRulesAsText, getGlobalHonorificRulesAsText, getStoryContextRulesAsText, getOutputFormatRules, getLocationManagementRules, getSessionTypeInstructions, getBasicConversationRules, getArticleReferenceRules, getFollowUpLocationRules, extractLocationFromCharacters } from './data/characters.js';
 import { generateInitialPrompt, generateCharacterPersonaPrompt } from './data/prompts.js';
 import { startInlineSpeedQuiz, stopInlineSpeedQuiz } from './inlineSpeedQuiz.js';
+import { caseLoaders } from './cases/index.js';
 
 // ★★★ ヘルパー関数 ★★★
 function sleep(ms) {
@@ -70,7 +71,7 @@ function processCharacterDialogue(dialogueText, supportedLaws = [], questionsAnd
 
 // ★★★ チャットセッション開始（複数小問対応） ★★★
 export async function startChatSession(button, currentCaseData) {
-    console.log('=== startChatSession開始（story/explanation対応） ===');
+    console.log('=== startChatSession開始 ===');
     
     // AI応答の重複防止チェック無効化（自然な会話を優先）
     console.log('� 重複防止チェックを無効化し、自然な会話を優先します');
@@ -85,77 +86,42 @@ export async function startChatSession(button, currentCaseData) {
         }
         
         const type = button.dataset?.type;
-    
-    // タイプに応じて適切な要素を取得
-    if (type === 'story') {
-        container = document.getElementById('tab-story-content');
-        inputElement = document.getElementById('story-question-input');
-        inputForm = inputElement ? inputElement.closest('.input-form') : null;
-        chatArea = document.getElementById('chat-area-story');
-    } else if (type === 'explanation') {
-        container = document.getElementById('tab-explanation-content');
-        inputElement = document.getElementById('explanation-question-input');
-        inputForm = inputElement ? inputElement.closest('.input-form') : null;
-        chatArea = document.getElementById('chat-area-explanation');
-    } else {
-        // 従来のquiz/essay処理
-        container = button.closest('.prose-bg');
-        
-        // mockButtonの場合はcontainerがnullになるので、特別処理
-        if (!container && button.dataset.type === 'quiz') {
-            const quizIndex = button.dataset.quizIndex;
-            const subIndex = button.dataset.subIndex || '0';
-            
-            // 司法試験用テキストエリアを複数の方法で検索
-            inputElement = document.getElementById('judicial-answer-textarea');
-            
-            if (!inputElement) {
-                // フォールバック: 他のIDで検索
-                inputElement = document.getElementById('initial-input-0-0') || 
-                              document.getElementById('initial-input-0-1') ||
-                              document.getElementById('initial-input-1-0') ||
-                              document.querySelector('textarea[id*="initial-input"]') ||
-                              document.querySelector('textarea');
-            }
-            
-            // 埋め込みチャットエリアを使用
-            chatArea = document.getElementById('embedded-chat-area');
-            
-            console.log('🔧 テキストエリア検索結果:', { 
-                inputElement: !!inputElement, 
-                inputElementId: inputElement?.id,
-                chatArea: !!chatArea 
-            });
-            
-            // input-formは動的に作成するか、既存の要素を探す
-            inputForm = document.querySelector('.input-form') || 
-                       document.querySelector('#judicial-answer-form') ||
-                       inputElement?.closest('form') ||
-                       inputElement?.parentElement;
-            
-            console.log('🔧 mockButton用の要素検索結果:', { inputElement, chatArea, inputForm });
-        } else if (container) {
-            inputForm = container.querySelector('.input-form');
-            inputElement = container.querySelector('textarea');
-            chatArea = container.querySelector('.chat-area');
-        } else {
-            // containerもない場合は要素が見つからない
-            inputForm = null;
-            inputElement = null;
-            chatArea = null;
+
+        if (type === 'qa') {
+            await startQaChatSession(button);
+            return;
         }
-    }
+
+        const standardChatConfig = {
+            story: {
+                containerId: 'tab-story-content',
+                inputId: 'story-question-input',
+                chatAreaId: 'chat-area-story'
+            },
+            explanation: {
+                containerId: 'tab-explanation-content',
+                inputId: 'explanation-question-input',
+                chatAreaId: 'chat-area-explanation'
+            }
+        };
+
+        const chatConfig = standardChatConfig[type];
+        if (!chatConfig) {
+            console.error('❌ 未対応のチャットタイプです:', type);
+            return;
+        }
+
+        container = document.getElementById(chatConfig.containerId);
+        inputElement = document.getElementById(chatConfig.inputId);
+        chatArea = document.getElementById(chatConfig.chatAreaId);
+        inputForm = inputElement ? inputElement.closest('.input-form') : null;
 
     if (!inputElement || !chatArea) {
         console.error('致命的エラー: 必要なUI要素が見つかりません', { 
             type, 
-            inputForm: !!inputForm, 
-            inputElement: !!inputElement, 
-            chatArea: !!chatArea,
-            buttonType: button.dataset.type,
-            isMockButton: !button.closest('.prose-bg'),
-            allTextareas: Array.from(document.querySelectorAll('textarea')).map(t => t.id || t.className),
-            embeddedChatExists: !!document.getElementById('embedded-chat-area')
+            inputFormExists: !!inputForm, 
+            inputElementExists: !!inputElement, 
+            chatAreaExists: !!chatArea
         });
         window.isCharacterDialogueInProgress = false;
         return;
@@ -180,54 +146,10 @@ export async function startChatSession(button, currentCaseData) {
     }
         chatArea.style.display = 'block';
 
-        const quizIndex = button.dataset.quizIndex;
-        const subIndex = button.dataset.subIndex || '0'; // 複数小問対応
+        const sessionId = 'story';
         
-        // ★★★ セッションIDを複数小問対応に変更（story、explanation対応） ★★★
-        let sessionId;
-        if (type === 'quiz') {
-            sessionId = `quiz-${quizIndex}-${subIndex}`;
-        } else if (type === 'story') {
-            sessionId = 'story';
-        } else if (type === 'explanation') {
-            sessionId = 'explanation';
-        } else {
-            sessionId = 'essay';
-        }
-        
-        let problemText, modelAnswer, hintText, chatTitle;
-        if (type === 'quiz') {
-            const quizGroup = currentCaseData.quiz[quizIndex];
-            
-            // 旧形式との互換性
-            if (quizGroup.problem && !quizGroup.subProblems) {
-                problemText = quizGroup.problem;
-                modelAnswer = quizGroup.modelAnswer || '';
-                hintText = `<h5 class="font-bold mb-2">答案に含めるべきポイント</h5><ul class="list-disc list-inside bg-gray-100 p-4 rounded-lg mb-4 text-sm space-y-1">${(quizGroup.points || []).map(p => `<li>${p}</li>`).join('')}</ul>`;
-            } else {
-                // 新形式：複数小問
-                const subProblem = quizGroup.subProblems[parseInt(subIndex)];
-                problemText = subProblem.problem;
-                modelAnswer = subProblem.modelAnswer || '';
-                hintText = `<h5 class="font-bold mb-2">答案に含めるべきポイント</h5><ul class="list-disc list-inside bg-gray-100 p-4 rounded-lg mb-4 text-sm space-y-1">${(subProblem.points || []).map(p => `<li>${p}</li>`).join('')}</ul>`;
-            }
-            chatTitle = '📝 ミニ論文添削';
-        } else if (type === 'story') {
-            problemText = `ストーリー内容：${currentCaseData.story.map(s => s.type === 'dialogue' ? `${s.speaker}: ${s.dialogue}` : s.text).join('\n')}`;
-            modelAnswer = '';
-            hintText = '';
-            chatTitle = '💬 キャラクターと話そう';
-        } else if (type === 'explanation') {
-            problemText = `解説内容：${currentCaseData.explanation}`;
-            modelAnswer = '';
-            hintText = '';
-            chatTitle = '🤔 解説について話そう';
-        } else {
-            problemText = currentCaseData.essay.question;
-            modelAnswer = currentCaseData.essay.points.join('、');
-            hintText = `<h5 class="font-bold mb-2">答案構成のヒント</h5><ul class="list-disc list-inside bg-gray-100 p-4 rounded-lg mb-4 text-sm space-y-1">${currentCaseData.essay.points.map(p => `<li>${p}</li>`).join('')}</ul>`;
-            chatTitle = '✍️ 論文トレーニング';
-        }
+        const problemText = `ストーリー内容：${currentCaseData.story.map(s => s.type === 'dialogue' ? `${s.speaker}: ${s.dialogue}` : s.text).join('\n')}`;
+        const chatTitle = '💬 キャラクターと話そう';
           chatArea.innerHTML = `
             <div class="bg-gray-50 p-4 rounded-lg border animate-fade-in">
                 <h4 class="text-lg font-bold mb-3">${chatTitle}</h4>
@@ -240,19 +162,10 @@ export async function startChatSession(button, currentCaseData) {
                 </div>
             </div>        `;
         
-        let initialPrompt;
-        // ストーリー・解説会話用のプロンプト
-        initialPrompt = generateInitialPrompt(userInput, type, currentCaseData);
+        const initialPrompt = generateInitialPrompt(userInput, type, currentCaseData);
 
         if (!window.conversationHistories) window.conversationHistories = {};
-        
-        let initialMessage;
-        if (type === 'story' || type === 'explanation') {
-            initialMessage = { role: 'user', parts: [{ text: `${userInput}` }] };
-        } else {
-            initialMessage = { role: 'user', parts: [{ text: `答案を添削してください。答案：${userInput}` }] };
-        }
-        
+        const initialMessage = { role: 'user', parts: [{ text: userInput }] };
         window.conversationHistories[sessionId] = [initialMessage];
         
         await sendMessageToAI(sessionId, initialPrompt, problemText, userInput);
@@ -289,7 +202,7 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
         const existingLoader = document.getElementById(loadingId);
         if (!existingLoader) {
             const loadingHTML = `
-                <div id="${loadingId}" class="text-center p-4">
+                <div id="${loadingId}" class="text-center p-4 flex flex-col items-center justify-center">
                     <div class="donut-loader"></div>
                     <p class="text-sm text-gray-600 mt-2">AIが考えています...</p>
                 </div>
@@ -604,35 +517,6 @@ export async function sendMessageToAI(sessionId, promptText, problemText, userIn
             }
         }
         
-        
-        // スコア抽出は quiz タイプのみで実行
-        if (sessionId.includes('quiz')) {
-            // より柔軟なスコア抽出パターン
-            const scorePatterns = [
-                /\*\*(\d+)点\*\*/,  // 元のパターン
-                /(\d+)点/,           // シンプルなパターン
-                /点数[：:]\s*(\d+)/,  // 「点数：XX」形式
-                /スコア[：:]\s*(\d+)/, // 「スコア：XX」形式
-                /評価[：:]\s*(\d+)点/ // 「評価：XX点」形式
-            ];
-            
-            let score = null;
-            for (const pattern of scorePatterns) {
-                const match = aiResponse.match(pattern);
-                if (match) {
-                    score = parseInt(match[1], 10);
-                    break;
-                }
-            }
-            
-            if (score !== null && score >= 10) {
-                await saveUserAnswer(sessionId, userInput, score, problemText);
-            } else if (score === null) {
-                // スコアが検出できない場合は50点として保存
-                await saveUserAnswer(sessionId, userInput, 50, problemText);
-            }
-        }
-
     } catch (error) {
         console.error('AI通信エラー:', error);
     const loaderToRemove = document.getElementById(`ai-loader-${sessionId}`);
@@ -686,23 +570,20 @@ export async function sendFollowUpMessage(sessionId) {
         '今すぐ、上記の全ルールを遵守し、会話の続きを生成してください。';
 
     // キャラクター情報を統合したプロンプトを生成（簡易版）
-    const { problemText, userInput, currentCaseData } = getProblemInfoFromHistory(sessionId);
-    
-    // sessionIdからセッションタイプを判定
-    let sessionType = null;
-    if (sessionId === 'story') {
-        sessionType = 'story';
-    } else if (sessionId === 'explanation') {
-        sessionType = 'explanation';
-    } else if (sessionId.startsWith('quiz-')) {
-        sessionType = 'quiz';
-    } else if (sessionId === 'essay') {
-        sessionType = 'essay';
+    const { problemText, userInput, qaMeta } = getProblemInfoFromHistory(sessionId);
+
+    let followUpPrompt = baseFollowUpPrompt;
+    let problemContext = problemText;
+    let userContext = userInput;
+
+    if (qaMeta) {
+        const recentSummary = buildRecentQaSummary(sessionId);
+        followUpPrompt = buildQaFollowUpPrompt(qaMeta, userMessage, recentSummary);
+        problemContext = qaMeta.question;
+        userContext = qaMeta.initialUserMessage || userMessage;
     }
-    
-    // 簡易版プロンプト統合
-    const followUpPrompt = baseFollowUpPrompt;
-      await sendMessageToAI(sessionId, followUpPrompt, problemText, userInput);
+
+    await sendMessageToAI(sessionId, followUpPrompt, problemContext, userContext);
 }
 
 function escapeIntoHtml(text) {
@@ -1173,9 +1054,18 @@ function displayMessage(message, type, sessionId) {
 
 // ★★★ ヘルパー関数 ★★★
 function getProblemInfoFromHistory(sessionId) {
+    if (sessionId && sessionId.startsWith('qa-') && window.qaChatMetadata?.[sessionId]) {
+        const meta = window.qaChatMetadata[sessionId];
+        return {
+            problemText: meta.question,
+            userInput: meta.initialUserMessage || '',
+            qaMeta: meta
+        };
+    }
+
     const history = window.conversationHistories[sessionId];
     if (!history || history.length === 0) {
-        return { problemText: null, userInput: null };
+        return { problemText: null, userInput: null, qaMeta: null };
     }
 
     const initialPrompt = history[0].parts[0].text;
@@ -1185,186 +1075,9 @@ function getProblemInfoFromHistory(sessionId) {
     const problemText = problemMatch ? problemMatch[1].trim() : '（問題文の取得に失敗）';
     const userInput = userMatch ? userMatch[1].trim() : '（答案の取得に失敗）';
 
-    return { problemText, userInput };
+    return { problemText, userInput, qaMeta: null };
 }
 
-async function saveUserAnswer(sessionId, userAnswer, score, problemText) {
-    const startTime = Date.now();
-    console.log('🎯 =========================');
-    console.log('💾 saveUserAnswer開始:', { 
-        sessionId, 
-        score, 
-        currentCaseId: window.currentCaseData?.id,
-        userAnswerLength: userAnswer?.length,
-        problemTextLength: problemText?.length
-    });
-    
-    try {
-        // Step 1: 基本的なチェック
-        if (!window.currentCaseData?.id) {
-            console.error('❌ Step1失敗: currentCaseDataが存在しません');
-            console.log('🔍 window.currentCaseData:', window.currentCaseData);
-            return;
-        }
-        console.log('✅ Step1成功: currentCaseData確認済み');
-          // Step 2: ストレージキーの生成
-        const isQuiz = sessionId.startsWith('quiz-');
-        let problemIndex = '';
-        
-        if (isQuiz) {
-            // sessionId例: "quiz-0-1" → problemIndex: "0-1"
-            const parts = sessionId.split('-');
-            problemIndex = parts.slice(1).join('-'); // "quiz-"以降の部分を取得
-        } else {
-            problemIndex = '';
-        }
-        
-        const storageKey = `answers_${window.currentCaseData.id}_${isQuiz ? 'quiz' : 'essay'}_${problemIndex}`;
-        console.log('✅ Step2成功: ストレージキー生成:', { sessionId, problemIndex, storageKey });
-        
-        // Step 3: 既存データの取得（データ移行対応）
-        let existingAnswers;
-        try {
-            let existingData = localStorage.getItem(storageKey);
-            
-            // 新しいキーでデータが見つからない場合、古いキー形式も確認
-            if (!existingData && isQuiz && problemIndex.includes('-')) {
-                const oldFormatIndex = problemIndex.split('-')[0]; // "0-1" → "0"
-                const oldStorageKey = `answers_${window.currentCaseData.id}_quiz_${oldFormatIndex}`;
-                console.log('🔄 古いキー形式をチェック:', oldStorageKey);
-                
-                const oldData = localStorage.getItem(oldStorageKey);
-                if (oldData) {
-                    console.log('📦 古いデータを発見、新しいキーに移行します');
-                    existingData = oldData;
-                    
-                    // 古いデータを新しいキーに移行
-                    localStorage.setItem(storageKey, oldData);
-                    console.log('✅ データ移行完了:', { from: oldStorageKey, to: storageKey });
-                }
-            }
-            
-            existingAnswers = existingData ? JSON.parse(existingData) : [];
-            console.log('✅ Step3成功: 既存データ取得:', existingAnswers.length, '件');
-        } catch (parseError) {
-            console.error('❌ Step3警告: 既存データのパースに失敗、新規配列で開始:', parseError);
-            existingAnswers = [];
-        }
-
-        // Step 4: 新しい回答データの作成
-        const newAnswer = {
-            userAnswer: userAnswer,
-            score: score,
-            timestamp: new Date().toISOString(),
-            problemText: problemText
-        };
-        console.log('✅ Step4成功: 新回答データ作成:', {
-            score: newAnswer.score,
-            timestamp: newAnswer.timestamp,
-            userAnswerLength: newAnswer.userAnswer?.length
-        });
-
-        // Step 5: データの結合
-        existingAnswers.push(newAnswer);
-        console.log('✅ Step5成功: データ結合完了。総件数:', existingAnswers.length);
-        
-        // Step 6: localStorage保存
-        try {
-            const dataToSave = JSON.stringify(existingAnswers);
-            console.log('🔄 Step6開始: localStorage保存中...', {
-                key: storageKey,
-                dataSize: dataToSave.length,
-                answersCount: existingAnswers.length
-            });
-            
-            localStorage.setItem(storageKey, dataToSave);
-            console.log('✅ Step6成功: localStorage.setItem完了');
-            
-            // Step 7: 保存検証
-            const verifyData = localStorage.getItem(storageKey);
-            if (verifyData) {
-                const parsedData = JSON.parse(verifyData);
-                if (parsedData.length === existingAnswers.length) {
-                    console.log('✅ Step7成功: 保存検証OK!', {
-                        savedCount: parsedData.length,
-                        latestScore: parsedData[parsedData.length - 1].score,
-                        latestTimestamp: parsedData[parsedData.length - 1].timestamp
-                    });
-                } else {
-                    throw new Error(`保存件数が不一致 (期待: ${existingAnswers.length}, 実際: ${parsedData.length})`);
-                }
-            } else {
-                throw new Error('保存後の検証で、データが見つかりません');
-            }
-        } catch (storageError) {
-            console.error('❌ Step6-7失敗: localStorage保存・検証失敗:', storageError);
-            throw storageError;
-        }
-        
-        // Step 8: UI表示
-        const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
-        if (dialogueArea) {
-            const successMessage = document.createElement('div');
-            successMessage.innerHTML = `
-                <div class="my-4 p-3 bg-green-100 rounded-lg border-2 border-green-300 animate-fade-in">
-                    <h5 class="font-bold text-green-800 mb-2">💾 回答を保存しました</h5>
-                    <p class="text-sm text-green-700">${new Date().toLocaleString()} | ${score}点</p>
-                    <p class="text-xs text-green-600 mt-1">保存キー: ${storageKey}</p>
-                    <p class="text-xs text-green-500 mt-1">処理時間: ${Date.now() - startTime}ms</p>
-                </div>
-            `;
-            dialogueArea.appendChild(successMessage);
-            dialogueArea.scrollTop = dialogueArea.scrollHeight;
-            console.log('✅ Step8成功: 保存メッセージ表示完了');
-        } else {
-            console.warn('⚠️ Step8警告: dialogueAreaが見つかりません:', `dialogue-area-${sessionId}`);
-        }        // Step 9: 最終確認（念のため）
-        setTimeout(() => {
-            const finalCheck = localStorage.getItem(storageKey);
-            if (finalCheck) {
-                const finalData = JSON.parse(finalCheck);
-                console.log('🎉 Step9成功: 最終確認OK!', {
-                    totalTime: Date.now() - startTime,
-                    finalCount: finalData.length,
-                    storageKey: storageKey
-                });
-                
-                // 過去回答表示エリアの自動更新
-                if (typeof updatePastAnswersDisplay === 'function') {
-                    updatePastAnswersDisplay(sessionId, storageKey);
-                }
-                
-            } else {
-                console.error('❌ Step9失敗: 最終確認でデータが消失!');
-            }
-        }, 100);
-
-    } catch (error) {
-        console.error('❌ 回答保存エラー:', error);
-        console.log('🔍 エラー発生時の詳細情報:', {
-            sessionId,
-            currentCaseId: window.currentCaseData?.id,
-            localStorageAvailable: typeof Storage !== 'undefined',
-            totalTime: Date.now() - startTime
-        });
-        
-        // エラーが発生した場合も、ユーザーにフィードバックを表示
-        const dialogueArea = document.getElementById(`dialogue-area-${sessionId}`);
-        if (dialogueArea) {
-            const errorMessage = document.createElement('div');
-            errorMessage.innerHTML = `
-                <div class="my-4 p-3 bg-red-100 rounded-lg border-2 border-red-300">
-                    <h5 class="font-bold text-red-800 mb-2">❌ 保存に失敗しました</h5>
-                    <p class="text-sm text-red-700">エラー: ${error.message}</p>
-                    <p class="text-xs text-red-600">詳細はコンソールをご確認ください</p>
-                </div>
-            `;
-            dialogueArea.appendChild(errorMessage);
-        }
-    }
-    
-    console.log('🎯 =========================');
-}
 
 // ★★★ チャットセッション終了 ★★★
 export function endChatSession(sessionId) {
@@ -1399,6 +1112,19 @@ export function endChatSession(sessionId) {
     // 会話履歴をクリア
     if (window.conversationHistories && window.conversationHistories[sessionId]) {
         delete window.conversationHistories[sessionId];
+    }
+
+    if (sessionId && sessionId.startsWith('qa-')) {
+        const qaSlot = document.querySelector(`.qa-chat-slot[data-active-session-id="${sessionId}"]`);
+        if (qaSlot) {
+            qaSlot.classList.add('hidden');
+            qaSlot.classList.remove('qa-chat-open');
+            qaSlot.innerHTML = '';
+            qaSlot.dataset.activeSessionId = '';
+        }
+        if (window.qaChatMetadata && window.qaChatMetadata[sessionId]) {
+            delete window.qaChatMetadata[sessionId];
+        }
     }
     
     console.log('✅ チャットセッション終了完了:', sessionId);
@@ -1487,4 +1213,320 @@ function deriveIntoNarration(firstSpeaker = '') {
         subject = '静かな空気の中、会話が始まる。';
     }
     return `${locationPhrase}${subject}`.trim();
+}
+
+const DEFAULT_QA_CHAT_CHARACTERS = ['ユズヒコ', 'みかん', 'しみちゃん', '母'];
+const moduleCharacterCache = {};
+
+function createCoverageChecklist(answerText = '') {
+    if (!answerText) return [];
+    const normalized = answerText
+        .replace(/\{\{([^}]+)\}\}/g, '$1')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const segments = normalized.split(/[。\n]/).map(seg => seg.trim()).filter(Boolean);
+    const uniqueSegments = [];
+    segments.forEach(seg => {
+        if (!uniqueSegments.includes(seg)) {
+            uniqueSegments.push(seg);
+        }
+    });
+    return uniqueSegments;
+}
+
+function formatCoverageChecklist(items = []) {
+    if (!items.length) {
+        return '設問全体の論点・効果・要件をすべて確認し、欠落がないよう対話を設計する。';
+    }
+    return items.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
+}
+
+function buildRecentQaSummary(sessionId, maxEntries = 6) {
+    const history = window.conversationHistories?.[sessionId];
+    if (!history || !history.length) return '';
+    const slice = history.slice(-maxEntries);
+    return slice.map(entry => {
+        const roleLabel = entry.role === 'model' ? 'AI' : 'USER';
+        const text = entry.parts?.map(part => part.text).join(' ').trim() || '';
+        return `${roleLabel}: ${text}`;
+    }).join('\n');
+}
+
+function decodeDatasetValue(value = '') {
+    if (!value) return '';
+    try {
+        return decodeURIComponent(value);
+    } catch (error) {
+        console.warn('⚠️ data属性のdecodeに失敗しました:', error);
+        return value;
+    }
+}
+
+function extractBlanksFromAnswer(answerText = '') {
+    const blanks = [];
+    if (!answerText) return blanks;
+    const regex = /\{\{([^}]+)\}\}/g;
+    let match;
+    while ((match = regex.exec(answerText)) !== null) {
+        blanks.push(match[1].trim());
+    }
+    return blanks;
+}
+
+function extractStorySpeakers(story = []) {
+    if (!Array.isArray(story)) return [];
+    return story
+        .filter(item => item?.type === 'dialogue' && item.speaker)
+        .map(item => item.speaker?.trim())
+        .filter(Boolean);
+}
+
+async function determineQaChatCharacters(moduleId) {
+    const cacheKey = moduleId || '__default__';
+    if (moduleCharacterCache[cacheKey]) {
+        return moduleCharacterCache[cacheKey];
+    }
+
+    const uniqueTrimmed = (list = []) => [...new Set(list.map(name => name?.trim()).filter(Boolean))];
+    let storyCharacters = [];
+
+    if (moduleId && window.currentCaseData?.id === moduleId) {
+        storyCharacters = extractStorySpeakers(window.currentCaseData.story);
+        if (!storyCharacters.length && window.currentCaseData?.rightSideCharacters?.length) {
+            storyCharacters = [...window.currentCaseData.rightSideCharacters];
+        }
+    }
+
+    if (!storyCharacters.length && moduleId) {
+        try {
+            const loader = (window.caseLoaders || caseLoaders)?.[moduleId];
+            if (typeof loader === 'function') {
+                const mod = await loader();
+                const moduleData = mod?.default;
+                storyCharacters = extractStorySpeakers(moduleData?.story);
+                if (!storyCharacters.length && moduleData?.rightSideCharacters?.length) {
+                    storyCharacters = [...moduleData.rightSideCharacters];
+                }
+            }
+        } catch (error) {
+            console.warn(`⚠️ QAチャット用キャラクター取得失敗: ${moduleId}`, error);
+        }
+    }
+
+    if (!storyCharacters.length) {
+        storyCharacters = extractStorySpeakers(window.currentCaseData?.story);
+    }
+    if (!storyCharacters.length && window.currentCaseData?.rightSideCharacters?.length) {
+        storyCharacters = [...window.currentCaseData.rightSideCharacters];
+    }
+    if (!storyCharacters.length) {
+        storyCharacters = [...DEFAULT_QA_CHAT_CHARACTERS];
+    }
+
+    const normalized = uniqueTrimmed(storyCharacters).slice(0, 4);
+    moduleCharacterCache[cacheKey] = normalized;
+    return normalized;
+}
+
+function buildQaInitialPrompt(meta) {
+    const characterList = meta.characters.join('、');
+    const personaPrompt = generateCharacterPersonaPrompt(meta.characters);
+    const locationCue = generateLocationNarration(meta.characters) || '';
+    const answerDigest = (meta.answer || '').replace(/\s+/g, ' ').trim() || 'モデル答案は登録されていません。';
+
+    const coverageText = formatCoverageChecklist(meta.coverageChecklist);
+
+    return `# 指示: 『あたしンち』キャラクターがソクラテス式で理解確認を行う
+
+## モジュール概要
+- 設問: ${meta.question}
+- モジュール: ${meta.moduleTitle || meta.moduleId}
+- ランク: ${meta.rank || '不明'} / ステータス: ${meta.status || '未'}
+- モデル答案の要点: ${answerDigest}
+
+## 登場人物とペルソナ
+${personaPrompt}
+
+## 世界観と会話ルール
+${getGlobalRulesAsText()}
+
+${getGlobalHonorificRulesAsText()}
+
+${getBasicConversationRules()}
+
+${getLocationManagementRules()}
+
+${locationCue}
+
+## 学習ゴール（単語当ては禁止）
+1. ${characterList} は、穴埋めではなく **説明** と **理由付け** を引き出す質問を行うこと。
+2. 問題文全体を踏まえ、問いの趣旨・法的効果・要件の因果関係を利用者に語らせること。
+3. 一度に複数論点を詰め込まず、ターンごとに一つの論点を掘り下げ、最後は必ず追加の問いで締めること。
+4. モデル答案の表現を丸写しせず、ヒントや比喩で方向づけること。
+
+## カバレッジ必達項目
+${coverageText}
+- 会話の進行中に上記すべての項目を確認し、抜けがあれば次の問いで補完すること。
+
+## ユーザー参加の演出（重要）
+- 各ターンの締めに、ユーザーが回答すべきキャラクター名と状態を示す行（例: \`ユズヒコ@thinking: （ユーザーの回答を待つ）\`）を必ず出力する。
+- その行ではAIは説明やヒントを追加せず、ユーザーへの指示だけを記載する。
+- どのキャラクターがユーザーの代弁者になるかは、設問との親和性に応じて毎回選ぶ。
+
+## 進め方
+1. 導入: 問題の核心を利用者に言葉でまとめさせる質問をする。
+2. 中盤: 「定義」「趣旨」「比較」「典型事例」「例外」のような観点から、理解を測る質問を順番に提示する。
+3. 終盤: 利用者が自分の結論を再構築できるよう、論理の全体像を確認する問いを投げかける。
+
+## 絶対禁止
+- 単語リストの羅列や穴埋め指示。
+- 模範解答の全文提示。
+- キャラクター性・呼称・口調の逸脱。
+- 質問を投げかけずに会話を終わらせること。
+- ユーザーが説明すべき核心部分をAIが先に回答してしまうこと。
+- 既に扱った導入・ナレーションを繰り返して会話をリセットすること。
+
+## 出力フォーマット
+${getOutputFormatRules('qa')}
+`;
+}
+
+function buildQaFollowUpPrompt(meta, userMessage, recentSummary = '') {
+    const personaPrompt = generateCharacterPersonaPrompt(meta.characters);
+    const answerDigest = (meta.answer || '').replace(/\s+/g, ' ').trim() || 'モデル答案は登録されていません。';
+    const coverageText = formatCoverageChecklist(meta.coverageChecklist);
+
+    return `# 指示: Q&Aチャット継続 (${meta.moduleTitle || meta.moduleId} / Q${meta.qaId})
+
+${personaPrompt}
+
+## 状況整理
+- 設問: ${meta.question}
+- モデル答案の要点: ${answerDigest}
+- 直前の利用者メモ: ${userMessage}
+
+## 直近の会話ログ
+${recentSummary || '（直近ログなし）'}
+
+## 進行ルール
+1. 各キャラクターは一つの論点に絞った問いを投げ、必ず新しい視点を加える。
+2. 単語暗記ではなく、因果関係や適用場面を説明させる質問で理解を確認する。
+3. 模範解答の語句をそのまま提示せず、たとえ話や具体例で方向付ける。
+4. 会話は常に質問で終え、利用者に思考を委ねる。
+5. 直近ログの続きを自然につなぎ、新しい導入や不必要なナレーションのやり直しは禁止。
+
+## カバレッジ誓約
+${coverageText}
+- 未触及の項目があれば、次の問いで必ず取り上げる。
+
+## ユーザー参加の演出
+- 各ターンの最後に、ユーザーが演じるキャラクターと「（ユーザーの回答を待つ）」を示す行を必ず出力する。
+- その行ではAIが追加情報を述べず、ユーザーへのバトン渡しだけを行う。
+- キャラクターは状況に応じて選び、単調にならないようにする。
+
+## 絶対禁止
+- 穴埋め指示・語句丸出し。
+- キャラクターの口調崩壊。
+- 同じ質問の繰り返し。
+- ユーザーが説明すべき本質的な結論をAIが代わりに回答すること。
+- 直近ログを無視して別の会話を始めること。
+
+## 出力フォーマット
+${getOutputFormatRules('qa')}
+`;
+}
+
+async function startQaChatSession(button) {
+    if (!button) return;
+
+    try {
+        const qaItem = button.closest('.qa-item');
+        const chatSlot = qaItem?.querySelector('.qa-chat-slot');
+        if (!qaItem || !chatSlot) {
+            console.error('❌ Q&Aチャット領域を特定できませんでした');
+            return;
+        }
+
+        const qaId = button.dataset.qaId || 'unknown';
+        const moduleId = button.dataset.moduleId || window.currentCaseData?.id || 'global';
+        const moduleTitle = decodeDatasetValue(button.dataset.moduleTitle || '');
+        const sessionId = `qa-${moduleId}-${qaId}`;
+
+        if (chatSlot.dataset.activeSessionId === sessionId && chatSlot.classList.contains('qa-chat-open')) {
+            chatSlot.classList.remove('qa-chat-open');
+            chatSlot.classList.add('hidden');
+            chatSlot.dataset.activeSessionId = '';
+            chatSlot.innerHTML = '';
+            if (window.conversationHistories) {
+                delete window.conversationHistories[sessionId];
+            }
+            if (window.qaChatMetadata) {
+                delete window.qaChatMetadata[sessionId];
+            }
+            return;
+        }
+
+        const question = decodeDatasetValue(button.dataset.question || '');
+        const rawAnswer = decodeDatasetValue(button.dataset.answer || '');
+        const rank = decodeDatasetValue(button.dataset.rank || '');
+        const status = decodeDatasetValue(button.dataset.status || '');
+        const blanks = extractBlanksFromAnswer(rawAnswer);
+        const plainAnswer = rawAnswer.replace(/\{\{([^}]+)\}\}/g, '$1');
+
+        chatSlot.dataset.activeSessionId = sessionId;
+        chatSlot.classList.add('qa-chat-open');
+        chatSlot.classList.remove('hidden');
+
+        const chatTitle = moduleTitle ? `${moduleTitle}｜Q${qaId}` : `Q${qaId}`;
+        const safeChatTitle = typeof escapeIntoHtml === 'function' ? escapeIntoHtml(chatTitle) : chatTitle;
+        const safeQuestion = typeof escapeIntoHtml === 'function' ? escapeIntoHtml(question) : question;
+        chatSlot.innerHTML = `
+            <div id="chat-area-${sessionId}" class="qa-inline-chat bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 animate-fade-in">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-[11px] font-semibold text-indigo-600 uppercase tracking-[0.2em]">Socratic Tutor</p>
+                        <h4 class="text-lg font-bold text-gray-900">${safeChatTitle}</h4>
+                    </div>
+                    <button id="end-chat-btn-${sessionId}" data-session-id="${sessionId}" class="text-xs text-gray-500 hover:text-gray-800">× 終了</button>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">${safeQuestion}</p>
+                <div id="dialogue-area-${sessionId}" class="space-y-4 max-h-96 overflow-y-auto bg-white border border-gray-200 rounded-lg p-3 custom-scrollbar"></div>
+                <div class="mt-3 flex gap-2">
+                    <textarea id="chat-follow-up-input-${sessionId}" class="w-full border border-gray-300 rounded-lg p-3 focus-ring text-sm resize-none" rows="3" placeholder="疑問や気づきを入力して送信"></textarea>
+                    <button id="send-follow-up-btn-${sessionId}" data-session-id="${sessionId}" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm px-4 py-2 rounded-lg whitespace-nowrap">送信</button>
+                </div>
+            </div>
+        `;
+        setupArticleRefButtons(chatSlot);
+
+    const characters = await determineQaChatCharacters(moduleId);
+        const meta = {
+            qaId,
+            moduleId,
+            moduleTitle,
+            question,
+            answer: plainAnswer,
+            rawAnswer,
+            blanks,
+            rank,
+            status: status || '未',
+            characters,
+            coverageChecklist: createCoverageChecklist(plainAnswer)
+        };
+        if (!window.qaChatMetadata) window.qaChatMetadata = {};
+        window.qaChatMetadata[sessionId] = meta;
+
+        const initialPrompt = buildQaInitialPrompt(meta);
+        const initialUserMessage = `Q${qaId}の理解を深めたいです。まだ次の空欄・ポイントが曖昧: ${blanks.length ? blanks.join(', ') : '論点全体'}。問いかけ中心で導いてください。`;
+        meta.initialUserMessage = initialUserMessage;
+
+        if (!window.conversationHistories) window.conversationHistories = {};
+        window.conversationHistories[sessionId] = [{ role: 'user', parts: [{ text: initialUserMessage }] }];
+
+        await sendMessageToAI(sessionId, initialPrompt, question, initialUserMessage);
+    } catch (error) {
+        console.error('❌ startQaChatSessionでエラー:', error);
+    } finally {
+        window.isCharacterDialogueInProgress = false;
+    }
 }

@@ -1,7 +1,6 @@
 // eventHandler.js - イベント処理専用モジュール
 
 import { showArticlePanel } from './articlePanel.js';
-import { startChatSession, sendFollowUpMessage, endChatSession } from './chatSystem.js';
 import { loadAndRenderCase } from './pages/casePage.js';
 import { renderHome } from './pages/homePage.js';
 import { renderTabContent } from './pages/casePage.js';
@@ -82,47 +81,6 @@ async function handleGlobalClick(event) {
         return;
     }
 
-    // ★★★ INTOモード：送信ボタン ★★★
-    const intoSendBtn = event.target.closest('#into-send-btn');
-    if (intoSendBtn) {
-        event.preventDefault();
-        if (window.sendIntoFollowUp) window.sendIntoFollowUp();
-        return;
-    }
-
-    // ★★★ INTOモード：終了ボタン ★★★
-    const intoEndBtn = event.target.closest('#into-end-btn');
-    if (intoEndBtn) {
-        event.preventDefault();
-        if (window.endIntoMode) window.endIntoMode();
-        return;
-    }
-
-    // ★★★ INTOモード：回答キャラ変更（clickイベントでも一応拾う）★★★
-    if (event.target && event.target.id === 'into-responder-select') {
-        const name = event.target.value;
-        if (window.setIntoResponder) window.setIntoResponder(name);
-        return;
-    }
-
-    // ★★★ 答案入力ボタンの処理（オーバーレイ式） ★★★
-    const answerBtn = event.target.closest('.answer-sheet-btn, .enter-answer-mode-btn');
-    if (answerBtn) {
-        console.log('✅ 答案ボタンを検出（オーバーレイ式）');
-        event.preventDefault();
-        const quizIndex = answerBtn.dataset.quizIndex;
-        const subIndex = answerBtn.dataset.subIndex;
-        console.log('データ:', { quizIndex, subIndex });
-        
-        if (window.startAnswerCorrectionMode) {
-            console.log('✅ オーバーレイ答案システム実行中...');
-            window.startAnswerCorrectionMode(quizIndex, subIndex);
-        } else {
-            console.error('❌ オーバーレイ答案システムが見つかりません');
-        }
-        return;
-    }
-
     // ★★★ みんなの意見ボタンの処理 ★★★
     const opinionBtn = event.target.closest('.opinion-btn');
     if (opinionBtn) {
@@ -136,60 +94,6 @@ async function handleGlobalClick(event) {
             window.startCharacterDialogue(quizIndex, subIndex);
         } else {
             console.error('❌ window.startCharacterDialogue関数が見つかりません');
-        }
-        return;
-    }
-    
-    // ★★★ 対話開始ボタンの処理を委任方式で捕捉 ★★★
-    const startChatBtn = event.target.closest('.start-chat-btn');
-    if (startChatBtn) {
-        console.log('✅ 対話開始ボタンを検出（イベント委任）');
-        event.preventDefault();
-        event.stopPropagation();
-        
-        // ミニ論文の場合、答案用紙表示ボタンを設定
-        if (startChatBtn.dataset.type === 'quiz') {
-            const quizIndex = startChatBtn.dataset.quizIndex;
-            const subIndex = startChatBtn.dataset.subIndex || '0';
-            const chatArea = document.getElementById(`chat-area-quiz-${quizIndex}-${subIndex}`);
-            
-            if (chatArea) {
-                // 答案用紙表示ボタンを設定（チャット開始後に表示）
-                setTimeout(() => {
-                    if (window.setupAnswerSheetButton) {
-                        const answerSheetBtn = window.setupAnswerSheetButton(chatArea, quizIndex, subIndex);
-                        if (answerSheetBtn) {
-                            answerSheetBtn.style.display = 'inline-block';
-                        }
-                    }
-                }, 1000); // チャットが開始された後に表示
-            }
-        }
-        
-        startChatSession(startChatBtn, window.currentCaseData);
-        return;
-    }
-
-    // ★★★ 追加質問ボタンの処理も委任方式で捕捉 ★★★
-    const sendFollowUpBtn = event.target.closest('[id^="send-follow-up-btn-"]');
-    if (sendFollowUpBtn) {
-        console.log('✅ 追加質問ボタンを検出（イベント委任）');
-        event.preventDefault();
-        const sessionId = sendFollowUpBtn.dataset.sessionId;
-        if (sessionId) sendFollowUpMessage(sessionId);
-        return;
-    }
-    
-    // ★★★ チャット終了ボタンの処理 ★★★
-    const endChatBtn = event.target.closest('[id^="end-chat-btn-"]');
-    if (endChatBtn) {
-        console.log('✅ チャット終了ボタンを検出（イベント委任）');
-        event.preventDefault();
-        const sessionId = endChatBtn.dataset.sessionId;
-        if (sessionId) {
-            if (confirm('チャットを終了しますか？')) {
-                endChatSession(sessionId);
-            }
         }
         return;
     }

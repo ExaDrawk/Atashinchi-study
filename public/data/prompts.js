@@ -168,13 +168,13 @@ function generateExpressionGuide() {
 /**
  * AIへの指示（会話プロンプト）を生成する関数
  * @param {string} userInput - ユーザーのメッセージ
- * @param {string} chatType - チャットのタイプ（'story' または 'explanation'）
+ * @param {string} chatType - チャットのタイプ（'story' など）
  * @param {object} storyData - モジュールの全データ
  * @returns {string} - AIに渡すための完全な指示文字列
  */
 export function generateInitialPrompt(userInput, chatType, storyData) {
   const characterNames = [...new Set(storyData.story.filter(s => s.type === 'dialogue').map(s => s.speaker))];
-  const sessionType = chatType; // 'story' または 'explanation'
+    const sessionType = chatType === 'story' ? 'story' : (chatType || 'general');
   
 
   // --- つづき・再開時の会話繰り返し防止ルール ---
@@ -209,13 +209,12 @@ ${COMMON_EXPRESSIONS.map(expr => `- ${expr}`).join('\n')}
 ## シナリオ概要
 -   これから生成するのは、ユーザーのメッセージに対する**自然で楽しい会話劇**です。
 -   目的は、**ユーザーの話題を中心とした**自由な議論・雑談をすることです。
--   ${chatType === 'story' ? 'ストーリー内容を必ず参照し' : '解説内容を必ず参照し'}、ユーザーの話題と関連付けてください。
+-   ${chatType === 'story' ? 'ストーリー内容を必ず参照し' : 'ケースの背景情報を可能な範囲で参照し'}、ユーザーの話題と関連付けてください。
 -   採点や評価は一切行わず、ユーザーが話したいことについて楽しく対話することを重視してください。
 
 ## 材料
 -   **ユーザーのメッセージ**: ${userInput}
 -   **ストーリー内容（必ず参照すること）**: ${chatType === 'story' ? storyData.story.map(s => s.type === 'dialogue' ? `${s.speaker}: ${s.dialogue}` : s.text).join('\n') : 'なし'}
--   **解説内容（必ず参照すること）**: ${chatType === 'explanation' ? storyData.explanation : 'なし'}
 -   **背景知識（必要に応じて参照）**: ${storyData.knowledgeBox || 'なし'}
 
 ## 場所設定とナレーション（最重要）

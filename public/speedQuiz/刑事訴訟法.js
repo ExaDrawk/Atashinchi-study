@@ -1,10 +1,37 @@
 // 刑事訴訟法のスピード条文回答データ
 // 自動生成ファイル - 手動編集は推奨されません
-// 最終更新: 2025/9/26 15:55:48
+// 最終更新: 2025/11/16 18:18:41
 
 const lawData_speedQuizData = {
   "lawName": "刑事訴訟法",
   "articles": {
+    "99": {
+      "1": {
+        "answered": 1,
+        "correct": 0,
+        "totalScore": 0,
+        "averageScore": 0,
+        "modules": []
+      }
+    },
+    "110": {
+      "1": {
+        "answered": 4,
+        "correct": 0,
+        "totalScore": 0,
+        "averageScore": 0,
+        "modules": []
+      }
+    },
+    "111": {
+      "1": {
+        "answered": 2,
+        "correct": 0,
+        "totalScore": 0,
+        "averageScore": 0,
+        "modules": []
+      }
+    },
     "143": {
       "1": {
         "answered": 1,
@@ -34,34 +61,52 @@ const lawData_speedQuizData = {
     },
     "189": {
       "1": {
-        "answered": 4,
+        "answered": 7,
         "correct": 2,
         "totalScore": 250,
-        "averageScore": 62.5,
+        "averageScore": 35.71,
         "modules": []
       }
     },
     "197": {
       "1": {
-        "answered": 4,
+        "answered": 6,
         "correct": 2,
         "totalScore": 220,
-        "averageScore": 55,
+        "averageScore": 36.67,
         "modules": []
       }
     },
     "199": {
       "1": {
-        "answered": 7,
-        "correct": 3,
-        "totalScore": 450,
-        "averageScore": 64.29,
+        "answered": 10,
+        "correct": 5,
+        "totalScore": 770,
+        "averageScore": 77,
         "modules": []
       }
     },
     "218": {
       "1": {
-        "answered": 4,
+        "answered": 7,
+        "correct": 0,
+        "totalScore": 0,
+        "averageScore": 0,
+        "modules": []
+      }
+    },
+    "219": {
+      "1": {
+        "answered": 6,
+        "correct": 2,
+        "totalScore": 280,
+        "averageScore": 46.67,
+        "modules": []
+      }
+    },
+    "222": {
+      "1": {
+        "answered": 2,
         "correct": 0,
         "totalScore": 0,
         "averageScore": 0,
@@ -70,10 +115,10 @@ const lawData_speedQuizData = {
     },
     "247": {
       "1": {
-        "answered": 3,
+        "answered": 4,
         "correct": 2,
         "totalScore": 330,
-        "averageScore": 110,
+        "averageScore": 82.5,
         "modules": [
           "刑事訴訟法/2.公訴・公判/2.1-6.js"
         ]
@@ -101,10 +146,10 @@ const lawData_speedQuizData = {
     },
     "260": {
       "1": {
-        "answered": 1,
+        "answered": 3,
         "correct": 1,
         "totalScore": 140,
-        "averageScore": 140,
+        "averageScore": 46.67,
         "modules": [
           "刑事訴訟法/2.公訴・公判/2.1-6.js"
         ]
@@ -112,10 +157,10 @@ const lawData_speedQuizData = {
     },
     "261": {
       "1": {
-        "answered": 2,
+        "answered": 4,
         "correct": 2,
         "totalScore": 340,
-        "averageScore": 170,
+        "averageScore": 85,
         "modules": [
           "刑事訴訟法/2.公訴・公判/2.1-6.js"
         ]
@@ -123,7 +168,7 @@ const lawData_speedQuizData = {
     },
     "262": {
       "1": {
-        "answered": 2,
+        "answered": 3,
         "correct": 0,
         "totalScore": 0,
         "averageScore": 0,
@@ -134,10 +179,10 @@ const lawData_speedQuizData = {
     },
     "269": {
       "1": {
-        "answered": 1,
+        "answered": 2,
         "correct": 1,
         "totalScore": 120,
-        "averageScore": 120,
+        "averageScore": 60,
         "modules": [
           "刑事訴訟法/2.公訴・公判/2.1-6.js"
         ]
@@ -163,10 +208,10 @@ const lawData_speedQuizData = {
     },
     "306": {
       "1": {
-        "answered": 6,
+        "answered": 9,
         "correct": 1,
         "totalScore": 190,
-        "averageScore": 31.67,
+        "averageScore": 21.11,
         "modules": []
       }
     },
@@ -199,10 +244,10 @@ const lawData_speedQuizData = {
     },
     "312": {
       "1": {
-        "answered": 3,
+        "answered": 4,
         "correct": 3,
         "totalScore": 490,
-        "averageScore": 163.33,
+        "averageScore": 122.5,
         "modules": [
           "刑事訴訟法/2.公訴・公判/2.1-6.js"
         ]
@@ -228,10 +273,10 @@ const lawData_speedQuizData = {
     },
     "319": {
       "1": {
-        "answered": 1,
+        "answered": 2,
         "correct": 1,
         "totalScore": 200,
-        "averageScore": 200,
+        "averageScore": 100,
         "modules": []
       }
     },
@@ -246,10 +291,10 @@ const lawData_speedQuizData = {
     },
     "338": {
       "1": {
-        "answered": 3,
+        "answered": 4,
         "correct": 3,
         "totalScore": 560,
-        "averageScore": 186.67,
+        "averageScore": 140,
         "modules": [
           "刑事訴訟法/2.公訴・公判/2.1-6.js"
         ]
@@ -264,12 +309,21 @@ const lawData_speedQuizData = {
         "modules": []
       }
     },
+    "430": {
+      "1": {
+        "answered": 3,
+        "correct": 0,
+        "totalScore": 0,
+        "averageScore": 0,
+        "modules": []
+      }
+    },
     "435": {
       "1": {
-        "answered": 2,
+        "answered": 3,
         "correct": 1,
         "totalScore": 160,
-        "averageScore": 80,
+        "averageScore": 53.33,
         "modules": []
       }
     }

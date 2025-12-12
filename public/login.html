@@ -1,148 +1,422 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ログイン - あたしんち学習アプリ</title>
+    <title>ログイン - あたしンちスタディ Premium</title>
+    <meta name="description" content="あたしンちスタディ - 司法試験対策のための革新的学習プラットフォーム">
+    <link rel="icon" type="image/x-icon" href="/yuzu.ico?v=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        body { 
-            font-family: 'M PLUS Rounded 1c', sans-serif; 
-            background-color: #FFFBEB; 
+        :root {
+            --color-accent: #6366f1;
+            --color-accent-strong: #4f46e5;
+            --color-accent-soft: #eef2ff;
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --gradient-mesh: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
             min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%);
+            position: relative;
+            overflow: hidden;
         }
-        .login-container {
-            background: white;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+        /* Animated mesh background */
+        .mesh-bg {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            animation: mesh-float 20s ease-in-out infinite;
         }
+
+        @keyframes mesh-float {
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.05) rotate(2deg);
+            }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float-particle 15s linear infinite;
+        }
+
+        @keyframes float-particle {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Glass morphism card */
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-card:hover {
+            box-shadow:
+                0 30px 60px -15px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                0 0 80px rgba(99, 102, 241, 0.2);
+            transform: translateY(-4px);
+        }
+
+        /* Premium input fields */
         .input-field {
-            background: white;
-            border: 2px solid #e5e7eb;
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
         .input-field:focus {
-            border-color: #F9A825;
-            box-shadow: 0 0 0 3px rgba(249, 168, 37, 0.1);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--color-accent);
+            box-shadow:
+                0 0 0 4px rgba(99, 102, 241, 0.2),
+                0 0 30px rgba(99, 102, 241, 0.3);
             outline: none;
         }
+
+        /* Gradient button */
         .login-btn {
-            background-color: #F9A825;
-            transition: all 0.3s ease;
+            background: var(--gradient-primary);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
         }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .login-btn:hover::before {
+            transform: translateX(100%);
+        }
+
         .login-btn:hover {
-            background-color: #F57C00;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.5);
         }
+
+        .login-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Logo animation */
+        .logo-text {
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 50%, #f8fafc 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logo-shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes logo-shimmer {
+
+            0%,
+            100% {
+                background-position: 0% center;
+            }
+
+            50% {
+                background-position: 200% center;
+            }
+        }
+
+        /* Icon glow */
+        .icon-glow {
+            filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+        }
+
+        /* Error/Success messages */
+        .message {
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
         .error-message {
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(239, 68, 68, 0.15);
             border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #dc2626;
+            color: #fca5a5;
         }
+
         .success-message {
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(34, 197, 94, 0.15);
             border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #16a34a;
+            color: #86efac;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Badge styles */
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Input label */
+        .input-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .input-label svg {
+            color: var(--color-accent);
+        }
+
+        /* Decorative elements */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--color-accent);
+            top: -150px;
+            left: -100px;
+            animation: orb-float 10s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: #8b5cf6;
+            bottom: -200px;
+            right: -150px;
+            animation: orb-float 12s ease-in-out infinite reverse;
+        }
+
+        @keyframes orb-float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, 20px);
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body class="flex items-center justify-center min-h-screen p-4">
-    <div class="login-container rounded-2xl p-8 w-full max-w-md">
-        <!-- ヘッダー -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-extrabold text-yellow-800 mb-2">法律学習アプリ</h1>
-            <h2 class="text-2xl md:text-3xl font-extrabold text-yellow-600 tracking-wider mb-4">『あたしんち学習アプリ』</h2>
-            <p class="text-gray-600">司法試験対策システムにログイン</p>
+    <!-- Animated background -->
+    <div class="mesh-bg"></div>
+
+    <!-- Particles -->
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 35%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 1s;"></div>
+    <div class="particle" style="left: 65%; animation-delay: 3s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 5s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 2.5s;"></div>
+
+    <!-- Login Card -->
+    <div class="login-card rounded-3xl p-10 w-full max-w-md relative z-10">
+        <!-- Decorative orbs -->
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-10 relative">
+            <div
+                class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 mb-6 shadow-lg shadow-indigo-500/30">
+                <span class="text-4xl">📚</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-extrabold logo-text mb-3">
+                あたしンちスタディ
+            </h1>
+            <p class="text-slate-400 text-sm">
+                司法試験対策のための革新的学習プラットフォーム
+            </p>
+            <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full badge text-xs">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                <span class="text-slate-300">Premium Edition</span>
+            </div>
         </div>
 
-        <!-- ログインフォーム -->
-        <form id="loginForm" class="space-y-6">
-            <!-- エラー・成功メッセージ -->
-            <div id="messageContainer" class="hidden rounded-lg p-4"></div>
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-6 relative">
+            <!-- Message Container -->
+            <div id="messageContainer" class="hidden message"></div>
 
-            <!-- ユーザー名 -->
+            <!-- Username -->
             <div>
-                <label for="username" class="block text-sm font-bold text-gray-700 mb-2">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                <label for="username" class="input-label">
+                    <svg class="w-4 h-4 icon-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                     ユーザー名
                 </label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username" 
-                    required 
-                    class="input-field w-full px-4 py-3 rounded-lg transition-all"
-                    placeholder="ユーザー名を入力"
-                    autocomplete="username"
-                >
+                <input type="text" id="username" name="username" required
+                    class="input-field w-full px-5 py-4 rounded-xl" placeholder="ユーザー名を入力" autocomplete="username">
             </div>
 
-            <!-- パスワード -->
+            <!-- Password -->
             <div>
-                <label for="password" class="block text-sm font-bold text-gray-700 mb-2">
-                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                <label for="password" class="input-label">
+                    <svg class="w-4 h-4 icon-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
                     </svg>
                     パスワード
                 </label>
                 <div class="relative">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        class="input-field w-full px-4 py-3 pr-12 rounded-lg transition-all"
-                        placeholder="パスワードを入力"
-                        autocomplete="current-password"
-                    >
-                    <button 
-                        type="button" 
-                        id="togglePassword" 
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    <input type="password" id="password" name="password" required
+                        class="input-field w-full px-5 py-4 pr-14 rounded-xl" placeholder="パスワードを入力"
+                        autocomplete="current-password">
+                    <button type="button" id="togglePassword"
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                            </path>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            <!-- ログインボタン -->
-            <button 
-                type="submit" 
-                id="loginBtn"
-                class="login-btn w-full py-3 px-4 rounded-lg text-white font-bold transition-all transform hover:scale-105"
-            >
+            <!-- Login Button -->
+            <button type="submit" id="loginBtn"
+                class="login-btn w-full py-4 px-6 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-3">
                 <span id="loginBtnText">ログイン</span>
-                <svg id="loginBtnSpinner" class="hidden animate-spin w-4 h-4 ml-2 inline" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <div id="loginBtnSpinner" class="hidden w-5 h-5 spinner"></div>
+                <svg id="loginBtnArrow" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6">
+                    </path>
                 </svg>
             </button>
         </form>
 
-        <!-- フッター -->
-        <div class="mt-8 text-center">
-            <p class="text-gray-500 text-sm">
-                © 2024 あたしんち学習アプリ. All rights reserved.
+        <!-- Footer -->
+        <div class="mt-10 text-center relative">
+            <p class="text-slate-500 text-xs mb-4">
+                © 2024-2025 あたしンちスタディ. All rights reserved.
             </p>
-            <div class="mt-4 flex justify-center space-x-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <div class="flex justify-center gap-3">
+                <span class="badge inline-flex items-center px-3 py-1.5 rounded-full text-xs text-slate-300">
+                    <svg class="w-3 h-3 mr-1.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    Secure Login
+                    Secure
                 </span>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800 font-medium">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                <span class="badge inline-flex items-center px-3 py-1.5 rounded-full text-xs text-slate-300">
+                    <svg class="w-3 h-3 mr-1.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
                     </svg>
-                    SSL Protected
+                    SSL
+                </span>
+                <span class="badge inline-flex items-center px-3 py-1.5 rounded-full text-xs text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-purple-400 mr-1.5"></span>
+                    Premium
                 </span>
             </div>
         </div>
@@ -156,6 +430,7 @@
         const loginBtn = document.getElementById('loginBtn');
         const loginBtnText = document.getElementById('loginBtnText');
         const loginBtnSpinner = document.getElementById('loginBtnSpinner');
+        const loginBtnArrow = document.getElementById('loginBtnArrow');
         const messageContainer = document.getElementById('messageContainer');
         const togglePasswordBtn = document.getElementById('togglePassword');
 
@@ -163,17 +438,17 @@
         togglePasswordBtn.addEventListener('click', () => {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            
+
             if (type === 'text') {
                 togglePasswordBtn.innerHTML = `
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
                     </svg>
                 `;
             } else {
                 togglePasswordBtn.innerHTML = `
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 616 0z"></path>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                     </svg>
                 `;
@@ -184,17 +459,17 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             hideMessage();
-            
+
             const username = usernameInput.value.trim();
             const password = passwordInput.value.trim();
-            
+
             if (!username || !password) {
                 showMessage('ユーザー名とパスワードを入力してください。', 'error');
                 return;
             }
-            
+
             setLoading(true);
-            
+
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -203,15 +478,15 @@
                     },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
-                    showMessage('ログインに成功しました。リダイレクト中...', 'success');
+                    showMessage('ログインに成功しました！リダイレクト中...', 'success');
                     setTimeout(() => {
                         const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
                         window.location.href = redirectUrl;
-                    }, 1000);
+                    }, 1200);
                 } else {
                     showMessage(result.message || 'ログインに失敗しました。', 'error');
                 }
@@ -225,8 +500,13 @@
 
         // メッセージ表示
         function showMessage(message, type) {
-            messageContainer.className = `${type === 'error' ? 'error-message' : 'success-message'} rounded-lg p-4`;
-            messageContainer.textContent = message;
+            messageContainer.className = `message ${type === 'error' ? 'error-message' : 'success-message'}`;
+            messageContainer.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="text-lg">${type === 'error' ? '⚠️' : '✅'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
             messageContainer.classList.remove('hidden');
         }
 
@@ -241,10 +521,12 @@
                 loginBtn.disabled = true;
                 loginBtnText.textContent = 'ログイン中...';
                 loginBtnSpinner.classList.remove('hidden');
+                loginBtnArrow.classList.add('hidden');
             } else {
                 loginBtn.disabled = false;
                 loginBtnText.textContent = 'ログイン';
                 loginBtnSpinner.classList.add('hidden');
+                loginBtnArrow.classList.remove('hidden');
             }
         }
 
@@ -256,6 +538,17 @@
         } else if (error === 'session-expired') {
             showMessage('セッションが期限切れです。再度ログインしてください。', 'error');
         }
+
+        // フォーカス時のインプットアニメーション
+        [usernameInput, passwordInput].forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('scale-[1.01]');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
     </script>
 </body>
+
 </html>

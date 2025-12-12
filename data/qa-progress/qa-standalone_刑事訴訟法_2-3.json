@@ -1,0 +1,513 @@
+[
+  {
+    "id": "2-3",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "{{訴因}}の設定・変更は{{検察官}}の{{専権}}とされていること（【刑事訴訟法247条】【刑事訴訟法312条1項】），{{起訴猶予}}裁量が認められていることとの均衡（{{起訴便宜主義}}，【刑事訴訟法248条】）から，事案の{{軽重}}，{{立証の難易}}等を考慮して{{一部起訴}}を行うことも可能である（最決昭59.1.27）。\nただし，{{一部起訴}}も{{裁量権}}の範囲内で行われるべきであり（最判平4.9.18），{{裁量権の逸脱・濫用}}があると見られる場合には，例外的に{{公訴棄却}}をもって対処すべきである（【刑事訴訟法338条】）。例えば，{{強盗罪}}を{{暴行罪}}として起訴するなど，{{実体的真実}}にとって耐えられないような一部起訴は認められない。また，{{かすがい外し}}など，検察官に{{濫用的意図}}がある場合の起訴も許されない。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "訴因",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "検察官",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "専権",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "起訴猶予",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "起訴便宜主義",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "軽重",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "立証の難易",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "一部起訴",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "一部起訴",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "裁量権",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "裁量権の逸脱・濫用",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "公訴棄却",
+              "prompt": "空欄B12",
+              "placeholder": ""
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "強盗罪",
+              "prompt": "空欄B13",
+              "placeholder": ""
+            },
+            {
+              "id": "B14",
+              "label": "(14)",
+              "answer": "暴行罪",
+              "prompt": "空欄B14",
+              "placeholder": ""
+            },
+            {
+              "id": "B15",
+              "label": "(15)",
+              "answer": "実体的真実",
+              "prompt": "空欄B15",
+              "placeholder": ""
+            },
+            {
+              "id": "B16",
+              "label": "(16)",
+              "answer": "かすがい外し",
+              "prompt": "空欄B16",
+              "placeholder": ""
+            },
+            {
+              "id": "B17",
+              "label": "(17)",
+              "answer": "濫用的意図",
+              "prompt": "空欄B17",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "訴因"
+            },
+            {
+              "type": "text",
+              "text": "の設定・変更は"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "検察官"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "専権"
+            },
+            {
+              "type": "text",
+              "text": "とされていること（【刑事訴訟法247条】【刑事訴訟法312条1項】），"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "起訴猶予"
+            },
+            {
+              "type": "text",
+              "text": "裁量が認められていることとの均衡（"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "起訴便宜主義"
+            },
+            {
+              "type": "text",
+              "text": "，【刑事訴訟法248条】）から，事案の"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "軽重"
+            },
+            {
+              "type": "text",
+              "text": "，"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "立証の難易"
+            },
+            {
+              "type": "text",
+              "text": "等を考慮して"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "一部起訴"
+            },
+            {
+              "type": "text",
+              "text": "を行うことも可能である（最決昭59.1.27）。\nただし，"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "一部起訴"
+            },
+            {
+              "type": "text",
+              "text": "も"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "裁量権"
+            },
+            {
+              "type": "text",
+              "text": "の範囲内で行われるべきであり（最判平4.9.18），"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "裁量権の逸脱・濫用"
+            },
+            {
+              "type": "text",
+              "text": "があると見られる場合には，例外的に"
+            },
+            {
+              "type": "blank",
+              "id": "B12",
+              "label": "(12)",
+              "placeholder": "",
+              "answer": "公訴棄却"
+            },
+            {
+              "type": "text",
+              "text": "をもって対処すべきである（【刑事訴訟法338条】）。例えば，"
+            },
+            {
+              "type": "blank",
+              "id": "B13",
+              "label": "(13)",
+              "placeholder": "",
+              "answer": "強盗罪"
+            },
+            {
+              "type": "text",
+              "text": "を"
+            },
+            {
+              "type": "blank",
+              "id": "B14",
+              "label": "(14)",
+              "placeholder": "",
+              "answer": "暴行罪"
+            },
+            {
+              "type": "text",
+              "text": "として起訴するなど，"
+            },
+            {
+              "type": "blank",
+              "id": "B15",
+              "label": "(15)",
+              "placeholder": "",
+              "answer": "実体的真実"
+            },
+            {
+              "type": "text",
+              "text": "にとって耐えられないような一部起訴は認められない。また，"
+            },
+            {
+              "type": "blank",
+              "id": "B16",
+              "label": "(16)",
+              "placeholder": "",
+              "answer": "かすがい外し"
+            },
+            {
+              "type": "text",
+              "text": "など，検察官に"
+            },
+            {
+              "type": "blank",
+              "id": "B17",
+              "label": "(17)",
+              "placeholder": "",
+              "answer": "濫用的意図"
+            },
+            {
+              "type": "text",
+              "text": "がある場合の起訴も許されない。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-12T04:36:18.414Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "○",
+                "feedback": "正解。訴因の設定・変更は検察官の専権事項で、刑訴法247条・312条1項が根拠。これを押さえると起訴状の形式要件理解が深まるよ。",
+                "speaker": "しみちゃん",
+                "expression": "impressed",
+                "userAnswer": "訴因",
+                "correctAnswer": "訴因"
+              },
+              {
+                "id": "B2",
+                "result": "○",
+                "feedback": "正解。検察官が訴因を決める専権を持つから、起訴便宜主義とのバランスで一部起訴が可能になる基盤だね。",
+                "speaker": "しみちゃん",
+                "expression": "normal",
+                "userAnswer": "検察官",
+                "correctAnswer": "検察官"
+              },
+              {
+                "id": "B3",
+                "result": "○",
+                "feedback": "正解。専権だから検察の裁量が広く認められるけど、それが起訴猶予と均衡する仕組みを理解できてる。論文で活きるポイントだよ。",
+                "speaker": "しみちゃん",
+                "expression": "cool",
+                "userAnswer": "専権",
+                "correctAnswer": "専権"
+              },
+              {
+                "id": "B4",
+                "result": "△",
+                "feedback": "惜しい。起訴猶予の意味を説明したのはわかるけど、用語として『起訴猶予』を入れるべき。起訴便宜主義の刑訴248条で検察が不起訴を選べる裁量を指すんだ。混同しやすい検察の判断基準だね。",
+                "speaker": "しみちゃん",
+                "expression": "thinking",
+                "userAnswer": "起訴をするかどうかの",
+                "correctAnswer": "起訴猶予"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "正解。起訴便宜主義は刑訴248条の検察裁量の根拠で、一部起訴の柔軟性を支える。これ知ってると公訴維持の論点に繋がるよ。",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "起訴便宜主義",
+                "correctAnswer": "起訴便宜主義"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "不正解。『軽重』は事案の犯罪の重さの程度を指すけど、違法性は刑法の構成要件該当性と混同しやすい。検察が一部起訴を検討する実務的判断基準を押さえよう。",
+                "speaker": "しみちゃん",
+                "expression": "annoyed",
+                "userAnswer": "違法性",
+                "correctAnswer": "軽重"
+              },
+              {
+                "id": "B7",
+                "result": "△",
+                "feedback": "惜しい。立証の難易は証拠収集のハードルを意味するけど、重大性は軽重と重なる部分があるから混同したね。最決昭59.1.27で考慮要素として明確だよ。",
+                "speaker": "しみちゃん",
+                "expression": "confused",
+                "userAnswer": "重大性",
+                "correctAnswer": "立証の難易"
+              },
+              {
+                "id": "B8",
+                "result": "○",
+                "feedback": "正解。一部起訴は検察の裁量範囲で認められるけど、限界を次に続く判例で理解できてる。これで公訴棄却の例外性を活かせる。",
+                "speaker": "しみちゃん",
+                "expression": "happy",
+                "userAnswer": "一部起訴",
+                "correctAnswer": "一部起訴"
+              },
+              {
+                "id": "B9",
+                "result": "○",
+                "feedback": "正解。繰り返しだけど、一部起訴の裁量性を最判平4.9.18で確認。これが逸脱濫用の判断基準に直結するよ。",
+                "speaker": "しみちゃん",
+                "expression": "normal",
+                "userAnswer": "一部起訴",
+                "correctAnswer": "一部起訴"
+              },
+              {
+                "id": "B10",
+                "result": "☓",
+                "feedback": "不正解。裁量権の範囲内で行うべきで、公訴事実は訴因記載と混同したかも。一部起訴の柔軟性は検察裁量の枠内が肝心だよ。",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "公訴事実",
+                "correctAnswer": "裁量権"
+              },
+              {
+                "id": "B11",
+                "result": "☓",
+                "feedback": "不正解。裁量権の逸脱・濫用が公訴棄却の要件で、手続違反は別物（刑訴316条など）と混同しやすい。裁判所が検察裁量を審査する例外を押さえよう。",
+                "speaker": "しみちゃん",
+                "expression": "annoyed",
+                "userAnswer": "手続違反",
+                "correctAnswer": "裁量権の逸脱・濫用"
+              },
+              {
+                "id": "B12",
+                "result": "○",
+                "feedback": "正解。刑訴338条の公訴棄却は検察裁量濫用の対処法。これ理解してると実体的真実発見の制度趣旨に繋がる論文力が上がるよ。",
+                "speaker": "しみちゃん",
+                "expression": "impressed",
+                "userAnswer": "公訴棄却",
+                "correctAnswer": "公訴棄却"
+              },
+              {
+                "id": "B13",
+                "result": "☓",
+                "feedback": "不正解。強盗罪を暴行罪に一部起訴は実体的真実に反する例で、存在しない人は公訴時効とかの別論点と混同した？ 判例の典型例だよ。",
+                "speaker": "しみちゃん",
+                "expression": "surprised",
+                "userAnswer": "存在しない人",
+                "correctAnswer": "強盗罪"
+              },
+              {
+                "id": "B14",
+                "result": "☓",
+                "feedback": "不正解。暴行罪は強盗の軽微部分の例で、被告人は関係ない。検察が罪名をダウングレードしすぎると裁量逸脱になる理由を理解して。",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "被告人",
+                "correctAnswer": "暴行罪"
+              },
+              {
+                "id": "B15",
+                "result": "☓",
+                "feedback": "不正解。実体的真実は裁判所の真実発見機能で、被告人を入れたのは公訴棄却の判断要素と混同か。一部起訴の限界の核心だよ。",
+                "speaker": "しみちゃん",
+                "expression": "annoyed",
+                "userAnswer": "被告人",
+                "correctAnswer": "実体的真実"
+              },
+              {
+                "id": "B16",
+                "result": "☓",
+                "feedback": "不正解。かすがい外しは複数の罪を意図的に一部起訴で分断する濫用で、公務員の犯罪は職権濫用罪とかと混同しやすい。実務的濫用パターンを覚えよう。",
+                "speaker": "しみちゃん",
+                "expression": "serious",
+                "userAnswer": "公務員の犯罪",
+                "correctAnswer": "かすがい外し"
+              },
+              {
+                "id": "B17",
+                "result": "☓",
+                "feedback": "不正解。濫用的意図は検察の不純動機で、欠格事由は裁判官資格とか別分野。裁量濫用の主観的要素を判例で押さえてね。",
+                "speaker": "しみちゃん",
+                "expression": "sigh",
+                "userAnswer": "欠格事由",
+                "correctAnswer": "濫用的意図"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "一部起訴は検察の専権・裁量の範囲だけど、実体的真実を害したり濫用だと公訴棄却の例外があるのが核心。基礎は取れてるけど、後半の具体例で混同が多いから判例集めて反復学習を。論文では裁量均衡の制度趣旨を常に意識して書こう。",
+              "speaker": "しみちゃん",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "訴因",
+            "B2": "検察官",
+            "B3": "専権",
+            "B4": "起訴をするかどうかの",
+            "B5": "起訴便宜主義",
+            "B6": "違法性",
+            "B7": "重大性",
+            "B8": "一部起訴",
+            "B9": "一部起訴",
+            "B10": "公訴事実",
+            "B11": "手続違反",
+            "B12": "公訴棄却",
+            "B13": "存在しない人",
+            "B14": "被告人",
+            "B15": "被告人",
+            "B16": "公務員の犯罪",
+            "B17": "欠格事由"
+          }
+        }
+      },
+      "updatedAt": "2025-12-12T04:36:18.415Z"
+    }
+  }
+]

@@ -8,7 +8,7 @@
     <LawId>322AC0000000061</LawId>
     <LawNum/>
     <LawFullText>
-      <Law Era="Showa" Lang="ja" LawType="Act" Num="061" Year="22" PromulgateMonth="04" PromulgateDay="16">
+      <Law Lang="ja" Era="Showa" Year="22" Num="061" PromulgateMonth="04" PromulgateDay="16" LawType="Act">
         <LawNum>昭和二十二年法律第六十一号</LawNum>
         <LawBody>
           <LawTitle Kana="けんさつちょうほう" Abbrev="" AbbrevKana="">検察庁法</LawTitle>

@@ -58,5 +58,10 @@
     "articleNumber": "10",
     "paragraph": "1",
     "sourceCase": ""
+  },
+  {
+    "articleNumber": "10",
+    "paragraph": 1,
+    "sourceCase": ""
   }
 ]

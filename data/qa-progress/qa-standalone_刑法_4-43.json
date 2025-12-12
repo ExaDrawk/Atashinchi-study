@@ -1,0 +1,177 @@
+[
+  {
+    "id": "4-43",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "{{非身分者}}であっても{{身分者}}と{{共同して}} {{違法な法益侵害の結果を惹起する}}ことは可能であるから{{含まれる}}（大判大4.3.2）。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "非身分者",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "身分者",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "共同して",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "違法な法益侵害の結果を惹起する",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "含まれる",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "非身分者"
+            },
+            {
+              "type": "text",
+              "text": "であっても"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "身分者"
+            },
+            {
+              "type": "text",
+              "text": "と"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "共同して"
+            },
+            {
+              "type": "text",
+              "text": " "
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "違法な法益侵害の結果を惹起する"
+            },
+            {
+              "type": "text",
+              "text": "ことは可能であるから"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "含まれる"
+            },
+            {
+              "type": "text",
+              "text": "（大判大4.3.2）。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-08T12:51:21.224Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "☓",
+                "feedback": "共同正犯なんて回答は完全に的外れだぞ。身分犯の共同正犯で非身分者が参加できるかを問うてんだ。ここは『非身分者』が入るんだ。共同正犯の概念自体を穴埋めに持ってきちゃダメだな、全体の文脈を読み違えやすい典型的なミスだ。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "共同正犯",
+                "correctAnswer": "非身分者"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "『意思連絡』？ それは共犯の教義で正犯と共謀者の連絡を指すけど、ここは身分犯の構造を説明してるんだ。『身分者』が正解で、非身分者が身分者と組むパターンを示す言葉だぞ。共犯論の細かい用語と混同して、判例の要点を見失いがちだな。",
+                "speaker": "村上先生",
+                "expression": "annoyed",
+                "userAnswer": "意思連絡",
+                "correctAnswer": "身分者"
+              },
+              {
+                "id": "B3",
+                "result": "△",
+                "feedback": "『共謀に基づく』は惜しいな、共同正犯の要件に共謀は入ってるが、この判例（大判大4.3.2）は実行の共同性を強調してるんだ。『共同して』が正解で、非身分者が身分者と一緒に動く点をピンポイントで表す。共謀だけだと正犯の成立要件を狭く捉えすぎて、司法試験の論文で減点されやすいぞ。",
+                "speaker": "村上先生",
+                "expression": "thinking",
+                "userAnswer": "共謀に基づく",
+                "correctAnswer": "共同して"
+              },
+              {
+                "id": "B4",
+                "result": "☓",
+                "feedback": "『実行』は身分犯の共同正犯で一番混同しやすい言葉だな。非身分者は身分的実行行為（例: 地位利用の行為）をしてないから成立しないと勘違いする人が多いが、この判例は『違法な法益侵害の結果を惹起する』共同性を要件とするんだ。制度趣旨は身分犯の本質が法益侵害にあるから、非身分者も結果共同で正犯になりうるってことだぞ。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "実行",
+                "correctAnswer": "違法な法益侵害の結果を惹起する"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "正解だ！ 非身分者も身分者と共同で法益侵害結果を起こせば共同正犯に含まれるって判例の結論をズバリ押さえてる。この理解は刑法総論の共犯論全体、特に身分犯例外論に活きるぞ、論文で判例を正確に援用できる。",
+                "speaker": "村上先生",
+                "expression": "impressed",
+                "userAnswer": "含まれる",
+                "correctAnswer": "含まれる"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "この問題の核心は身分犯の共同正犯で、非身分者が身分者と共同して違法法益侵害の結果を惹起すれば正犯成立する大判大4.3.2の趣旨だぞ。身分的実行行為にこだわらず結果共同性を捉えろ、司法試験ではこの判例を共犯の例外としてしっかり位置づけろよ。次は類似判例や総論的論点をノートにまとめて繰り返し解け。",
+              "speaker": "村上先生",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "共同正犯",
+            "B2": "意思連絡",
+            "B3": "共謀に基づく",
+            "B4": "実行",
+            "B5": "含まれる"
+          }
+        }
+      },
+      "updatedAt": "2025-12-08T12:51:21.224Z"
+    }
+  }
+]

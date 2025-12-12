@@ -1,0 +1,629 @@
+[
+  {
+    "id": "共犯-1",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "共犯の処罰根拠は、{{正犯}}の{{実行行為}}を通じて{{法益侵害結果}}に対し{{因果性}}を及ぼす点（{{因果的共犯論}}）にある。\nしたがって、{{共犯関係}}からの{{離脱}}が認められるためには、{{離脱者}}がそれまでの関与により形成した{{物理的・心理的因果性}}を{{遮断}}することが必要である。\n具体的には、{{実行着手}}後の場合、単に{{犯行現場}}から立ち去るだけでは足りず、{{残余者}}による犯行継続の{{おそれ}}に応じた{{格別の防止措置}}（例えば、{{犯行の制止}}、{{道具の回収}}、{{被害者の救護}}等）を講じ、既存の{{共犯関係}}に基づく{{危険性}}を{{除去}}したといえるか否かにより判断する。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "正犯",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "実行行為",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "法益侵害結果",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "因果性",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "因果的共犯論",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "共犯関係",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "離脱",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "離脱者",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "物理的・心理的因果性",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "遮断",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "実行着手",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "犯行現場",
+              "prompt": "空欄B12",
+              "placeholder": ""
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "残余者",
+              "prompt": "空欄B13",
+              "placeholder": ""
+            },
+            {
+              "id": "B14",
+              "label": "(14)",
+              "answer": "おそれ",
+              "prompt": "空欄B14",
+              "placeholder": ""
+            },
+            {
+              "id": "B15",
+              "label": "(15)",
+              "answer": "格別の防止措置",
+              "prompt": "空欄B15",
+              "placeholder": ""
+            },
+            {
+              "id": "B16",
+              "label": "(16)",
+              "answer": "犯行の制止",
+              "prompt": "空欄B16",
+              "placeholder": ""
+            },
+            {
+              "id": "B17",
+              "label": "(17)",
+              "answer": "道具の回収",
+              "prompt": "空欄B17",
+              "placeholder": ""
+            },
+            {
+              "id": "B18",
+              "label": "(18)",
+              "answer": "被害者の救護",
+              "prompt": "空欄B18",
+              "placeholder": ""
+            },
+            {
+              "id": "B19",
+              "label": "(19)",
+              "answer": "共犯関係",
+              "prompt": "空欄B19",
+              "placeholder": ""
+            },
+            {
+              "id": "B20",
+              "label": "(20)",
+              "answer": "危険性",
+              "prompt": "空欄B20",
+              "placeholder": ""
+            },
+            {
+              "id": "B21",
+              "label": "(21)",
+              "answer": "除去",
+              "prompt": "空欄B21",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "共犯の処罰根拠は、"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "正犯"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "実行行為"
+            },
+            {
+              "type": "text",
+              "text": "を通じて"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "法益侵害結果"
+            },
+            {
+              "type": "text",
+              "text": "に対し"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "因果性"
+            },
+            {
+              "type": "text",
+              "text": "を及ぼす点（"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "因果的共犯論"
+            },
+            {
+              "type": "text",
+              "text": "）にある。\nしたがって、"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "共犯関係"
+            },
+            {
+              "type": "text",
+              "text": "からの"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "離脱"
+            },
+            {
+              "type": "text",
+              "text": "が認められるためには、"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "離脱者"
+            },
+            {
+              "type": "text",
+              "text": "がそれまでの関与により形成した"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "物理的・心理的因果性"
+            },
+            {
+              "type": "text",
+              "text": "を"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "遮断"
+            },
+            {
+              "type": "text",
+              "text": "することが必要である。\n具体的には、"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "実行着手"
+            },
+            {
+              "type": "text",
+              "text": "後の場合、単に"
+            },
+            {
+              "type": "blank",
+              "id": "B12",
+              "label": "(12)",
+              "placeholder": "",
+              "answer": "犯行現場"
+            },
+            {
+              "type": "text",
+              "text": "から立ち去るだけでは足りず、"
+            },
+            {
+              "type": "blank",
+              "id": "B13",
+              "label": "(13)",
+              "placeholder": "",
+              "answer": "残余者"
+            },
+            {
+              "type": "text",
+              "text": "による犯行継続の"
+            },
+            {
+              "type": "blank",
+              "id": "B14",
+              "label": "(14)",
+              "placeholder": "",
+              "answer": "おそれ"
+            },
+            {
+              "type": "text",
+              "text": "に応じた"
+            },
+            {
+              "type": "blank",
+              "id": "B15",
+              "label": "(15)",
+              "placeholder": "",
+              "answer": "格別の防止措置"
+            },
+            {
+              "type": "text",
+              "text": "（例えば、"
+            },
+            {
+              "type": "blank",
+              "id": "B16",
+              "label": "(16)",
+              "placeholder": "",
+              "answer": "犯行の制止"
+            },
+            {
+              "type": "text",
+              "text": "、"
+            },
+            {
+              "type": "blank",
+              "id": "B17",
+              "label": "(17)",
+              "placeholder": "",
+              "answer": "道具の回収"
+            },
+            {
+              "type": "text",
+              "text": "、"
+            },
+            {
+              "type": "blank",
+              "id": "B18",
+              "label": "(18)",
+              "placeholder": "",
+              "answer": "被害者の救護"
+            },
+            {
+              "type": "text",
+              "text": "等）を講じ、既存の"
+            },
+            {
+              "type": "blank",
+              "id": "B19",
+              "label": "(19)",
+              "placeholder": "",
+              "answer": "共犯関係"
+            },
+            {
+              "type": "text",
+              "text": "に基づく"
+            },
+            {
+              "type": "blank",
+              "id": "B20",
+              "label": "(20)",
+              "placeholder": "",
+              "answer": "危険性"
+            },
+            {
+              "type": "text",
+              "text": "を"
+            },
+            {
+              "type": "blank",
+              "id": "B21",
+              "label": "(21)",
+              "placeholder": "",
+              "answer": "除去"
+            },
+            {
+              "type": "text",
+              "text": "したといえるか否かにより判断する。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-09T04:44:32.077Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "☓",
+                "feedback": "そうだな、タチバナ。共犯の回答は大間違いだよ。共犯の処罰根拠は因果的共犯論で、正犯の実行行為を通じて法益侵害結果に因果関係を及ぼす点にあるから、ここは『正犯』が入るんだ。共犯と混同すると共犯関係全体の構造を見失いやすいぞ、刑法60条の趣旨を思い出せ。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "共犯",
+                "correctAnswer": "正犯"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "『行為』だけじゃ不十分だよ。共犯の因果関係は正犯の『実行行為』、すなわち客体に着手した具体的な行為を通じて生じるからだ。総称的な『行為』だと準備行為とかと混同してしまい、論文で実行の有無を曖昧に論じて減点されやすいな。",
+                "speaker": "村上先生",
+                "expression": "thinking",
+                "userAnswer": "行為",
+                "correctAnswer": "実行行為"
+              },
+              {
+                "id": "B3",
+                "result": "☓",
+                "feedback": "『結果』は曖昧すぎる。刑法の法益侵害結果、つまり保護法益を実際に侵害した結果を指すんだよ。単なる『結果』だと因果関係論で結果発生主義と混同しやすく、共犯の間接性を見落とす典型的なミスだ。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "結果",
+                "correctAnswer": "法益侵害結果"
+              },
+              {
+                "id": "B4",
+                "result": "○",
+                "feedback": "正解だよ。共犯処罰の核心は正犯の実行行為を通じて法益侵害結果に『因果性』が及ぶ点で、この理解は共犯の全般的な因果関係論に活きるぞ。論文で因果関係をしっかり押さえられるな。",
+                "speaker": "村上先生",
+                "expression": "happy",
+                "userAnswer": "因果性",
+                "correctAnswer": "因果性"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "その通りだ。『因果的共犯論』は日本刑法の通説で、共犯の処罰を正犯行為との物理的・心理的因果関係で説明するもの。この正しい用語選択は、行為論的共犯論との対比で他の総論問題にも直結するよ。",
+                "speaker": "村上先生",
+                "expression": "impressed",
+                "userAnswer": "因果的共犯論",
+                "correctAnswer": "因果的共犯論"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "『共犯』は広すぎるよ。離脱判断は『共犯関係』、すなわち共犯者間の心理的・物理的つながりからの離脱を意味するんだ。単なる共犯と混同すると、離脱の要件を曖昧にし、判例の厳格基準を満たせなくなるぞ。",
+                "speaker": "村上先生",
+                "expression": "annoyed",
+                "userAnswer": "共犯",
+                "correctAnswer": "共犯関係"
+              },
+              {
+                "id": "B7",
+                "result": "○",
+                "feedback": "正解！共犯からの『離脱』は刑法の判例で確立した概念で、この理解は準備・実行段階別の要件区分に活き、論文の論理展開を強化するよ。",
+                "speaker": "村上先生",
+                "expression": "happy",
+                "userAnswer": "離脱",
+                "correctAnswer": "離脱"
+              },
+              {
+                "id": "B8",
+                "result": "☓",
+                "feedback": "『共犯』じゃ誰が離脱者かわからんよ。『離脱者』は具体的にその共犯者を指し、自己の関与を断つ主体だ。曖昧な表現だと論文で誰の行為を論じているか不明瞭になり、採点者に伝わらないミスだな。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "共犯",
+                "correctAnswer": "離脱者"
+              },
+              {
+                "id": "B9",
+                "result": "☓",
+                "feedback": "『因果性』だけじゃ足りない。離脱はそれまでの関与で形成した『物理的・心理的因果性』を断つ必要があるんだよ。総称的に書くと正犯の物理的因果と共犯の心理的因果を区別できず、深い分析ができなくなる典型だ。",
+                "speaker": "村上先生",
+                "expression": "thinking",
+                "userAnswer": "因果性",
+                "correctAnswer": "物理的・心理的因果性"
+              },
+              {
+                "id": "B10",
+                "result": "△",
+                "feedback": "惜しいな、『除去』は近いが『遮断』が正しいよ。離脱は既存の因果性を積極的に『遮断』、つまり断ち切ることを求め、後半の『除去』とは危険性の消滅段階を区別するんだ。この混同は要件の二重構造を見落とすぞ。",
+                "speaker": "村上先生",
+                "expression": "confused",
+                "userAnswer": "除去",
+                "correctAnswer": "遮断"
+              },
+              {
+                "id": "B11",
+                "result": "☓",
+                "feedback": "『実行行為』は広範すぎるよ。ここは『実行着手』後を指し、刑法の実行着手基準（着手独占説等）と連動するんだ。行為と着手を混同すると、準備段階離脱との違いを論じられず論文が浅くなる。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "実行行為",
+                "correctAnswer": "実行着手"
+              },
+              {
+                "id": "B12",
+                "result": "☓",
+                "feedback": "『現場』だけじゃ不正確だ。『犯行現場』は犯罪実行の場所を具体的に示し、立ち去りが不十分な理由を明確にするよ。省略癖で論文の具体性が失われやすいミスだな。",
+                "speaker": "村上先生",
+                "expression": "annoyed",
+                "userAnswer": "現場",
+                "correctAnswer": "犯行現場"
+              },
+              {
+                "id": "B13",
+                "result": "△",
+                "feedback": "まあ近いが、『残余者』が判例の標準用語だよ。『他の共犯』は正しいが、残余犯の継続犯行を指す専門用語で、離脱判断の客観性を強調するんだ。この辺の用語精度が司法試験の差だ。",
+                "speaker": "村上先生",
+                "expression": "thinking",
+                "userAnswer": "他の共犯",
+                "correctAnswer": "残余者"
+              },
+              {
+                "id": "B14",
+                "result": "△",
+                "feedback": "『可能性』は抽象的すぎる。『おそれ』は残余者による犯行継続の現実的危険を意味し、防止措置の必要性を決めるよ。可能性と混同すると主観過剰になり、判例の客観基準から外れるぞ。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "可能性",
+                "correctAnswer": "おそれ"
+              },
+              {
+                "id": "B15",
+                "result": "○",
+                "feedback": "完璧だ！実行着手後の離脱には通常の離脱を超えた『格別の防止措置』が必要で、この理解は判例（最高裁昭和32年等）の要件を押さえ、他の実行後事例に活きるよ。",
+                "speaker": "村上先生",
+                "expression": "excited",
+                "userAnswer": "格別の防止措置",
+                "correctAnswer": "格別の防止措置"
+              },
+              {
+                "id": "B16",
+                "result": "△",
+                "feedback": "働きかけはいい線だが、『犯行の制止』が典型例だよ。格別措置の具体例として直接制止を挙げるのが判例的で、抽象的に書くと説得力が落ちるんだ。",
+                "speaker": "村上先生",
+                "expression": "impressed",
+                "userAnswer": "共犯者に対する働きかけ",
+                "correctAnswer": "犯行の制止"
+              },
+              {
+                "id": "B17",
+                "result": "☓",
+                "feedback": "『被害者の隔離』？ 全然違うよ。『道具の回収』は共犯道具を除去して継続を防ぐ典型例だ。被害者関連と混同すると、防止措置の多様性を理解できず、論文で例示不足になるぞ。",
+                "speaker": "村上先生",
+                "expression": "angry",
+                "userAnswer": "被害者の隔離",
+                "correctAnswer": "道具の回収"
+              },
+              {
+                "id": "B18",
+                "result": "△",
+                "feedback": "通報も有効だが、ここは『被害者の救護』が即時的な格別措置の例だよ。通報は間接的で事後的になりやすく、実行直後の防止と区別すべきだ。この違いを押さえろ。",
+                "speaker": "村上先生",
+                "expression": "thinking",
+                "userAnswer": "警察への通報",
+                "correctAnswer": "被害者の救護"
+              },
+              {
+                "id": "B19",
+                "result": "☓",
+                "feedback": "『実行行為』は論点外だよ。『共犯関係』に基づく危険性を除去するのが離脱の最終要件で、関係の解消を明示しないと構造が崩れる。行為中心の混同は因果論の誤りだな。",
+                "speaker": "村上先生",
+                "expression": "serious",
+                "userAnswer": "実行行為",
+                "correctAnswer": "共犯関係"
+              },
+              {
+                "id": "B20",
+                "result": "☓",
+                "feedback": "『因果性』と『危険性』を混同しやすいが、前者は既存のつながり、後者はその結果の継続犯行危険だよ。判例は危険除去を求め、因果回帰を許さない。この区別が論文の深みを決めるぞ。",
+                "speaker": "村上先生",
+                "expression": "annoyed",
+                "userAnswer": "因果性",
+                "correctAnswer": "危険性"
+              },
+              {
+                "id": "B21",
+                "result": "○",
+                "feedback": "正解！最終的に『危険性』を『除去』したことが離脱成立の判断基準で、この理解は共犯全体の効果論に繋がり、未遂共犯との対比でも使えるよ。",
+                "speaker": "村上先生",
+                "expression": "happy",
+                "userAnswer": "除去",
+                "correctAnswer": "除去"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "この問題の核心は因果的共犯論に基づく離脱要件、特に実行着手後の格別防止措置で、用語の正確さと判例例示が採点の鍵だよ。○は5つだが、用語の曖昧さと例の混同が多いから、刑法60条判例集を繰り返し読み、論文で物理的・心理的区別を意識して論じろ。今後、共犯の全段階をフローチャート化して整理すると強いぞ。",
+              "speaker": "村上先生",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "共犯",
+            "B2": "行為",
+            "B3": "結果",
+            "B4": "因果性",
+            "B5": "因果的共犯論",
+            "B6": "共犯",
+            "B7": "離脱",
+            "B8": "共犯",
+            "B9": "因果性",
+            "B10": "除去",
+            "B11": "実行行為",
+            "B12": "現場",
+            "B13": "他の共犯",
+            "B14": "可能性",
+            "B15": "格別の防止措置",
+            "B16": "共犯者に対する働きかけ",
+            "B17": "被害者の隔離",
+            "B18": "警察への通報",
+            "B19": "実行行為",
+            "B20": "因果性",
+            "B21": "除去"
+          }
+        }
+      },
+      "updatedAt": "2025-12-09T04:44:32.078Z"
+    }
+  }
+]

@@ -1,0 +1,433 @@
+[
+  {
+    "id": "財産犯-1",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "事後強盗罪が{{強盗}}として論じられる（238条）のは、{{窃盗犯人}}が{{被害者等}}の{{追及}}を受けるなどした{{緊迫した状況下}}で行う{{暴行・脅迫}}が、強盗の手段たる暴行・脅迫と{{類似性}}を有するからである。\nしたがって、「{{窃盗の機会}}」とは、窃盗行為との{{時間的・場所的近接性}}を踏まえ、{{被害者等}}から容易に発見されて財物を取り返され、あるいは逮捕され得る状況（{{追及可能性}}）が継続している場合をいう。\n具体的には、一度{{現場を離れた}}としても、被害者が直ちに犯行を察知して{{追跡態勢}}に入っており、犯人が追及を受けうる状況が継続している場合には、{{窃盗の機会の継続}}が認められる（最決平14.2.14参照）。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "強盗",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "窃盗犯人",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "被害者等",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "追及",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "緊迫した状況下",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "暴行・脅迫",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "類似性",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "窃盗の機会",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "時間的・場所的近接性",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            },
+            {
+              "id": "B10",
+              "label": "(10)",
+              "answer": "被害者等",
+              "prompt": "空欄B10",
+              "placeholder": ""
+            },
+            {
+              "id": "B11",
+              "label": "(11)",
+              "answer": "追及可能性",
+              "prompt": "空欄B11",
+              "placeholder": ""
+            },
+            {
+              "id": "B12",
+              "label": "(12)",
+              "answer": "現場を離れた",
+              "prompt": "空欄B12",
+              "placeholder": ""
+            },
+            {
+              "id": "B13",
+              "label": "(13)",
+              "answer": "追跡態勢",
+              "prompt": "空欄B13",
+              "placeholder": ""
+            },
+            {
+              "id": "B14",
+              "label": "(14)",
+              "answer": "窃盗の機会の継続",
+              "prompt": "空欄B14",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "text",
+              "text": "事後強盗罪が"
+            },
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "強盗"
+            },
+            {
+              "type": "text",
+              "text": "として論じられる（238条）のは、"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "窃盗犯人"
+            },
+            {
+              "type": "text",
+              "text": "が"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "被害者等"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "追及"
+            },
+            {
+              "type": "text",
+              "text": "を受けるなどした"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "緊迫した状況下"
+            },
+            {
+              "type": "text",
+              "text": "で行う"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "暴行・脅迫"
+            },
+            {
+              "type": "text",
+              "text": "が、強盗の手段たる暴行・脅迫と"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "類似性"
+            },
+            {
+              "type": "text",
+              "text": "を有するからである。\nしたがって、「"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "窃盗の機会"
+            },
+            {
+              "type": "text",
+              "text": "」とは、窃盗行為との"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "時間的・場所的近接性"
+            },
+            {
+              "type": "text",
+              "text": "を踏まえ、"
+            },
+            {
+              "type": "blank",
+              "id": "B10",
+              "label": "(10)",
+              "placeholder": "",
+              "answer": "被害者等"
+            },
+            {
+              "type": "text",
+              "text": "から容易に発見されて財物を取り返され、あるいは逮捕され得る状況（"
+            },
+            {
+              "type": "blank",
+              "id": "B11",
+              "label": "(11)",
+              "placeholder": "",
+              "answer": "追及可能性"
+            },
+            {
+              "type": "text",
+              "text": "）が継続している場合をいう。\n具体的には、一度"
+            },
+            {
+              "type": "blank",
+              "id": "B12",
+              "label": "(12)",
+              "placeholder": "",
+              "answer": "現場を離れた"
+            },
+            {
+              "type": "text",
+              "text": "としても、被害者が直ちに犯行を察知して"
+            },
+            {
+              "type": "blank",
+              "id": "B13",
+              "label": "(13)",
+              "placeholder": "",
+              "answer": "追跡態勢"
+            },
+            {
+              "type": "text",
+              "text": "に入っており、犯人が追及を受けうる状況が継続している場合には、"
+            },
+            {
+              "type": "blank",
+              "id": "B14",
+              "label": "(14)",
+              "placeholder": "",
+              "answer": "窃盗の機会の継続"
+            },
+            {
+              "type": "text",
+              "text": "が認められる（最決平14.2.14参照）。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-09T05:10:33.842Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "○",
+                "feedback": "正解だよ、みかん。事後強盗が強盗として論じられるのは、刑法238条の暴行・脅迫要件を満たすからで、窃盗後の緊迫状況下での行為が強盗の本質と重なる制度趣旨を捉えてるね。この理解は強盗罪全体の機会論に活きるよ。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "強盗",
+                "correctAnswer": "強盗"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "ううん、そこは『窃盗犯人』だよ。『窃盗』だけだと行為を指しちゃうけど、犯人主体の追及状況が事後強盗の成立で大事なんだ。被害者から特定された犯人を強調しないと、単なる窃盗罪と混同しやすくて、司法試験では主体の明確化が採点ポイントになるよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "窃盗",
+                "correctAnswer": "窃盗犯人"
+              },
+              {
+                "id": "B3",
+                "result": "△",
+                "feedback": "惜しいね、『被害者等』が正解。『被害者』だけだと本人限定だけど、『等』で第三者も含むよ。事後強盗の追及は周囲の目撃者とかも想定されてるから、この広さが判例の運用に合ってるんだ。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "被害者",
+                "correctAnswer": "被害者等"
+              },
+              {
+                "id": "B4",
+                "result": "△",
+                "feedback": "『追及』がぴったりだよ。『追跡』は物理的に追いかけるイメージだけど、追及は問い詰めや抗議も含む広い意味で、緊迫状況を生むんだ。強盗の暴行誘発の趣旨を考えると、心理的圧迫までカバーするよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "追跡",
+                "correctAnswer": "追及"
+              },
+              {
+                "id": "B5",
+                "result": "△",
+                "feedback": "『緊迫した状況下』が正解かな。『緊急状態』は似てるけど、強盗罪では被害者側の追及による犯人の心理的・現実的プレッシャーが核心で、判例が繰り返し用いる表現だよ。このニュアンスを押さえると他の機会犯も理解しやすい。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "緊急状態",
+                "correctAnswer": "緊迫した状況下"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "それは違うよ、『暴行・脅迫』だよ。事後強盗が238条強盗適用になるのは、この具体的な手段が窃盗後のものでも類似するから。『行為』だと抽象的すぎて、強盗罪の構成要件を無視しちゃう間違いをしやすいんだ。",
+                "speaker": "ゆかりん",
+                "expression": "sad",
+                "userAnswer": "行為",
+                "correctAnswer": "暴行・脅迫"
+              },
+              {
+                "id": "B7",
+                "result": "△",
+                "feedback": "『類似性』が正解だよ。『同一性』だと厳しすぎて、事後強盗の柔軟な処罰趣旨に合わないの。判例は手段の『類似』で足りるとしてるから、この言葉選びが論文で高得点取れるポイントだね。",
+                "speaker": "ゆかりん",
+                "expression": "impressed",
+                "userAnswer": "同一性",
+                "correctAnswer": "類似性"
+              },
+              {
+                "id": "B8",
+                "result": "○",
+                "feedback": "正解！『窃盗の機会』は事後強盗の成立範囲を定めるキーワードで、時間的・場所的継続を意味するよ。この概念を押さえれば、住居侵入強盗の機会論にもつながるね。",
+                "speaker": "ゆかりん",
+                "expression": "happy",
+                "userAnswer": "窃盗の機会",
+                "correctAnswer": "窃盗の機会"
+              },
+              {
+                "id": "B9",
+                "result": "△",
+                "feedback": "『時間的・場所的近接性』だよ。『接着性』は近いけど、判例が『近接性』を使うのは少しの間隔でも追及継続ならOKだから。空間的・時間的なつながりを正確に表現しないと、機会の判断が曖昧になるよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "時間的場所的接着性",
+                "correctAnswer": "時間的・場所的近接性"
+              },
+              {
+                "id": "B10",
+                "result": "△",
+                "feedback": "またここも『被害者等』がいいよ。さっきと同じく、第三者追及も含めて事後強盗の網を広くする制度趣旨があるんだ。被害者限定は狭すぎて判例に反するから注意してね。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "被害者",
+                "correctAnswer": "被害者等"
+              },
+              {
+                "id": "B11",
+                "result": "△",
+                "feedback": "『追及可能性』が正解。『追跡状態』だと身体的追うことに偏っちゃうけど、可能性の継続が窃盗機会の継続性を決めるよ。潜在的な逮捕リスクまで含めて考えるのが試験の視点だよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "追跡状態",
+                "correctAnswer": "追及可能性"
+              },
+              {
+                "id": "B12",
+                "result": "△",
+                "feedback": "『現場を離れた』よ。『実行行為を終えた』は窃盗既遂の話だけど、事後強盗は現場離脱後でも追及中なら機会継続。最決平14.2.14がまさにそれを例示してるんだ。",
+                "speaker": "ゆかりん",
+                "expression": "thinking",
+                "userAnswer": "実行行為を終えた",
+                "correctAnswer": "現場を離れた"
+              },
+              {
+                "id": "B13",
+                "result": "☓",
+                "feedback": "ううん、『追跡態勢』だよ。『支配状態』は強盗既遂時の財物支配と混同しやすいけど、事後は被害者側の積極態勢がポイント。逆の主体を間違えると機会論全体が崩れちゃうよ。",
+                "speaker": "ゆかりん",
+                "expression": "surprised",
+                "userAnswer": "支配状態",
+                "correctAnswer": "追跡態勢"
+              },
+              {
+                "id": "B14",
+                "result": "△",
+                "feedback": "『窃盗の機会の継続』がぴったり。『機会性』だと抽象的で、時間・場所の継続判断がぼやけるの。判例運用で継続性を強調するから、この表現で論文が締まるよ。",
+                "speaker": "ゆかりん",
+                "expression": "serious",
+                "userAnswer": "窃盗の機会性",
+                "correctAnswer": "窃盗の機会の継続"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "みかん、この問題の核心は事後強盗の『窃盗の機会』が、時間的・場所的近接性と被害者等の追及可能性で決まる点だよ。最決平14.2.14みたいに現場離脱後でも追跡態勢なら継続するのをしっかり押さえて。判例中心に機会論を繰り返し解いて、他の強盗形態にも広げてね。",
+              "speaker": "ゆかりん",
+              "expression": "serious",
+              "relatedQAs": []
+            }
+          },
+          "answers": {
+            "B1": "強盗",
+            "B2": "窃盗",
+            "B3": "被害者",
+            "B4": "追跡",
+            "B5": "緊急状態",
+            "B6": "行為",
+            "B7": "同一性",
+            "B8": "窃盗の機会",
+            "B9": "時間的場所的接着性",
+            "B10": "被害者",
+            "B11": "追跡状態",
+            "B12": "実行行為を終えた",
+            "B13": "支配状態",
+            "B14": "窃盗の機会性"
+          }
+        }
+      },
+      "updatedAt": "2025-12-09T05:10:33.842Z"
+    }
+  }
+]

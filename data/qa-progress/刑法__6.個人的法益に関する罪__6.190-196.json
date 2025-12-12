@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "relativePath": "刑法/6.個人的法益に関する罪/6.190-196",
+  "updatedAt": "2025-11-17T13:02:37.454Z",
+  "qa": {
+    "190": {
+      "fillDrill": {
+        "generatedAt": "2025-11-17T13:02:37.451Z",
+        "clearedLevels": [],
+        "templates": {
+          "2": {
+            "level": 2,
+            "focus": "刑法257条の親族相盗例の適用要件を、条文の趣旨と合わせて論理的に理解する。",
+            "sections": [
+              {
+                "title": "刑法257条の趣旨と適用範囲",
+                "summary": "刑法257条は、盗品等に関する罪に親族相盗例（刑法244条）を準用することで、親族間の一定の財産犯に特例を設けています。これは、親族間の問題に国家が過度に介入することを避けるという政策的配慮に基づくものです。",
+                "tips": [
+                  "刑法244条と257条の関係性を理解する。",
+                  "親族相盗例が設けられた趣旨（国家不介入の原則）を把握する。"
+                ],
+                "importance": "★★★"
+              },
+              {
+                "title": "親族相盗例の具体的な適用要件",
+                "summary": "親族相盗例が適用されるためには、行為者と被害者または本犯者との間に特定の身分関係があり、かつ当該行為が盗品等に関する罪に該当するという客観的要件を満たす必要があります。",
+                "tips": [
+                  "親族関係の各類型を正確に覚える。",
+                  "「〜との間」という条文の文言が指す範囲を具体的にイメージする。"
+                ],
+                "importance": "★★★"
+              }
+            ],
+            "blanks": [
+              {
+                "id": "B1",
+                "prompt": "盗品等に関する罪が適用される関係性として、まず最も緊密な関係は何か",
+                "answer": "配偶者との関係があること",
+                "placeholder": "親族関係の類型"
+              },
+              {
+                "id": "B2",
+                "prompt": "行為者と被害者等の間に血縁関係が存在する親族の具体的な類型は何か",
+                "answer": "直系血族に該当すること",
+                "placeholder": "親族関係の類型"
+              },
+              {
+                "id": "B3",
+                "prompt": "共同生活を送る中で発生した問題として扱われる親族関係の類型は何か",
+                "answer": "同居の親族であること",
+                "placeholder": "親族関係の類型"
+              },
+              {
+                "id": "B4",
+                "prompt": "上記の血族や同居の親族から派生する形で特例の対象となる関係性は何か",
+                "answer": "それらの者の配偶者であること",
+                "placeholder": "親族関係の類型"
+              },
+              {
+                "id": "B5",
+                "prompt": "この特例が適用される特定の犯罪類型は何か",
+                "answer": "盗品等に関する罪を犯したこと",
+                "placeholder": "罪の種類"
+              },
+              {
+                "id": "B6",
+                "prompt": "特例が適用されるための、行為に関する客観的な事実は何か",
+                "answer": "実際に罪を犯したという事実",
+                "placeholder": "行為の有無"
+              }
+            ],
+            "evaluationRubric": {
+              "overall": "刑法257条の親族相盗例の要件について、関係性と行為の側面から正確に記述し、各空欄が10〜25文字の短い文で構成されていることを評価します。条文の趣旨や論理的なつながりを意識した記述ができていれば合格です。",
+              "perBlank": "各空欄において、刑法257条の適用要件を構成する要素を、10〜25文字の簡潔かつ正確な法的表現で記述できているかを評価します。"
+            },
+            "inlineBody": [
+              {
+                "type": "text",
+                "text": "刑法257条は、盗品等に関する罪において、特定の親族間での行為に特例を設ける規定です。これは、親族間の私的な問題に国家が過度に介入することを避けるという政策的配慮に基づいています。この特例は、刑法244条（親族相盗例）の規定を準用することで適用されます。\n\n盗品等に関する罪における親族相盗例が適用されるためには、行為者と被害者または本犯者との間に、特定の身分関係が存在することが必要です。まず、両者の間に、法律上婚姻関係にある"
+              },
+              {
+                "type": "blank",
+                "id": "B1",
+                "label": "(1)",
+                "placeholder": "親族関係の類型",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "という関係性が認められる場合です。これは最も強い情誼関係が想定されるものです。\n\nまた、親と子、祖父母と孫のように、直系の血筋でつながる"
+              },
+              {
+                "type": "blank",
+                "id": "B2",
+                "label": "(2)",
+                "placeholder": "親族関係の類型",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "であることも、この特例の要件とされています。両者の間には深い信頼関係があると考えられるからです。\n\nさらに、同じ家屋に居住し、生計を共にしている"
+              },
+              {
+                "type": "blank",
+                "id": "B3",
+                "label": "(3)",
+                "placeholder": "親族関係の類型",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "である場合にも適用されます。共同生活を送る中で生じた問題として扱われます。\n\nこれらの直系血族や同居の親族の"
+              },
+              {
+                "type": "blank",
+                "id": "B4",
+                "label": "(4)",
+                "placeholder": "親族関係の類型",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "との間で罪が犯された場合も、同様に特例の対象となります。これにより、親族関係から派生する間接的な関係性も考慮されます。\n\n上記のいずれかの身分関係が存在することに加え、問題となる行為が刑法典に規定された"
+              },
+              {
+                "type": "blank",
+                "id": "B5",
+                "label": "(5)",
+                "placeholder": "罪の種類",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "でなければなりません。これは、他の犯罪には適用されないことを明確にするものです。\n\n最後に、上記の関係性の間で、実際に該当する罪が"
+              },
+              {
+                "type": "blank",
+                "id": "B6",
+                "label": "(6)",
+                "placeholder": "行為の有無",
+                "newline": false
+              },
+              {
+                "type": "text",
+                "text": "という客観的事実が不可欠です。これにより、単なる計画ではなく具体的な行為が問われます。"
+              }
+            ],
+            "writingGoals": [
+              "刑法257条の親族相盗例の適用要件を正確に理解し、短い文章で的確に表現できる。",
+              "親族相盗例の趣旨が、国家不介入の原則に基づいていることを説明できる。",
+              "刑法244条と257条の関係性を理解し、両条文の要件を区別して説明できる。"
+            ],
+            "qaId": 190,
+            "moduleId": "刑法/6.個人的法益に関する罪/6.190-196",
+            "moduleTitle": "盗品等関与と器物損壊",
+            "relativePath": "刑法/6.個人的法益に関する罪/6.190-196",
+            "question": "盗品等に関する罪における「親族等」の犯罪に関する特例（【刑法257条】）の要件について説明しなさい。",
+            "canonicalAnswer": "「配偶者との間又は直系血族、同居の親族若しくはこれらの者の配偶者との間で」、盗品等に関する罪「を犯した」ことである。",
+            "canonicalBlanks": [
+              {
+                "id": "B1",
+                "answer": "配偶者",
+                "raw": "{{配偶者}}"
+              },
+              {
+                "id": "B2",
+                "answer": "直系血族",
+                "raw": "{{直系血族}}"
+              },
+              {
+                "id": "B3",
+                "answer": "同居の親族",
+                "raw": "{{同居の親族}}"
+              },
+              {
+                "id": "B4",
+                "answer": "配偶者",
+                "raw": "{{配偶者}}"
+              },
+              {
+                "id": "B5",
+                "answer": "盗品等に関する罪",
+                "raw": "{{盗品等に関する罪}}"
+              },
+              {
+                "id": "B6",
+                "answer": "犯した",
+                "raw": "{{犯した}}"
+              }
+            ],
+            "generatedAt": "2025-11-17T12:56:58.083Z"
+          }
+        },
+        "attempts": {
+          "2": {
+            "timestamp": "2025-11-17T13:02:37.436Z",
+            "answers": {
+              "B1": "配偶者",
+              "B2": "直系血族",
+              "B3": "同居の親族",
+              "B4": "配偶者",
+              "B5": "個別的財産犯",
+              "B6": "既遂である"
+            },
+            "evaluation": {
+              "overall": {
+                "passed": false,
+                "score": 0,
+                "summary": "各空欄のヒントを参考に、法的な表現を見直してみましょう。",
+                "nextStep": "なぜその表現では不十分か、条文や判例を確認しながら考えてみてください。"
+              },
+              "blanks": [
+                {
+                  "id": "B1",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B2",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B3",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B4",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B5",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                },
+                {
+                  "id": "B6",
+                  "passed": false,
+                  "score": 0,
+                  "feedback": "AI採点エラー: got status: 503 Service Unavailable. {\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+                }
+              ]
+            },
+            "overallResult": null
+          }
+        }
+      },
+      "lastUpdated": "2025-11-17T13:02:37.451Z"
+    }
+  }
+}
