@@ -355,10 +355,12 @@ class QAStatusSystem {
                 return;
             }
 
-            // qaIdを数値に変換（qa-1 → 1）
-            const qNumber = typeof qaId === 'string' ?
-                qaId.replace(/^qa-/, '') : qaId.toString();
-            const qNum = parseInt(qNumber);
+            // qaIdを正規化（qa-1 → 1、ただし1-1形式はそのまま）
+            let qIdNormalized = typeof qaId === 'string' ?
+                qaId.replace(/^qa-/, '') : String(qaId);
+
+            // 純粋な数値の場合のみparseInt
+            const qNum = /^\d+$/.test(qIdNormalized) ? parseInt(qIdNormalized) : qIdNormalized;
 
             console.log(`📝 Q&Aデータ更新開始: Module=${moduleId}, Q${qNum}, Status=${status}`);
 
@@ -418,9 +420,18 @@ class QAStatusSystem {
                     console.log(`🔍 利用可能なQ&A ID:`, qaList.map(qa => qa.id));
                 }
             } else {
-                console.warn('⚠️ Q&Aデータが利用できません');
+                console.warn('⚠️ Q&Aデータが利用できません - 直接保存を試みます');
                 console.log('🔍 moduleId:', moduleId);
-                console.log('🔍 window.currentCaseData:', window.currentCaseData);
+
+                // ★★★ Q&Aデータがなくても直接保存 ★★★
+                // moduleIdをrelativePathとして使用
+                const relativePath = moduleId.endsWith('.js') ? moduleId : `${moduleId}.js`;
+                console.log(`💾 直接保存試行: ${relativePath}, Q${qNum}, Status=${status}`);
+
+                await this.saveQADataToFile(relativePath, [{
+                    id: qNum,
+                    status: status
+                }]);
             }
         } catch (error) {
             console.error('❌ Q&Aデータ更新エラー:', error);
