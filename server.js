@@ -30,6 +30,8 @@ import {
 } from './lawLoader.js';
 import { characters, COMMON_EXPRESSIONS } from './public/data/characters.js';
 import d1Client from './d1Client.js';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 
 dotenv.config();
 
@@ -224,14 +226,95 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production' && !process.env.RENDER, // Render.comではHTTPSが自動
         maxAge: 24 * 60 * 60 * 1000, // 24時間
         httpOnly: true, // XSS対策
-        sameSite: 'strict' // CSRF対策
+        sameSite: 'lax' // Google OAuth用にlaxに変更（strictだとコールバックで問題）
     }
 }));
+
+// ★★★ Passport.js設定（Google OAuth） ★★★
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passportシリアライズ設定
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+    done(null, user);
+});
+
+// Google OAuth Strategy設定
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    passport.use(new GoogleStrategy({
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback'
+    }, async (accessToken, refreshToken, profile, done) => {
+        try {
+            // ユーザー情報を構築
+            const user = {
+                id: profile.id,
+                email: profile.emails?.[0]?.value,
+                displayName: profile.displayName,
+                picture: profile.photos?.[0]?.value,
+                provider: 'google'
+            };
+
+            console.log('🔐 Googleログイン成功:', user.email);
+
+            // D1にユーザーを登録（存在しない場合）
+            if (process.env.D1_API_URL) {
+                try {
+                    await d1Client.createUser(user.email, `google:${user.id}`);
+                    console.log('✅ D1にユーザー登録:', user.email);
+                } catch (d1Error) {
+                    // 既に存在する場合はエラーを無視
+                    console.log('ℹ️ D1ユーザー登録スキップ（既存）:', user.email);
+                }
+            }
+
+            return done(null, user);
+        } catch (error) {
+            console.error('❌ Google認証エラー:', error);
+            return done(error, null);
+        }
+    }));
+    console.log('✅ Google OAuth設定完了');
+} else {
+    console.log('⚠️ Google OAuth未設定（GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET が必要）');
+}
+
+// ★★★ Google認証ルート ★★★
+// ログインページからGoogleへリダイレクト
+app.get('/auth/google', passport.authenticate('google', {
+    scope: ['profile', 'email']
+}));
+
+// Googleからのコールバック
+app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login.html?error=google_auth_failed' }),
+    (req, res) => {
+        // セッションにユーザー情報を保存
+        req.session.authenticated = true;
+        req.session.username = req.user.email;
+        req.session.displayName = req.user.displayName;
+        req.session.picture = req.user.picture;
+        req.session.provider = 'google';
+        req.session.lastAccess = new Date();
+
+        console.log('✅ Googleログイン完了:', req.user.email);
+
+        // リダイレクト
+        const redirectUrl = req.session.returnTo || '/';
+        delete req.session.returnTo;
+        res.redirect(redirectUrl);
+    }
+);
 
 // カスタム認証ミドルウェア
 const requireAuth = (req, res, next) => {
     // 認証不要なパス
-    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping', '/api/subfolders', '/health', '/health.html', '/api/d1-status'];
+    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping', '/api/subfolders', '/health', '/health.html', '/api/d1-status', '/auth/google'];
     const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
 
     if (isPublicPath) {
@@ -255,6 +338,7 @@ const requireAuth = (req, res, next) => {
     }
 
     // HTMLページへのリダイレクト
+    req.session.returnTo = req.originalUrl;
     const redirectUrl = encodeURIComponent(req.originalUrl);
     res.redirect(`/login.html?redirect=${redirectUrl}&error=unauthorized`);
 };
