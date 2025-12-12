@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Check</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:#0f172a;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}
+        .card{background:#1e293b;border-radius:16px;padding:2rem;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+        h1{font-size:1.5rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+        .status{display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid #334155}
+        .status:last-child{border:none}
+        .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .ok{background:#22c55e}
+        .err{background:#ef4444}
+        .loading{background:#eab308;animation:pulse 1s infinite}
+        .label{flex:1;color:#94a3b8;font-size:.9rem}
+        .value{font-weight:600;font-size:.9rem}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🩺 Health Status</h1>
+        <div class="status"><span class="dot loading" id="dot-server"></span><span class="label">Server</span><span class="value" id="val-server">...</span></div>
+        <div class="status"><span class="dot loading" id="dot-d1"></span><span class="label">D1 Database</span><span class="value" id="val-d1">...</span></div>
+        <div class="status"><span class="dot loading" id="dot-ai"></span><span class="label">AI Provider</span><span class="value" id="val-ai">...</span></div>
+        <div class="status"><span class="dot ok"></span><span class="label">Uptime</span><span class="value" id="val-uptime">-</span></div>
+    </div>
+    <script>
+        async function check(){
+            try{
+                const r=await fetch('/api/health');
+                const d=await r.json();
+                set('server','ok',d.status||'OK');
+                set('uptime',null,formatUptime(d.uptime));
+            }catch(e){set('server','err','Error')}
+            try{
+                const r=await fetch('/api/d1-status');
+                const d=await r.json();
+                set('d1',d.d1?.available?'ok':'err',d.d1?.available?'Connected':'N/A');
+            }catch(e){set('d1','err','N/A')}
+            try{
+                const r=await fetch('/api/ai-status');
+                const d=await r.json();
+                set('ai','ok',d.currentProvider||'N/A');
+            }catch(e){set('ai','err','N/A')}
+        }
+        function set(id,s,v){
+            const dot=document.getElementById('dot-'+id);
+            const val=document.getElementById('val-'+id);
+            if(dot&&s){dot.className='dot '+s}
+            if(val){val.textContent=v}
+        }
+        function formatUptime(s){
+            if(!s)return'-';
+            const h=Math.floor(s/3600);
+            const m=Math.floor((s%3600)/60);
+            return h>0?h+'h '+m+'m':m+'m';
+        }
+        check();
+    </script>
+</body>
+</html>

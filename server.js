@@ -231,7 +231,7 @@ app.use(session({
 // カスタム認証ミドルウェア
 const requireAuth = (req, res, next) => {
     // 認証不要なパス
-    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping', '/api/subfolders'];
+    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping', '/api/subfolders', '/health', '/health.html', '/api/d1-status'];
     const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
 
     if (isPublicPath) {
@@ -1119,6 +1119,11 @@ app.get('/api/health', (req, res) => {
         laws: SUPPORTED_LAWS.length,
         xmlFiles: globalXMLFiles.size
     });
+});
+
+// ★★★ ヘルスチェックページ ★★★
+app.get('/health', (req, res) => {
+    res.sendFile('health.html', { root: './public' });
 });
 
 app.get('/api/ping', (req, res) => {
