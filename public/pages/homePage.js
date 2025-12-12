@@ -420,14 +420,17 @@ async function updateSpeedArticlePreview() {
     const countSpan = document.getElementById('speed-article-count');
     if (!container) return;
 
+    // 読み込み中表示
+    container.innerHTML = '<span class="text-gray-400 text-sm animate-pulse">読み込み中...</span>';
+
     const settings = getSpeedFilterSettings();
     const categoryFilter = document.getElementById('category-filter')?.value || '';
     const subfolderFilter = document.getElementById('subfolder-filter')?.value || '';
 
     try {
         // モジュールをフィルタリング
-        const currentSummaries = window.caseSummaries || caseSummaries;
-        let filteredModules = currentSummaries;
+        const currentSummaries = window.caseSummaries || (typeof caseSummaries !== 'undefined' ? caseSummaries : []);
+        let filteredModules = [...currentSummaries];
         if (categoryFilter) {
             filteredModules = filteredModules.filter(m => m.category === categoryFilter);
         }
@@ -435,41 +438,56 @@ async function updateSpeedArticlePreview() {
             filteredModules = filteredModules.filter(m => m.subfolder === subfolderFilter);
         }
 
+        console.log(`📊 条文プレビュー: ${filteredModules.length}モジュール対象`);
+
         if (filteredModules.length === 0) {
             container.innerHTML = '<span class="text-gray-400 text-sm">条件に一致するモジュールがありません</span>';
             if (countSpan) countSpan.textContent = '(0件)';
             return;
         }
 
-        // 条文抽出
+        // Q&Aから直接条文参照を抽出
         let articles = [];
-        const currentLoaders = window.caseLoaders || caseLoaders;
-        const { extractAllArticles } = await import('../speedQuiz.js');
+        const currentLoaders = window.caseLoaders || (typeof caseLoaders !== 'undefined' ? caseLoaders : {});
+        const seenArticles = new Set();
+        const supportedLaws = ['日本国憲法', '憲法', '民法', '刑法', '会社法', '商法', '民事訴訟法', '刑事訴訟法', '行政手続法', '行政不服審査法', '行政事件訴訟法'];
 
-        for (const moduleSummary of filteredModules) {
+        for (const moduleSummary of filteredModules.slice(0, 20)) {
             try {
                 const loader = currentLoaders[moduleSummary.id];
                 if (!loader) continue;
+
                 const moduleData = await loader();
                 const caseData = moduleData.default || moduleData;
-                const moduleArticles = await extractAllArticles(caseData);
-                articles.push(...moduleArticles);
+                const qaList = caseData?.questionsAndAnswers || [];
+
+                for (const qa of qaList) {
+                    const texts = [qa.question || '', qa.answer || ''];
+                    for (const text of texts) {
+                        const regex = /【([^\d\】]+?)(\d+)条[^\】]*】/g;
+                        let match;
+                        while ((match = regex.exec(text)) !== null) {
+                            const rawLawName = match[1].trim();
+                            const articleNum = match[2];
+
+                            if (!supportedLaws.includes(rawLawName)) continue;
+
+                            const lawName = rawLawName === '憲法' ? '日本国憲法' : rawLawName;
+                            const key = `${lawName}-${articleNum}`;
+
+                            if (!seenArticles.has(key)) {
+                                seenArticles.add(key);
+                                articles.push({ lawName, articleNumber: articleNum });
+                            }
+                        }
+                    }
+                }
             } catch (err) {
-                // 無視
+                console.warn(`⚠️ モジュール読込エラー: ${moduleSummary.id}`);
             }
         }
 
-        // 重複を除去
-        const uniqueArticles = [];
-        const seen = new Set();
-        for (const article of articles) {
-            const key = `${article.lawName}-${article.articleNumber}`;
-            if (!seen.has(key)) {
-                seen.add(key);
-                uniqueArticles.push(article);
-            }
-        }
-        articles = uniqueArticles;
+        console.log(`📊 抽出された条文: ${articles.length}件`);
 
         // ランクフィルタを適用（rankFiltersが選択されている場合のみ）
         if (settings.rankFilters && settings.rankFilters.length > 0) {
@@ -3829,14 +3847,14 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
         // 注：後方互換性が必要な場合は以下のコメントを外す
         /*
         const summaries = window.caseSummaries || caseSummaries;
-
+ 
         // ★★★ 読み込み前にモジュールレベルでフィルタリング ★★★
         const filteredSummaries = summaries.filter(summary => {
             if (!showFilter) return true;
-
+ 
             // カテゴリフィルタ
             if (selectedCategory && summary.category !== selectedCategory) return false;
-
+ 
             // サブフォルダフィルタ
             if (selectedSubfolder) {
                 let subfolderName = summary.subfolder || '';
@@ -3848,28 +3866,28 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
                 }
                 if (subfolderName !== selectedSubfolder) return false;
             }
-
+ 
             // タグフィルタ
             if (selectedTags.length > 0) {
                 const summaryTags = summary.tags || [];
                 if (!selectedTags.some(tag => summaryTags.includes(tag))) return false;
             }
-
+ 
             // モジュール検索フィルタ（タイトルまたはID）
             if (moduleSearchTerm) {
                 const title = (summary.title || '').toLowerCase();
                 const id = (summary.id || '').toLowerCase();
                 if (!title.includes(moduleSearchTerm) && !id.includes(moduleSearchTerm)) return false;
             }
-
+ 
             return true;
         });
-
+ 
         // フィルタリングされたモジュールのみ読み込む（並列処理で高速化）
         const loadPromises = filteredSummaries.map(async (summary) => {
             try {
                 let questionsAndAnswers = summary.questionsAndAnswers;
-
+ 
                 if (!questionsAndAnswers) {
                     // Q&Aデータがない場合は動的に読み込む
                     const loader = window.caseLoaders?.[summary.id] || caseLoaders?.[summary.id];
@@ -3886,7 +3904,7 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
                         questionsAndAnswers = [];
                     }
                 }
-
+ 
                 // ドリルシステムへの登録（必要なデータのみ）
                 if (window.qaFillDrillSystem && typeof window.qaFillDrillSystem.registerModuleCaseData === 'function') {
                     window.qaFillDrillSystem.registerModuleCaseData(summary.id, {
@@ -3894,16 +3912,16 @@ export async function renderFilteredQAs({ container, qaList, showFilter = false 
                         questionsAndAnswers: questionsAndAnswers
                     });
                 }
-
+ 
                 return { summary, questionsAndAnswers };
             } catch (error) {
                 console.error(`Error processing summary ${summary.id}:`, error);
                 return { summary, questionsAndAnswers: [] };
             }
         });
-
+ 
         const loadedModules = await Promise.all(loadPromises);
-
+ 
         for (const { summary, questionsAndAnswers } of loadedModules) {
             questionsAndAnswers.forEach(qa => {
                 allQAs.push({

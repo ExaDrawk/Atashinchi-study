@@ -74,6 +74,24 @@ export default {
                 return await saveUserSettings(request, env, corsHeaders);
             }
 
+            // デバッグ: R2オブジェクト一覧
+            if (path === '/api/debug/list' && request.method === 'GET') {
+                const prefix = url.searchParams.get('prefix') || '';
+                const listed = await env.BUCKET.list({ prefix, limit: 100 });
+                return jsonResponse({
+                    objects: listed.objects.map(o => ({ key: o.key, size: o.size, uploaded: o.uploaded })),
+                    truncated: listed.truncated
+                }, 200, corsHeaders);
+            }
+
+            // デバッグ: R2オブジェクト削除
+            if (path === '/api/debug/delete' && request.method === 'POST') {
+                const { key } = await request.json();
+                if (!key) return jsonResponse({ error: 'key is required' }, 400, corsHeaders);
+                await env.BUCKET.delete(key);
+                return jsonResponse({ success: true, deleted: key }, 200, corsHeaders);
+            }
+
             return jsonResponse({ error: 'Not Found' }, 404, corsHeaders);
 
         } catch (error) {
