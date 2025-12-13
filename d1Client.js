@@ -170,14 +170,14 @@ export async function getFillDrillProgress(username, moduleId = null) {
 }
 
 /**
- * FillDrill進捗保存
+ * FillDrill進捗保存（テンプレート・採点結果含む）
  */
-export async function saveFillDrillProgress(username, moduleId, qaId, clearedLevels) {
+export async function saveFillDrillProgress(username, moduleId, qaId, fillDrill) {
     return callR2API('/api/fill-drill', 'POST', {
         username,
         moduleId,
         qaId,
-        clearedLevels
+        fillDrill
     });
 }
 

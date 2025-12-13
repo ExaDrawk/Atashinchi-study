@@ -45,11 +45,11 @@ async function loadR2Progress(moduleId = null) {
     }
 }
 
-// R2キャッシュからclearedLevelsを取得
-function getR2ClearedLevels(moduleId, qaId) {
+// R2キャッシュからfillDrillデータを取得
+function getR2FillDrillData(moduleId, qaId) {
     const modProgress = r2ProgressCache.get(normalizeModuleId(moduleId));
     if (modProgress && modProgress[qaId]) {
-        return modProgress[qaId].cleared || [];
+        return modProgress[qaId];
     }
     return null;
 }
@@ -828,13 +828,29 @@ function ensureFillDrill(qa, moduleId = '') {
             }
         }
 
-        // ★★★ R2キャッシュからclearedLevelsを読み込み（localStorageにない場合） ★★★
-        if ((!qa.fillDrill?.clearedLevels || qa.fillDrill.clearedLevels.length === 0) && r2ProgressLoaded) {
-            const r2Cleared = getR2ClearedLevels(moduleId, qa.id);
-            if (r2Cleared && r2Cleared.length > 0) {
+        // ★★★ R2キャッシュからfillDrillデータを読み込み（localStorageにない場合） ★★★
+        if (r2ProgressLoaded) {
+            const r2Data = getR2FillDrillData(moduleId, qa.id);
+            if (r2Data) {
                 if (!qa.fillDrill) qa.fillDrill = {};
-                qa.fillDrill.clearedLevels = r2Cleared;
-                console.log(`☁️ R2からclearedLevels復元: Q${qa.id} → Lv${r2Cleared.join(',')}`);
+
+                // clearedLevelsを復元（localStorageにない場合のみ）
+                if ((!qa.fillDrill.clearedLevels || qa.fillDrill.clearedLevels.length === 0) && r2Data.clearedLevels?.length > 0) {
+                    qa.fillDrill.clearedLevels = r2Data.clearedLevels;
+                    console.log(`☁️ R2からclearedLevels復元: Q${qa.id} → Lv${r2Data.clearedLevels.join(',')}`);
+                }
+
+                // テンプレートを復元（localStorageにない場合のみ）
+                if (r2Data.templates && Object.keys(r2Data.templates).length > 0) {
+                    qa.fillDrill.templates = { ...r2Data.templates, ...(qa.fillDrill.templates || {}) };
+                    console.log(`☁️ R2からテンプレート復元: Q${qa.id} (${Object.keys(r2Data.templates).length}件)`);
+                }
+
+                // 採点結果を復元（localStorageにない場合のみ）
+                if (r2Data.attempts && Object.keys(r2Data.attempts).length > 0) {
+                    qa.fillDrill.attempts = { ...r2Data.attempts, ...(qa.fillDrill.attempts || {}) };
+                    console.log(`☁️ R2から採点結果復元: Q${qa.id} (${Object.keys(r2Data.attempts).length}件)`);
+                }
             }
         }
     }
@@ -1899,9 +1915,9 @@ class QAFillDrillSystem {
                 }
             });
 
-            // ★★★ R2クラウドに保存（低容量：clearedLevelsのみ） ★★★
+            // ★★★ R2クラウドに保存（テンプレート・採点結果含む） ★★★
             for (const qa of updates) {
-                if (qa.fillDrill?.clearedLevels?.length > 0) {
+                if (qa.fillDrill) {
                     try {
                         await fetch('/api/fill-drill/progress', {
                             method: 'POST',
@@ -1909,10 +1925,12 @@ class QAFillDrillSystem {
                             body: JSON.stringify({
                                 moduleId: moduleId,
                                 qaId: qa.id,
-                                clearedLevels: qa.fillDrill.clearedLevels
+                                fillDrill: qa.fillDrill
                             })
                         });
-                        console.log(`☁️ R2に進捗保存: ${moduleId}/Q${qa.id} → Lv${qa.fillDrill.clearedLevels.join(',')}`);
+                        const levels = qa.fillDrill.clearedLevels?.join(',') || 'none';
+                        const templateCount = Object.keys(qa.fillDrill.templates || {}).length;
+                        console.log(`☁️ R2に進捗保存: ${moduleId}/Q${qa.id} → Lv${levels}, テンプレート${templateCount}件`);
                     } catch (r2Err) {
                         console.warn('⚠️ R2保存失敗（localStorageには保存済み）:', r2Err.message);
                     }

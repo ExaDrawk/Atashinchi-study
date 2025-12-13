@@ -545,9 +545,9 @@ async function getFillDrillProgress(username, moduleId, env, corsHeaders) {
     }
 }
 
-// FillDrill進捗保存（低容量：clearedLevelsのみ）
+// FillDrill進捗保存（テンプレート・採点結果含む）
 async function saveFillDrillProgress(request, env, corsHeaders) {
-    const { username, moduleId, qaId, clearedLevels } = await request.json();
+    const { username, moduleId, qaId, fillDrill } = await request.json();
 
     if (!username || !moduleId || !qaId) {
         return jsonResponse({ error: 'username, moduleId, and qaId are required' }, 400, corsHeaders);
@@ -562,13 +562,17 @@ async function saveFillDrillProgress(request, env, corsHeaders) {
         progressData = JSON.parse(await existing.text());
     }
 
-    // 該当Q&Aの進捗を更新（低容量：最小限のデータのみ）
+    // 該当Q&Aの進捗を更新（フルデータ）
     if (!progressData.progress) {
         progressData.progress = {};
     }
+
+    // fillDrillオブジェクト全体を保存
     progressData.progress[qaId] = {
-        cleared: clearedLevels || [],
-        at: new Date().toISOString().split('T')[0] // 日付のみ（容量削減）
+        clearedLevels: fillDrill?.clearedLevels || [],
+        templates: fillDrill?.templates || {},
+        attempts: fillDrill?.attempts || {},
+        at: new Date().toISOString()
     };
 
     progressData.updatedAt = new Date().toISOString();

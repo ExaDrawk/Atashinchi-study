@@ -3517,11 +3517,11 @@ app.get('/api/fill-drill/progress', async (req, res) => {
     }
 });
 
-// FillDrill進捗保存
+// FillDrill進捗保存（テンプレート・採点結果含む）
 app.post('/api/fill-drill/progress', async (req, res) => {
     try {
         const username = req.session?.username;
-        const { moduleId, qaId, clearedLevels } = req.body;
+        const { moduleId, qaId, fillDrill } = req.body;
 
         if (!username) {
             return res.status(401).json({ error: 'ログインが必要です' });
@@ -3535,9 +3535,11 @@ app.post('/api/fill-drill/progress', async (req, res) => {
             return res.json({ success: true, message: 'R2未設定のためスキップ' });
         }
 
-        console.log(`💾 FillDrill進捗保存: ${moduleId}/Q${qaId} → Lv${clearedLevels?.join(',') || 'none'}`);
+        const levels = fillDrill?.clearedLevels?.join(',') || 'none';
+        const templateCount = Object.keys(fillDrill?.templates || {}).length;
+        console.log(`💾 FillDrill進捗保存: ${moduleId}/Q${qaId} → Lv${levels}, テンプレート${templateCount}件`);
 
-        await d1Client.saveFillDrillProgress(username, moduleId, qaId, clearedLevels);
+        await d1Client.saveFillDrillProgress(username, moduleId, qaId, fillDrill);
         res.json({ success: true });
 
     } catch (error) {
