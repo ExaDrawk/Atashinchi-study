@@ -1154,9 +1154,16 @@ function renderInlineWorksheet(level, template, state, fillDrill, blankEvaluatio
         // ★★★ Q&A参照セグメントをボタン化 ★★★
         if (segment.type === 'qaRef') {
             const qaRef = segment.ref || '';
-            // processQAReferencesを使ってQ&Aボタンを生成
-            const buttonHtml = processQAReferences(`【id:${qaRef}】`, [], {});
-            return `<span class="inline-qa-ref mx-1">${buttonHtml}</span>`;
+            // qaRefをドット区切り形式に正規化（例: "商法1.3" → "商法.1.3"）
+            let normalizedRef = qaRef;
+            // "科目名数字.数字" パターンを "科目名.数字.数字" に変換
+            const match = qaRef.match(/^([^\d.]+)(\d+)\.(\d+)$/);
+            if (match) {
+                normalizedRef = `${match[1]}.${match[2]}.${match[3]}`;
+            }
+            // processQAReferencesを使ってQ&Aボタンを生成（【科目名.番号】形式）
+            const buttonHtml = processQAReferences(`【${normalizedRef}】`, [], {});
+            return `<span class="inline-qa-ref mx-1">${buttonHtml}</span>`
         }
         if (segment.type === 'blank') {
             blankCounter += 1;
@@ -1688,6 +1695,14 @@ class QAFillDrillSystem {
                 subject: qa.subject
             };
 
+            // ★★★ 参照資料を構築（ケースの参考資料 + Q&A解説） ★★★
+            let combinedReferenceMaterial = window.currentCaseData?.referenceMaterial || '';
+            if (qa.explanation) {
+                combinedReferenceMaterial = combinedReferenceMaterial
+                    ? `${combinedReferenceMaterial}\n\n【このQ&Aの解説】\n${qa.explanation}`
+                    : `【このQ&Aの解説】\n${qa.explanation}`;
+            }
+
             const response = await ApiService.generateQAFillTemplate({
                 relativePath: context.relativePath,
                 qaId: qa.id,
@@ -1695,8 +1710,15 @@ class QAFillDrillSystem {
                 forceRefresh: Boolean(forceRefresh),
                 historySnapshot: buildHistorySnapshot(fillDrill),
                 standaloneQA: qaDataForServer,
-                referenceMaterial: window.currentCaseData?.referenceMaterial || ''
+                referenceMaterial: combinedReferenceMaterial
             });
+
+            // ★★★ forceRefresh時は採点結果もクリア ★★★
+            if (forceRefresh) {
+                delete fillDrill.attempts[level];
+                console.log(`🔄 Lv${level}の採点結果をクリアしました`);
+            }
+
             fillDrill.templates[level] = response.template;
             fillDrill.updatedAt = new Date().toISOString();
             await this.persist(context.relativePath, context.qaRef.qa);
@@ -1790,6 +1812,14 @@ class QAFillDrillSystem {
                 caseCharacters = speakers.slice(0, 3); // 最大3人
             }
 
+            // ★★★ 参照資料を構築（ケースの参考資料 + Q&A解説） ★★★
+            let combinedReferenceMaterial = window.currentCaseData?.referenceMaterial || '';
+            if (qa.explanation) {
+                combinedReferenceMaterial = combinedReferenceMaterial
+                    ? `${combinedReferenceMaterial}\n\n【このQ&Aの解説】\n${qa.explanation}`
+                    : `【このQ&Aの解説】\n${qa.explanation}`;
+            }
+
             const response = await ApiService.gradeQAFillAnswers({
                 relativePath: context.relativePath,
                 qaId: qa.id,
@@ -1798,7 +1828,7 @@ class QAFillDrillSystem {
                 answers: answerSnapshot,
                 standaloneQA: qaDataForServer,
                 characters: caseCharacters,
-                referenceMaterial: window.currentCaseData?.referenceMaterial || ''
+                referenceMaterial: combinedReferenceMaterial
             });
 
             console.log('🤖 採点API応答:', response);

@@ -118,6 +118,12 @@ export async function renderQAItem(options) {
             <div class="flex gap-2 mb-1 items-center">
                 <button class="toggle-answer-btn bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold px-2 py-1 rounded text-xs" data-target="${answerId}">答えを表示</button>
                 <button class="copy-qa-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold px-2 py-1 rounded text-xs" data-qa-id="${qaId}" title="問題文と解答をコピー">📋 コピー</button>
+                <button class="explanation-btn bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold px-2 py-1 rounded text-xs" 
+                    data-qa-id="${qa._qaId || qa.qaId || (String(qaId).includes('-') ? String(qaId).split('-').pop() : qaId)}" 
+                    data-subject="${qa.subject || ''}" 
+                    data-subcategory="${qa.subcategoryId || qa._subcategoryId || (String(qaId).includes('-') ? String(qaId).split('-')[0] : '')}"
+                    data-question="${(qa.question || '').substring(0, 50).replace(/"/g, '&quot;')}"
+                    title="解説を表示/編集">📖 解説</button>
                 ${fillSummaryHtml}
             </div>
 
@@ -274,6 +280,17 @@ export function setupQAListEventHandlers(container) {
             if (moduleId) {
                 window.location.hash = `#/case/${moduleId}`;
             }
+        });
+    });
+
+    // ★★★ 解説ボタンの処理 ★★★
+    container.querySelectorAll('.explanation-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const qaId = this.dataset.qaId;
+            const subject = this.dataset.subject;
+            const subcategory = this.dataset.subcategory;
+            const question = this.dataset.question;
+            openExplanationModal(subject, subcategory, qaId, question);
         });
     });
 
@@ -650,3 +667,130 @@ function fallbackCopyAll(text, button, originalText, count) {
         button.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
     }, 2000);
 }
+
+/**
+ * 解説モーダルを開く
+ * @param {string} subject - 科目名
+ * @param {string} subcategory - サブカテゴリID
+ * @param {string} qaId - Q&A ID
+ * @param {string} questionPreview - 問題文プレビュー
+ */
+async function openExplanationModal(subject, subcategory, qaId, questionPreview) {
+    // 必須パラメータチェック
+    if (!subject || !subcategory || !qaId) {
+        console.warn('⚠️ 解説編集に必要な情報が不足しています:', { subject, subcategory, qaId });
+        alert('解説編集に必要な情報が不足しています。\n（科目・サブカテゴリ・Q&A IDが必要です）');
+        return;
+    }
+
+    // 既存のモーダルがあれば削除
+    const existingModal = document.getElementById('explanation-modal');
+    if (existingModal) existingModal.remove();
+
+    // モーダルHTML作成
+    const modalHtml = `
+        <div id="explanation-modal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">📖 解説編集</h3>
+                        <p class="text-xs text-gray-500">${subject} ${subcategory}-${qaId}: ${questionPreview || ''}...</p>
+                    </div>
+                    <button id="close-explanation-modal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <div class="p-4 flex-1 overflow-auto">
+                    <div id="explanation-loading" class="text-center py-8 text-gray-500">
+                        読み込み中...
+                    </div>
+                    <textarea id="explanation-textarea" class="hidden w-full h-64 p-3 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-mono text-sm" placeholder="このQ&Aの解説を入力してください..."></textarea>
+                    <p class="mt-2 text-xs text-gray-500">※ 解説はAI添削時に参照されます。条文の詳しい説明、判例のポイント、論点の補足などを記載してください。</p>
+                </div>
+                <div class="flex gap-2 p-4 border-t border-gray-200">
+                    <button id="cancel-explanation" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition-colors">キャンセル</button>
+                    <button id="save-explanation" class="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg transition-colors">💾 保存</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('explanation-modal');
+    const textarea = document.getElementById('explanation-textarea');
+    const loadingEl = document.getElementById('explanation-loading');
+    const closeBtn = document.getElementById('close-explanation-modal');
+    const cancelBtn = document.getElementById('cancel-explanation');
+    const saveBtn = document.getElementById('save-explanation');
+
+    // ESCキーで閉じる
+    const escHandler = (e) => {
+        if (e.key === 'Escape') closeModal();
+    };
+    document.addEventListener('keydown', escHandler);
+
+    const closeModal = () => {
+        document.removeEventListener('keydown', escHandler);
+        modal.remove();
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // 解説を取得
+    try {
+        const res = await fetch(`/api/qa/explanation?subject=${encodeURIComponent(subject)}&subcategory=${encodeURIComponent(subcategory)}&qaId=${encodeURIComponent(qaId)}`);
+        const data = await res.json();
+
+        if (data.success) {
+            textarea.value = data.explanation || '';
+            loadingEl.classList.add('hidden');
+            textarea.classList.remove('hidden');
+            textarea.focus();
+        } else {
+            loadingEl.textContent = `エラー: ${data.message}`;
+        }
+    } catch (err) {
+        console.error('解説取得エラー:', err);
+        loadingEl.textContent = 'エラーが発生しました';
+    }
+
+    // 保存ボタン
+    saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '保存中...';
+
+        try {
+            const res = await fetch('/api/qa/explanation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject,
+                    subcategory,
+                    qaId,
+                    explanation: textarea.value
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                saveBtn.textContent = '✅ 保存完了';
+                setTimeout(closeModal, 800);
+            } else {
+                alert(`保存エラー: ${data.message}`);
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 保存';
+            }
+        } catch (err) {
+            console.error('解説保存エラー:', err);
+            alert('保存中にエラーが発生しました');
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 保存';
+        }
+    });
+}
+
+// グローバルに公開
+window.openExplanationModal = openExplanationModal;

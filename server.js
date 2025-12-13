@@ -167,6 +167,77 @@ app.post('/api/article-stats/update', async (req, res) => {
     }
 });
 
+// ★★★ Q&A解説更新API: /api/qa/explanation ★★★
+const QA_DATA_DIR = path.join(__dirname2, 'public', 'data', 'qa');
+
+// GET: Q&A解説を取得
+app.get('/api/qa/explanation', async (req, res) => {
+    try {
+        const { subject, subcategory, qaId } = req.query;
+        if (!subject || !subcategory || !qaId) {
+            return res.status(400).json({ success: false, message: '必須パラメータ不足: subject, subcategory, qaId' });
+        }
+
+        const filePath = path.join(QA_DATA_DIR, `${subject}_${subcategory}.json`);
+        if (!fssync.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: `Q&Aファイルが見つかりません: ${subject}_${subcategory}.json` });
+        }
+
+        const data = JSON.parse(fssync.readFileSync(filePath, 'utf8'));
+        const qa = data.questions?.[qaId];
+        if (!qa) {
+            return res.status(404).json({ success: false, message: `Q&Aが見つかりません: ${qaId}` });
+        }
+
+        res.json({
+            success: true,
+            explanation: qa.explanation || '',
+            qa: {
+                id: qaId,
+                question: qa.question,
+                answer: qa.answer,
+                rank: qa.rank
+            }
+        });
+    } catch (e) {
+        console.error('❌ /api/qa/explanation GET エラー:', e);
+        res.status(500).json({ success: false, message: 'サーバーエラー' });
+    }
+});
+
+// POST: Q&A解説を更新
+app.post('/api/qa/explanation', async (req, res) => {
+    try {
+        const { subject, subcategory, qaId, explanation } = req.body;
+        if (!subject || !subcategory || !qaId) {
+            return res.status(400).json({ success: false, message: '必須パラメータ不足: subject, subcategory, qaId' });
+        }
+
+        const filePath = path.join(QA_DATA_DIR, `${subject}_${subcategory}.json`);
+        if (!fssync.existsSync(filePath)) {
+            return res.status(404).json({ success: false, message: `Q&Aファイルが見つかりません: ${subject}_${subcategory}.json` });
+        }
+
+        const data = JSON.parse(fssync.readFileSync(filePath, 'utf8'));
+        if (!data.questions?.[qaId]) {
+            return res.status(404).json({ success: false, message: `Q&Aが見つかりません: ${qaId}` });
+        }
+
+        // 解説を更新
+        data.questions[qaId].explanation = explanation || '';
+        data.questions[qaId].explanationUpdatedAt = new Date().toISOString();
+
+        // ファイルに保存
+        fssync.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+        console.log(`📝 Q&A解説を更新: ${subject}_${subcategory}.json Q${qaId}`);
+
+        res.json({ success: true, message: '解説を保存しました' });
+    } catch (e) {
+        console.error('❌ /api/qa/explanation POST エラー:', e);
+        res.status(500).json({ success: false, message: 'サーバーエラー' });
+    }
+});
+
 const port = process.env.PORT || 3000;
 
 // ★★★ Render.com対応ミドルウェア ★★★
@@ -413,7 +484,34 @@ async function callGrokAPI(prompt, systemPrompt = '', useCollectionSearch = fals
                     // 検索結果をコンテキストとして構築（上位5件）
                     searchContext = matches.slice(0, 5).map(m => m.chunk_content).join('\n\n---\n\n');
 
+                    // ★★★ デバッグ: 最初のマッチのフィールドを確認 ★★★
+                    if (matches.length > 0) {
+                        console.log(`🔬 検索結果のフィールド: ${Object.keys(matches[0]).join(', ')}`);
+                    }
+
+                    // ★★★ 参照したファイル名を抽出して表示 ★★★
+                    const referencedFiles = [...new Set(matches.slice(0, 5).map(m => {
+                        // xAI APIのレスポンス構造に応じて取得
+                        // source.document_name, metadata.filename 等も試す
+                        const name = m.document_name
+                            || m.filename
+                            || m.title
+                            || m.name
+                            || m.source?.document_name
+                            || m.source?.filename
+                            || m.metadata?.filename
+                            || m.metadata?.title
+                            || m.document?.name
+                            || m.document?.title
+                            || m.document_id
+                            || '(名前不明)';
+                        return name;
+                    }))];
+
                     console.log(`🔍 コレクション検索ヒット数: ${searchHitCount}件`);
+                    if (referencedFiles.length > 0 && !referencedFiles.every(f => f === '(名前不明)')) {
+                        console.log(`📄 参照ファイル: ${referencedFiles.join(', ')}`);
+                    }
                 } else {
                     console.warn('⚠️ コレクション検索失敗:', searchRes.status);
                 }
@@ -1392,10 +1490,23 @@ app.post('/api/qa-fill/generate', async (req, res) => {
 
         // ★★★ 参考資料がある場合はプロンプトに含める ★★★
         const referenceSection = referenceMaterial ? `
-【参考資料】
+【★★★ 重要：参考資料・解説 ★★★】
 ${referenceMaterial}
 
-この参考資料を踏まえて、ユーザーの理解を深める穴埋め問題を作成してください。
+【参考資料の活用方法 - 必須】
+・上記の「このQ&Aの解説」がある場合、これは出題者が設定した重要な解説です
+・この解説の内容を反映した穴埋め問題を作成してください
+・解説で触れられている論点・判例・条文は、問題に含めるべき重要ポイントです
+・解説がない場合は、回答文から適切にポイントを抽出してください
+` : '';
+
+        // ★★★ forceRefresh時は「別の問題を生成」指示を追加 ★★★
+        const regenerateInstruction = forceRefresh ? `
+【★★★ 重要：別の問題を生成してください ★★★】
+これは再生成リクエストです。前回とは異なるアプローチで問題を作成してください：
+・空欄にする単語/フレーズを変更してください
+・同じ回答文から、別の重要ポイントに焦点を当ててください
+・乱数シード: ${Date.now() % 10000}（このシードを参考に異なるパターンを選択）
 ` : '';
 
         // ★★★ レベルに応じたプロンプトを生成 ★★★
@@ -1404,7 +1515,7 @@ ${referenceMaterial}
         if (level === 3) {
             // Lv3: 応用・全文記述
             prompt = `司法試験の記述式問題を作成してください。
-
+${regenerateInstruction}
 【設問】
 ${qaData.question || ''}
 
@@ -1451,7 +1562,7 @@ ${referenceSection}
         } else if (level === 2) {
             // Lv2: 発展・穴埋め
             prompt = `司法試験の穴埋め問題を作成してください。
-
+${regenerateInstruction}
 【元の解答】
 ${qaData.answer || ''}
 ${referenceSection}
@@ -1480,7 +1591,7 @@ ${referenceSection}
         } else {
             // Lv1: 基礎・穴埋め
             prompt = `司法試験の穴埋め問題を作成してください。
-
+${regenerateInstruction}
 【元の解答】
 ${qaData.answer || ''}
 ${referenceSection}
@@ -1635,8 +1746,14 @@ ${template?.text || ''}
 【模範解答の核心ポイント】
 ${standaloneQA?.answer || ''}
 ${referenceMaterial ? `
-【参考資料】
+【★★★ 重要：参考資料・解説 ★★★】
 ${referenceMaterial}
+
+【参考資料の活用方法 - 必須】
+・上記の「このQ&Aの解説」がある場合、これは出題者が設定した重要な解説です
+・添削時は、この解説の内容に基づいてフィードバックしてください
+・解説で触れられている論点を正しく理解しているかを重点的に評価
+・論述の網羅性・正確性の判断基準として解説を活用してください
 ` : ''}
 【採点対象（学習者の回答）】
 ${correctAnswers.map((ans, i) => `(${i + 1}) 正解「${ans}」 ← 回答「${answers?.[i]?.text || answers?.[i] || ''}`).join('\n')}
@@ -1654,6 +1771,12 @@ ${correctAnswers.map((ans, i) => `(${i + 1}) 正解「${ans}」 ← 回答「${a
 ・正確性の評価：法的概念の理解度、判例の射程の理解を評価
 ・改善点の提示：次回どう書けばより良い答案になるか具体的にアドバイス
 ・選んだキャラクターの口調・個性を忠実に再現すること
+
+【判例についての重要な注意】
+・判例の趣旨・ロジックを理解することは重要
+・ただし、回答に「判例は～」と明記する必要はない
+・判例のロジック（考え方・規範）を自分の言葉で書けていれば正解とする
+・「判例」という言葉がなくても、判例の内容を正確に述べていれば○
 
 【使用可能な表情】${validExpressions.join(', ')}
 
@@ -1697,16 +1820,26 @@ ${characterSection}
 ・司法試験論文式試験の採点者が求める視点を意識した解説
 ・選んだキャラクターの口調・個性を忠実に再現すること
 
+【判例についての重要な注意】
+・判例の趣旨・ロジックを理解することは重要
+・ただし、回答に「判例は～」と明記する必要はない
+・判例のロジック（考え方・規範）を自分の言葉で書けていれば正解とする
+・「判例」という言葉がなくても、判例の内容を正確に述べていれば○
+
 【穴埋め問題】
 ${template?.text || ''}
 
 【採点対象】
 ${correctAnswers.map((ans, i) => `(${i + 1}) 正解「${ans}」 ← 回答「${answers?.[i]?.text || answers?.[i] || ''}`).join('\n')}
 ${referenceMaterial ? `
-【参考資料】
+【★★★ 重要：参考資料・解説 ★★★】
 ${referenceMaterial}
 
-上記の参考資料を踏まえて、ユーザーの理解を深める添削をしてください。
+【参考資料の活用方法 - 必須】
+・上記の「このQ&Aの解説」がある場合、これは出題者が設定した重要な解説です
+・添削時は、この解説の内容に基づいてフィードバックしてください
+・解説で触れられている論点を正しく理解しているかを重点的に評価
+・不正解の場合、解説の内容を参考にして正しい理解を促してください
 ` : ''}
 【判定基準】
 ○ = 正解（同義語・表記揺れも含む）

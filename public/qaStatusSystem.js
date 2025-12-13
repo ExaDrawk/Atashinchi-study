@@ -551,7 +551,10 @@ class QAStatusSystem {
                 return false;
             }
 
+            // ★★★ デバッグ: 保存するペイロードの詳細表示 ★★★
             console.log(`💾 進捗保存開始: ${resolvedPath} (${payload.length}件)`);
+            console.log('📦 保存ペイロード:', JSON.stringify(payload, null, 2));
+
             const result = await ApiService.saveQaProgress(resolvedPath, payload);
             console.log('✅ 進捗保存成功:', result);
             return true;

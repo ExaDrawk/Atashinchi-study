@@ -347,7 +347,8 @@ export async function getQA(ref) {
                 subject: parsed.subject,
                 rank: qa.rank || 'C',
                 question: qa.question,
-                answer: qa.answer
+                answer: qa.answer,
+                explanation: qa.explanation || ''
             };
         } catch (error) {
             console.error(`❌ Q&A取得エラー: ${ref}`, error);
@@ -372,7 +373,8 @@ export async function getQA(ref) {
         subject: parsed.subject,
         rank: qa.rank || 'C',
         question: qa.question,
-        answer: qa.answer
+        answer: qa.answer,
+        explanation: qa.explanation || ''
     };
 }
 
