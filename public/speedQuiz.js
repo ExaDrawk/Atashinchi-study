@@ -228,35 +228,35 @@ function toKanji(n) {
     const nums = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
     n = parseInt(n);
     if (isNaN(n) || n === 0) return '';
-    
+
     let result = '';
-    
+
     // 千の位
     if (n >= 1000) {
         const thou = Math.floor(n / 1000);
         result += (thou === 1 ? '' : nums[thou]) + '千';
         n %= 1000;
     }
-    
+
     // 百の位
     if (n >= 100) {
         const hun = Math.floor(n / 100);
         result += (hun === 1 ? '' : nums[hun]) + '百';
         n %= 100;
     }
-    
+
     // 十の位
     if (n >= 10) {
         const ten = Math.floor(n / 10);
         result += (ten === 1 ? '' : nums[ten]) + '十';
         n %= 10;
     }
-    
+
     // 一の位
     if (n > 0) {
         result += nums[n];
     }
-    
+
     return result;
 }
 
@@ -270,13 +270,13 @@ function toKanjiWithNo(numStr) {
 // ═══════════════════════════════════════════════════════════════════════════
 // 条文抽出 & 取得
 // ═══════════════════════════════════════════════════════════════════════════
-const LAWS = ['民法','刑法','憲法','日本国憲法','会社法','商法','民事訴訟法','刑事訴訟法','刑事訴訟規則','行政事件訴訟法','行政手続法','行政不服審査法','国家賠償法','地方自治法','破産法','民事再生法','民事執行法','民事保全法','借地借家法','不動産登記法'];
+const LAWS = ['民法', '刑法', '憲法', '日本国憲法', '会社法', '商法', '民事訴訟法', '刑事訴訟法', '刑事訴訟規則', '行政事件訴訟法', '行政手続法', '行政不服審査法', '国家賠償法', '地方自治法', '破産法', '民事再生法', '民事執行法', '民事保全法', '借地借家法', '不動産登記法'];
 
 export async function extractAllArticles(caseData) {
     if (!caseData) return [];
     const articles = [], seen = new Set();
     const pat = /(?:【)?([^\s【】]+?(?:法|規則|憲法))(\d+(?:の\d+)?)\s*条(?:第?(\d+)\s*項)?(?:第?(\d+)\s*号)?(?:】)?/g;
-    
+
     function extract(text, src = '') {
         if (!text || typeof text !== 'string') return;
         let m; pat.lastIndex = 0;
@@ -291,7 +291,7 @@ export async function extractAllArticles(caseData) {
             articles.push({ lawName: law.trim(), articleNumber: num, paragraph: para ? +para : null, item: item ? +item : null, displayText: cleanDisplayText, source: src });
         }
     }
-    
+
     if (caseData.title) extract(caseData.title, 'title');
     if (caseData.description) extract(caseData.description, 'desc');
     if (caseData.content) extract(caseData.content, 'content');
@@ -329,54 +329,54 @@ async function fetchContent(a) {
 
 function hideAnswer(content, a) {
     if (!content || !a) return content;
-    
+
     console.log('🔍 hideAnswer入力:', content.substring(0, 200));
-    
+
     // APIからの条文フォーマット:
     // "（見出し）\n第〇〇条　本文..."
     // 
     // 条文番号（第〇〇条）を完全に削除して、見出しと本文だけを表示する
-    
+
     // 行ごとに分割
     const lines = content.split('\n');
     const result = [];
-    
+
     for (const line of lines) {
         const trimmedLine = line.trim();
-        
+
         // 空行はスキップ
         if (!trimmedLine) continue;
-        
+
         // 見出し行（括弧で囲まれた行）はそのまま保持
         if (/^（.+）$/.test(trimmedLine)) {
             // 見出しを二重括弧に変換（displayQでハイライト処理される）
             result.push(trimmedLine.replace(/^（(.+)）$/, '（（$1））'));
             continue;
         }
-        
+
         // 「第〇〇条　」または「第〇〇条」で始まる行から条文番号を削除
         // 漢数字パターン: 第四百十三条、第四百六十五条の二 など
         // アラビア数字パターン: 第413条、第465条の2 など
         let processedLine = line;
-        
+
         // 漢数字の条文番号を削除（「第〇〇条　」の部分を削除）
         processedLine = processedLine.replace(
             /^第[〇一二三四五六七八九十百千零]+(?:の[〇一二三四五六七八九十百千零]+)*条[　\s]*/,
             ''
         );
-        
+
         // アラビア数字の条文番号を削除
         processedLine = processedLine.replace(
             /^第\d+(?:の\d+)?条[　\s]*/,
             ''
         );
-        
+
         // 空行でなければ結果に追加
         if (processedLine.trim()) {
             result.push(processedLine);
         }
     }
-    
+
     const output = result.join('\n');
     console.log('🔍 hideAnswer出力:', output.substring(0, 200));
     return output;
@@ -390,17 +390,17 @@ async function recordAnswer(a, ok, sc) {
     try {
         const d = new Date().toISOString().split('T')[0];
         const ts = new Date().toISOString();
-        await fetch('/api/quiz-results', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ 
-                date: d, 
-                result: { 
-                    articleNumber: `${a.lawName}${a.articleNumber}条`, 
+        await fetch('/api/quiz-results', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date: d,
+                result: {
+                    articleNumber: `${a.lawName}${a.articleNumber}条`,
                     score: sc, // 0〜10点
                     timestamp: ts
-                } 
-            }) 
+                }
+            })
         });
     } catch (err) {
         console.warn('スコア記録エラー:', err);
@@ -412,7 +412,7 @@ async function showArticleModal(article) {
     // 既存のモーダルがあれば削除
     const existing = document.getElementById('sq-article-modal');
     if (existing) existing.remove();
-    
+
     // モーダル作成
     const modal = document.createElement('div');
     modal.id = 'sq-article-modal';
@@ -427,15 +427,15 @@ async function showArticleModal(article) {
         </div>
     `;
     document.body.appendChild(modal);
-    
+
     // 閉じるボタン
     document.getElementById('sq-modal-close').addEventListener('click', () => modal.remove());
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-    
+
     // ESCで閉じる
     const escHandler = (e) => { if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escHandler); } };
     document.addEventListener('keydown', escHandler);
-    
+
     // 条文取得
     try {
         const content = await fetchContent(article);
@@ -469,7 +469,7 @@ function getAvailableLaws() {
 function renderMenu(count) {
     // homePage.jsの既存絞り込みパネルを取得
     const filterPanelHTML = getSpeedFilterPanelHTML();
-    
+
     return `
 <div class="sq-fs sq-bg-menu sq-flex sq-col sq-overflow-auto" style="padding:1.5rem;">
     <button class="sq-back" id="sq-back">← 戻る</button>
@@ -485,19 +485,17 @@ function renderMenu(count) {
             ${filterPanelHTML}
         </div>
         
-        <div class="sq-card" style="max-width:550px;margin:0 auto;">
-            <h3 class="sq-text-white sq-bold sq-text-lg sq-mb-3">📖 ルール</h3>
-            <ul class="sq-text-gray" style="text-align:left;line-height:2;font-size:.95rem;">
-                <li>• 条文を読んで、何条か入力</li>
-                <li>• 制限時間は <span class="sq-text-white sq-bold">10秒</span></li>
-                <li>• 早く答えるほど <span class="sq-text-white sq-bold">高得点</span></li>
-                <li>• タイプミスで <span style="color:#ef4444;">−1秒</span></li>
-                <li>• 時間が減ると<span class="sq-text-white sq-bold">文字が大きく！</span></li>
-            </ul>
+        <!-- 履歴セクション -->
+        <div class="sq-card" style="max-width:700px;margin:0 auto;">
+            <h3 class="sq-text-white sq-bold sq-text-lg sq-mb-3">📊 最近の記録</h3>
+            <div id="sq-history-container" class="sq-text-gray" style="text-align:left;max-height:300px;overflow-y:auto;">
+                <p style="text-align:center;color:rgba(255,255,255,0.5);">読み込み中...</p>
+            </div>
         </div>
     </div>
 </div>`;
 }
+
 
 function renderGame() {
     const a = SQ.articles[SQ.index];
@@ -556,7 +554,7 @@ function renderResult() {
     // 平均点計算（小数第二位まで）
     const avgScore = total > 0 ? (SQ.score / total).toFixed(2) : '0.00';
     const ri = getRankInfo(parseFloat(avgScore));
-    
+
     // グリッド形式の回答ボタン生成
     let buttonsHtml = '';
     if (SQ.allAnswers && SQ.allAnswers.length > 0) {
@@ -577,7 +575,7 @@ function renderResult() {
             const shortLawName = a.lawName.length > 4 ? a.lawName.substring(0, 3) + '…' : a.lawName;
             return `<button class="sq-result-btn sq-article-btn" data-idx="${idx}" style="background:${lawColor.bg};color:${lawColor.text};border:none;padding:0.4rem 0.6rem;border-radius:0.5rem;font-size:0.85rem;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:0.3rem;white-space:nowrap;transition:transform 0.1s,box-shadow 0.1s;" title="${a.lawName}${a.articleNumber}条">${shortLawName}${a.articleNumber}条${scoreIcon} ${score}点</button>`;
         }).join('');
-        
+
         buttonsHtml = `
 <div style="margin-top:1.5rem;">
     <h3 class="sq-text-white sq-bold sq-text-xl sq-mb-4">📋 全問題（クリックで条文表示）</h3>
@@ -586,7 +584,7 @@ function renderResult() {
     </div>
 </div>`;
     }
-    
+
     return `
 <div class="sq-fs sq-bg-result sq-flex sq-col sq-center sq-overflow-auto sq-p-6">
     <button class="sq-back" id="sq-back">← 戻る</button>
@@ -630,11 +628,11 @@ function showCorrectFx() {
 }
 
 function confetti() {
-    const colors = ['#10b981','#3b82f6','#8b5cf6','#ec4899','#fbbf24','#ef4444'];
+    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#fbbf24', '#ef4444'];
     for (let i = 0; i < 70; i++) {
         const c = document.createElement('div');
         c.className = 'sq-confetti';
-        c.style.cssText = `left:${Math.random()*100}vw;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'3px'};animation-delay:${Math.random()*.5}s;animation-duration:${2+Math.random()*1.5}s;`;
+        c.style.cssText = `left:${Math.random() * 100}vw;top:-20px;background:${colors[Math.floor(Math.random() * colors.length)]};border-radius:${Math.random() > .5 ? '50%' : '3px'};animation-delay:${Math.random() * .5}s;animation-duration:${2 + Math.random() * 1.5}s;`;
         document.body.appendChild(c);
         setTimeout(() => c.remove(), 3500);
     }
@@ -659,14 +657,14 @@ function startTimer() {
     SQ.timerStart = performance.now();
     SQ.fontSize = 1;
     updateTimer();
-    
+
     // 1秒ごとのカウントダウン
     SQ.timer = setInterval(() => {
         SQ.timeLeft--;
         updateTimer(); // ★ 残り時間表示を更新
         if (SQ.timeLeft <= 0) handleTimeout();
     }, 1000);
-    
+
     // 連続的なフォントサイズ更新（60fps）
     function animateFontSize() {
         if (SQ.phase !== 'playing' || SQ.processing) return;
@@ -688,7 +686,7 @@ function stopTimer() {
 function updateTimer() {
     const bar = document.getElementById('sq-bar');
     const time = document.getElementById('sq-time');
-    
+
     if (bar) {
         const pct = (SQ.timeLeft / SQ.timeLimit) * 100;
         bar.style.width = pct + '%';
@@ -708,18 +706,18 @@ function updateTimerSmooth(progress) {
     const inp = document.getElementById('sq-input');
     const labelDai = document.getElementById('sq-label-dai');
     const labelJou = document.getElementById('sq-label-jou');
-    
+
     // プログレスバーも滑らかに
     if (bar) {
         const pct = (1 - progress) * 100;
         bar.style.width = pct + '%';
     }
-    
+
     // ネプリーグ風：連続的に文字が大きくなる（5rem → 9rem）
     const baseFontSize = 5;
     const maxGrow = 4;
     const currentSize = baseFontSize + (maxGrow * progress);
-    
+
     if (inp) {
         inp.style.fontSize = currentSize + 'rem';
     }
@@ -737,12 +735,12 @@ function updateTimerSmooth(progress) {
 }
 
 function penalty() {
-    if (SQ.timeLeft > 1) { 
-        SQ.timeLeft--; 
+    if (SQ.timeLeft > 1) {
+        SQ.timeLeft--;
         // ペナルティでタイマー開始時間を1秒分早める
         SQ.timerStart -= 1000;
-        updateTimer(); 
-        showPenaltyFx(); 
+        updateTimer();
+        showPenaltyFx();
     }
 }
 
@@ -862,13 +860,13 @@ async function displayQ() {
     const labelDai = document.getElementById('sq-label-dai');
     const labelJou = document.getElementById('sq-label-jou');
     const overlay = document.getElementById('sq-input-overlay');
-    if (inp) { 
-        inp.value = ''; 
-        inp.classList.remove('ok', 'ng'); 
+    if (inp) {
+        inp.value = '';
+        inp.classList.remove('ok', 'ng');
         inp.style.fontSize = '5rem'; // 初期サイズにリセット
         inp.disabled = false; // 入力ロックを解除
         inp.style.opacity = '1';
-        setTimeout(() => inp.focus(), 100); 
+        setTimeout(() => inp.focus(), 100);
     }
     // オーバーレイをリセット
     if (overlay) {
@@ -904,21 +902,21 @@ function goBack() {
 // フィルタ適用後の問題数を取得
 function getFilteredArticles() {
     let articles = [...(window.speedQuizArticles || SQ.articles)];
-    
+
     // homePage.jsの共通フィルター設定を取得
     const settings = getSpeedFilterSettings();
-    
+
     // 法令名フィルタ
     if (settings.selectedLaws?.length > 0) {
         articles = articles.filter(a => settings.selectedLaws.some(l => a.lawName?.includes(l)));
     }
-    
+
     // 出題数制限
     if (settings.questionCount && settings.questionCount !== 'all') {
         const count = parseInt(settings.questionCount) || 20;
         articles = shuffle(articles).slice(0, count);
     }
-    
+
     return articles;
 }
 
@@ -927,7 +925,10 @@ function showMenu() {
     stopTimer();
     removeKeyHandler();
     SQ.container.innerHTML = renderMenu(SQ.articles.length);
-    
+
+    // 履歴を読み込んで表示
+    loadAndDisplayHistory();
+
     // homePage.jsの共通フィルターハンドラを適用
     const filterPanel = document.getElementById('sq-filter-panel');
     if (filterPanel) {
@@ -945,8 +946,98 @@ function showMenu() {
             }
         });
     }
-    
+
     document.getElementById('sq-back')?.addEventListener('click', goBack);
+}
+
+// 履歴を読み込んで表示
+async function loadAndDisplayHistory() {
+    const container = document.getElementById('sq-history-container');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/quiz-results');
+        if (!res.ok) throw new Error('履歴取得失敗');
+
+        const allResults = await res.json();
+
+        // 日付でソート（新しい順）
+        const sortedDates = Object.keys(allResults).sort((a, b) => b.localeCompare(a));
+
+        if (sortedDates.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.5);">まだ記録がありません</p>';
+            return;
+        }
+
+        // 最新7日分の履歴を表示
+        let html = '';
+        let totalItems = 0;
+        const maxItems = 30; // 最大表示件数
+
+        for (const date of sortedDates.slice(0, 7)) {
+            const dayResults = allResults[date];
+            if (!Array.isArray(dayResults) || dayResults.length === 0) continue;
+
+            // 日付ヘッダー
+            const dateFormatted = formatDate(date);
+
+            // 条文ごとにグループ化して平均点を計算
+            const articleStats = {};
+            dayResults.forEach(r => {
+                const key = r.articleNumber;
+                if (!articleStats[key]) {
+                    articleStats[key] = { scores: [], lawName: r.articleNumber };
+                }
+                articleStats[key].scores.push(r.score);
+            });
+
+            // 平均点でソート（高い順）
+            const sortedArticles = Object.entries(articleStats)
+                .map(([key, data]) => ({
+                    articleNumber: key,
+                    avgScore: data.scores.reduce((a, b) => a + b, 0) / data.scores.length,
+                    count: data.scores.length
+                }))
+                .sort((a, b) => b.avgScore - a.avgScore);
+
+            html += `<div style="margin-bottom:1rem;">
+                <div style="font-weight:bold;color:#a78bfa;margin-bottom:0.5rem;">${dateFormatted}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">`;
+
+            for (const item of sortedArticles) {
+                if (totalItems >= maxItems) break;
+                const rankIcon = item.avgScore >= 8 ? '◯' : item.avgScore >= 3 ? '△' : '✕';
+                const rankColor = item.avgScore >= 8 ? '#10b981' : item.avgScore >= 3 ? '#fbbf24' : '#ef4444';
+                html += `<span style="background:rgba(255,255,255,0.1);padding:0.3rem 0.6rem;border-radius:0.5rem;font-size:0.85rem;display:inline-flex;align-items:center;gap:0.3rem;">
+                    <span style="color:${rankColor};">${rankIcon}</span>
+                    <span>${item.articleNumber}</span>
+                    <span style="color:rgba(255,255,255,0.5);font-size:0.75rem;">${item.avgScore.toFixed(1)}点</span>
+                </span>`;
+                totalItems++;
+            }
+
+            html += '</div></div>';
+            if (totalItems >= maxItems) break;
+        }
+
+        container.innerHTML = html || '<p style="text-align:center;color:rgba(255,255,255,0.5);">まだ記録がありません</p>';
+
+    } catch (error) {
+        console.warn('履歴読み込みエラー:', error);
+        container.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.5);">履歴を読み込めませんでした</p>';
+    }
+}
+
+// 日付フォーマット
+function formatDate(dateStr) {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    if (dateStr === today) return '今日';
+    if (dateStr === yesterday) return '昨日';
+
+    const [year, month, day] = dateStr.split('-');
+    return `${parseInt(month)}/${parseInt(day)}`;
 }
 
 async function startGame() {
@@ -1002,20 +1093,20 @@ function pauseGame() {
 function resumeGame() {
     SQ.phase = 'playing';
     document.getElementById('sq-pause-overlay')?.remove();
-    
+
     // ポーズしていた時間分、timerStartを補正
     if (SQ.pausedAt) {
         const pausedDuration = performance.now() - SQ.pausedAt;
         SQ.timerStart += pausedDuration;
     }
-    
+
     // タイマー再開
     SQ.timer = setInterval(() => {
         SQ.timeLeft--;
         updateTimer(); // ★ 残り時間表示を更新
         if (SQ.timeLeft <= 0) handleTimeout();
     }, 1000);
-    
+
     // アニメーション再開
     function animateFontSize() {
         if (SQ.phase !== 'playing' || SQ.processing) return;
@@ -1027,7 +1118,7 @@ function resumeGame() {
         }
     }
     SQ.tickHandler = requestAnimationFrame(animateFontSize);
-    
+
     document.getElementById('sq-input')?.focus();
 }
 
@@ -1047,7 +1138,7 @@ function showResult() {
     document.getElementById('sq-retry')?.addEventListener('click', startGame);
     document.getElementById('sq-menu')?.addEventListener('click', showMenu);
     document.getElementById('sq-back')?.addEventListener('click', goBack);
-    
+
     // 条文ボタンのイベントハンドラ
     document.querySelectorAll('.sq-article-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -1071,7 +1162,7 @@ export async function initializeSpeedQuizGame(containerId, caseData, preserveExi
     SQ.container = container;
     SQ.returnUrl = options.returnUrl || null;
     SQ.timeLimit = options.timeLimit || 10;
-    
+
     if (options.articles?.length > 0) {
         SQ.articles = [...options.articles];
     } else if (preserveExisting && window.speedQuizArticles?.length > 0) {
@@ -1082,7 +1173,7 @@ export async function initializeSpeedQuizGame(containerId, caseData, preserveExi
         SQ.articles = [];
     }
     window.speedQuizArticles = SQ.articles;
-    
+
     if (SQ.articles.length === 0) {
         container.innerHTML = `<div class="sq-fs sq-bg-menu sq-flex sq-center"><div class="sq-card sq-text-center" style="max-width:400px;"><p class="sq-text-white sq-text-2xl sq-mb-4">⚠️ 条文なし</p><p class="sq-text-gray sq-text-lg">このモジュールには条文参照がありません。</p><button class="sq-back" id="sq-back">← 戻る</button></div></div>`;
         document.getElementById('sq-back')?.addEventListener('click', goBack);
