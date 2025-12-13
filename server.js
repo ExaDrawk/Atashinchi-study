@@ -1228,8 +1228,8 @@ app.post('/api/gemini', async (req, res) => {
         console.log(finalPrompt);
         console.log('📝=== 最終プロンプト全文 END ===');
 
-        // ★★★ 統合AI呼び出し関数を使用（Grok/Gemini両対応） ★★★
-        const responseText = await callAI(finalPrompt, systemInstruction);
+        // ★★★ 統合AI呼び出し関数を使用（Grok/Gemini両対応、コレクション検索有効） ★★★
+        const responseText = await callAI(finalPrompt, systemInstruction, true);
 
         console.log('✅ AI API成功', { responseLength: responseText.length });
         res.json({
