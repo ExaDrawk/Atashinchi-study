@@ -487,7 +487,12 @@ function renderMenu(count) {
         
         <!-- 履歴セクション -->
         <div class="sq-card" style="max-width:700px;margin:0 auto;">
-            <h3 class="sq-text-white sq-bold sq-text-lg sq-mb-3">📊 最近の記録</h3>
+            <div class="sq-flex sq-between sq-center sq-mb-3">
+                <h3 class="sq-text-white sq-bold sq-text-lg">📊 最近の記録</h3>
+                <button id="sq-sync-r2-btn" class="sq-btn sq-btn-ghost" style="padding:0.4rem 0.8rem;font-size:0.8rem;">
+                    ☁️ クラウド同期
+                </button>
+            </div>
             <div id="sq-history-container" class="sq-text-gray" style="text-align:left;max-height:300px;overflow-y:auto;">
                 <p style="text-align:center;color:rgba(255,255,255,0.5);">読み込み中...</p>
             </div>
@@ -947,7 +952,48 @@ function showMenu() {
         });
     }
 
+    // R2同期ボタン
+    document.getElementById('sq-sync-r2-btn')?.addEventListener('click', syncToR2);
+
     document.getElementById('sq-back')?.addEventListener('click', goBack);
+}
+
+// R2にローカルデータを同期
+async function syncToR2() {
+    const btn = document.getElementById('sq-sync-r2-btn');
+    if (!btn) return;
+
+    const originalText = btn.textContent;
+    btn.textContent = '同期中...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/quiz-results/sync-to-r2', { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+            btn.textContent = `✅ ${data.count}件同期完了`;
+            // 履歴を再読み込み
+            setTimeout(() => {
+                loadAndDisplayHistory();
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 1500);
+        } else {
+            btn.textContent = `❌ ${data.error || '同期失敗'}`;
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('同期エラー:', error);
+        btn.textContent = '❌ エラー';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }
 }
 
 // 履歴を読み込んで表示
