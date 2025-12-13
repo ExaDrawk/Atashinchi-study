@@ -230,6 +230,26 @@ app.use(session({
     }
 }));
 
+// ★★★ 自動ログインミドルウェア（ローカル開発用） ★★★
+// 常にセッションを確認し、設定があれば自動ログインを行う
+app.use((req, res, next) => {
+    if (process.env.AUTO_LOGIN_LOCAL === 'true' && process.env.NODE_ENV !== 'production') {
+        // 未ログインの場合のみ処理
+        if (!req.session.authenticated) {
+            const autoUsername = process.env.AUTH_USERNAME;
+            if (autoUsername) {
+                req.session.authenticated = true;
+                req.session.username = autoUsername;
+                req.session.loginTime = new Date();
+                req.session.lastAccess = new Date();
+                req.session.autoLogin = true;
+                console.log(`🔓 自動ログイン (Global): ${autoUsername}`);
+            }
+        }
+    }
+    next();
+});
+
 // ★★★ Passport.js設定（Google OAuth） ★★★
 app.use(passport.initialize());
 app.use(passport.session());
@@ -380,38 +400,42 @@ async function callGrokAPI(prompt, systemPrompt = '', useCollectionSearch = fals
 
     // ★★★ RAG（コレクション検索）を使用する場合 ★★★
     if (useCollectionSearch && process.env.XAI_COLLECTION_ID) {
-        const collectionId = process.env.XAI_COLLECTION_ID;
-        console.log(`📚 コレクション検索開始: ${collectionId}`);
+        // カンマ区切りで複数のコレクションIDに対応
+        const collectionIds = process.env.XAI_COLLECTION_ID.split(',').map(id => id.trim()).filter(id => id);
 
-        try {
-            // まずコレクション検索を実行
-            const searchRes = await fetch('https://api.x.ai/v1/documents/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROK_API_KEY}`,
-                },
-                body: JSON.stringify({
-                    query: prompt.substring(0, 500), // 検索クエリはプロンプトの先頭500文字
-                    source: { collection_ids: [collectionId] },
-                    retrieval_mode: { type: 'hybrid' },
-                }),
-            });
+        if (collectionIds.length > 0) {
+            console.log(`📚 コレクション検索開始: ${collectionIds.join(', ')}`);
 
-            if (searchRes.ok) {
-                const searchData = await searchRes.json();
-                const matches = searchData.matches || [];
-                searchHitCount = matches.length;
+            try {
+                // まずコレクション検索を実行
+                const searchRes = await fetch('https://api.x.ai/v1/documents/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${GROK_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        query: prompt.substring(0, 500), // 検索クエリはプロンプトの先頭500文字
+                        source: { collection_ids: collectionIds },
+                        retrieval_mode: { type: 'hybrid' },
+                    }),
+                });
 
-                // 検索結果をコンテキストとして構築（上位5件）
-                searchContext = matches.slice(0, 5).map(m => m.chunk_content).join('\n\n---\n\n');
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    const matches = searchData.matches || [];
+                    searchHitCount = matches.length;
 
-                console.log(`🔍 コレクション検索ヒット数: ${searchHitCount}件`);
-            } else {
-                console.warn('⚠️ コレクション検索失敗:', searchRes.status);
+                    // 検索結果をコンテキストとして構築（上位5件）
+                    searchContext = matches.slice(0, 5).map(m => m.chunk_content).join('\n\n---\n\n');
+
+                    console.log(`🔍 コレクション検索ヒット数: ${searchHitCount}件`);
+                } else {
+                    console.warn('⚠️ コレクション検索失敗:', searchRes.status);
+                }
+            } catch (searchErr) {
+                console.warn('⚠️ コレクション検索エラー:', searchErr.message);
             }
-        } catch (searchErr) {
-            console.warn('⚠️ コレクション検索エラー:', searchErr.message);
         }
     }
 
