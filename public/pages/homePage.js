@@ -4432,10 +4432,6 @@ async function updateInlineSpeedQuizSection(dataList, mode = 'qa') {
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <span class="text-white font-bold text-2xl">${uniqueCount}</span>
-                        <span class="text-white/80 text-sm ml-1">問</span>
-                    </div>
                     <button id="inline-speed-quiz-start-btn" 
                             class="bg-white hover:bg-gray-100 text-indigo-600 font-bold py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105">
                         スタート
@@ -4565,10 +4561,6 @@ async function updateInlineSpeedQuizForModules() {
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <span class="text-white font-bold text-2xl">${uniqueCount}</span>
-                        <span class="text-white/80 text-sm ml-1">問</span>
-                    </div>
                     <button id="inline-speed-quiz-start-btn" 
                             class="bg-white hover:bg-gray-100 text-indigo-600 font-bold py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105">
                         スタート
