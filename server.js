@@ -230,25 +230,9 @@ app.use(session({
     }
 }));
 
-// ★★★ 自動ログインミドルウェア（ローカル開発用） ★★★
-// 常にセッションを確認し、設定があれば自動ログインを行う
-app.use((req, res, next) => {
-    if (process.env.AUTO_LOGIN_LOCAL === 'true' && process.env.NODE_ENV !== 'production') {
-        // 未ログインの場合のみ処理
-        if (!req.session.authenticated) {
-            const autoUsername = process.env.AUTH_USERNAME;
-            if (autoUsername) {
-                req.session.authenticated = true;
-                req.session.username = autoUsername;
-                req.session.loginTime = new Date();
-                req.session.lastAccess = new Date();
-                req.session.autoLogin = true;
-                console.log(`🔓 自動ログイン (Global): ${autoUsername}`);
-            }
-        }
-    }
-    next();
-});
+// ★★★ 自動ログインはrequireAuth内でのみ行う（グローバルミドルウェア削除済み） ★★★
+// 理由: /api/auth/status等のpublicルートでも自動ログインされてしまい、
+//       ログアウト後も即座に再ログインされる問題が発生するため
 
 // ★★★ Passport.js設定（Google OAuth） ★★★
 app.use(passport.initialize());

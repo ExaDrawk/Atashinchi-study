@@ -3473,17 +3473,17 @@ async function fetchUserInfo() {
                 </div>
             `;
         } else if (userInfoElement) {
-            // ★★★ 認証されていない場合は自動的にログインを試みる ★★★
-            console.log('⚠️ セッション切れ - 自動再認証を試行');
+            // ★★★ 認証されていない場合はログインページへリダイレクト ★★★
+            console.log('⚠️ 未認証状態 - ログインページへリダイレクト');
             userInfoElement.innerHTML = `
                 <div class="text-right">
-                    <div class="text-xs text-gray-500">再認証中...</div>
+                    <div class="text-xs text-gray-500">ログインが必要です</div>
                 </div>
             `;
-            // ページを再読み込みして自動ログインをトリガー
+            // ログインページへリダイレクト（リロードループを防止）
             setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+                window.location.href = '/login.html';
+            }, 500);
         }
     } catch (error) {
         console.error('ユーザー情報取得エラー:', error);
