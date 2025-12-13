@@ -3414,15 +3414,29 @@ app.get('/api/quiz-results/:date', async (req, res) => {
     }
 });
 
-// 全クイズ結果取得
+// 全クイズ結果取得（R2優先）
 app.get('/api/quiz-results', async (req, res) => {
     try {
-        // ファイルが存在するか確認
+        const username = req.session?.username;
+
+        // ★★★ ログインユーザーはR2から読み込み ★★★
+        if (username && process.env.D1_API_URL) {
+            try {
+                const r2Data = await d1Client.getQuizResults(username);
+                if (r2Data && r2Data.results) {
+                    console.log(`📖 R2からクイズ結果読み込み: ${username}`);
+                    return res.json(r2Data.results);
+                }
+            } catch (r2Error) {
+                console.warn('⚠️ R2からの読み込み失敗、ローカルにフォールバック:', r2Error.message);
+            }
+        }
+
+        // ★★★ ローカルファイルから読み込み（フォールバック） ★★★
         if (!fssync.existsSync(QUIZ_RESULTS_FILE)) {
             return res.json({});
         }
 
-        // 結果を読み込み
         const fileContent = await fs.readFile(QUIZ_RESULTS_FILE, 'utf8');
         const allResults = JSON.parse(fileContent);
 
@@ -3431,6 +3445,50 @@ app.get('/api/quiz-results', async (req, res) => {
     } catch (error) {
         console.error('❌ 全クイズ結果取得エラー:', error);
         res.status(500).json({ error: 'クイズ結果の取得に失敗しました' });
+    }
+});
+
+// ローカルデータをR2に同期
+app.post('/api/quiz-results/sync-to-r2', async (req, res) => {
+    try {
+        const username = req.session?.username;
+
+        if (!username) {
+            return res.status(401).json({ error: 'ログインが必要です' });
+        }
+
+        if (!process.env.D1_API_URL) {
+            return res.status(500).json({ error: 'R2 APIが設定されていません' });
+        }
+
+        // ローカルファイルを読み込み
+        if (!fssync.existsSync(QUIZ_RESULTS_FILE)) {
+            return res.json({ success: true, message: '同期するデータがありません', count: 0 });
+        }
+
+        const fileContent = await fs.readFile(QUIZ_RESULTS_FILE, 'utf8');
+        const localResults = JSON.parse(fileContent);
+
+        // R2に送信
+        let syncCount = 0;
+        for (const [date, results] of Object.entries(localResults)) {
+            if (!Array.isArray(results)) continue;
+            for (const result of results) {
+                try {
+                    await d1Client.saveQuizResult(username, date, result);
+                    syncCount++;
+                } catch (err) {
+                    console.warn(`⚠️ 同期失敗: ${date}/${result.articleNumber}:`, err.message);
+                }
+            }
+        }
+
+        console.log(`✅ R2にクイズ結果同期完了: ${syncCount}件`);
+        res.json({ success: true, message: `${syncCount}件のデータをR2に同期しました`, count: syncCount });
+
+    } catch (error) {
+        console.error('❌ R2同期エラー:', error);
+        res.status(500).json({ error: '同期に失敗しました' });
     }
 });
 
