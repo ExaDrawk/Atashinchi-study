@@ -328,6 +328,20 @@ const requireAuth = (req, res, next) => {
         return next();
     }
 
+    // ★★★ ローカル環境での自動ログイン ★★★
+    if (process.env.AUTO_LOGIN_LOCAL === 'true' && process.env.NODE_ENV !== 'production') {
+        const autoUsername = process.env.AUTH_USERNAME;
+        if (autoUsername) {
+            req.session.authenticated = true;
+            req.session.username = autoUsername;
+            req.session.loginTime = new Date();
+            req.session.lastAccess = new Date();
+            req.session.autoLogin = true;
+            console.log(`🔓 自動ログイン: ${autoUsername}`);
+            return next();
+        }
+    }
+
     // 認証が必要
     if (req.path.startsWith('/api/')) {
         return res.status(401).json({
