@@ -74,6 +74,15 @@ export default {
                 return await saveUserSettings(request, env, corsHeaders);
             }
 
+            // クイズ結果関連
+            if (path === '/api/quiz-results' && request.method === 'GET') {
+                const username = url.searchParams.get('username');
+                return await getQuizResults(username, env, corsHeaders);
+            }
+            if (path === '/api/quiz-results' && request.method === 'POST') {
+                return await saveQuizResult(request, env, corsHeaders);
+            }
+
             // デバッグ: R2オブジェクト一覧
             if (path === '/api/debug/list' && request.method === 'GET') {
                 const prefix = url.searchParams.get('prefix') || '';
@@ -408,6 +417,65 @@ async function saveUserSettings(request, env, corsHeaders) {
     };
 
     await env.BUCKET.put(key, JSON.stringify(settingsData), {
+        httpMetadata: { contentType: 'application/json' }
+    });
+
+    return jsonResponse({ success: true }, 200, corsHeaders);
+}
+
+// ===== クイズ結果関連 =====
+
+// クイズ結果用のキー生成
+function getQuizResultsKey(username) {
+    return `quiz-results/${username}.json`;
+}
+
+// クイズ結果取得
+async function getQuizResults(username, env, corsHeaders) {
+    if (!username) {
+        return jsonResponse({ error: 'username is required' }, 400, corsHeaders);
+    }
+
+    const key = getQuizResultsKey(username);
+    const object = await env.BUCKET.get(key);
+
+    if (!object) {
+        return jsonResponse({ results: {} }, 200, corsHeaders);
+    }
+
+    const data = JSON.parse(await object.text());
+    return jsonResponse({ results: data.results || {} }, 200, corsHeaders);
+}
+
+// クイズ結果保存
+async function saveQuizResult(request, env, corsHeaders) {
+    const { username, date, result } = await request.json();
+
+    if (!username || !date || !result) {
+        return jsonResponse({ error: 'username, date, and result are required' }, 400, corsHeaders);
+    }
+
+    const key = getQuizResultsKey(username);
+
+    // 既存データを取得
+    let resultsData = { results: {}, updatedAt: null };
+    const existing = await env.BUCKET.get(key);
+    if (existing) {
+        resultsData = JSON.parse(await existing.text());
+    }
+
+    // 日付ごとに結果を追加
+    if (!resultsData.results[date]) {
+        resultsData.results[date] = [];
+    }
+    resultsData.results[date].push({
+        ...result,
+        savedAt: new Date().toISOString()
+    });
+
+    resultsData.updatedAt = new Date().toISOString();
+
+    await env.BUCKET.put(key, JSON.stringify(resultsData), {
         httpMetadata: { contentType: 'application/json' }
     });
 

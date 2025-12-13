@@ -136,6 +136,26 @@ export async function saveUserSettings(username, settings) {
     return callR2API('/api/user-settings', 'POST', { username, settings });
 }
 
+// ===== クイズ結果関連 =====
+
+/**
+ * クイズ結果取得
+ */
+export async function getQuizResults(username) {
+    return callR2API(`/api/quiz-results?username=${encodeURIComponent(username)}`);
+}
+
+/**
+ * クイズ結果保存
+ */
+export async function saveQuizResult(username, date, result) {
+    return callR2API('/api/quiz-results', 'POST', {
+        username,
+        date,
+        result
+    });
+}
+
 // ===== ヘルスチェック =====
 
 /**
@@ -164,6 +184,8 @@ export default {
     addStudyRecord,
     getUserSettings,
     saveUserSettings,
+    getQuizResults,
+    saveQuizResult,
     checkR2Health,
     checkD1Health
 };

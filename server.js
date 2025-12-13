@@ -3334,15 +3334,29 @@ const QUIZ_RESULTS_FILE = path.join(process.cwd(), 'data', 'quiz-results.json');
 app.post('/api/quiz-results', async (req, res) => {
     try {
         const { date, result } = req.body;
+        const username = req.session?.username;
 
-        if (!date || !result || !result.articleNumber || typeof result.score !== 'number' || typeof result.isCorrect !== 'boolean') {
+        if (!date || !result || !result.articleNumber || typeof result.score !== 'number') {
             return res.status(400).json({
                 success: false,
                 error: '必要なフィールドが不足しています'
             });
         }
 
-        // データディレクトリが存在することを確認
+        console.log(`📝 クイズ結果保存: ${date} - ${result.articleNumber} (${result.score}点, user: ${username || 'none'})`);
+
+        // ★★★ ログインユーザーがいればR2にも保存 ★★★
+        if (username && process.env.D1_API_URL) {
+            try {
+                const r2Result = await d1Client.saveQuizResult(username, date, result);
+                console.log(`✅ R2にクイズ結果保存成功`);
+            } catch (r2Error) {
+                console.warn('⚠️ R2への保存失敗:', r2Error.message);
+                // R2への保存失敗してもローカル保存は続行
+            }
+        }
+
+        // ★★★ ローカルファイルにも保存（フォールバック・バックアップ） ★★★
         const dataDir = path.dirname(QUIZ_RESULTS_FILE);
         await fs.mkdir(dataDir, { recursive: true });
 
@@ -3352,24 +3366,23 @@ app.post('/api/quiz-results', async (req, res) => {
             const fileContent = await fs.readFile(QUIZ_RESULTS_FILE, 'utf8');
             existingResults = JSON.parse(fileContent);
         } catch (error) {
-            // ファイルが存在しない場合は新規作成
             existingResults = {};
         }
 
         // 日付ごとに結果をグループ化
-        const dateKey = date;
-        if (!existingResults[dateKey]) {
-            existingResults[dateKey] = [];
+        if (!existingResults[date]) {
+            existingResults[date] = [];
         }
-
-        // 結果を追加
-        existingResults[dateKey].push(result);
+        existingResults[date].push(result);
 
         // ファイルを保存
         await fs.writeFile(QUIZ_RESULTS_FILE, JSON.stringify(existingResults, null, 2), 'utf8');
 
-        console.log(`📝 クイズ結果を保存: ${dateKey} - ${result.isCorrect ? '正解' : '不正解'} (${result.articleNumber})`);
-        res.json({ success: true, message: 'クイズ結果を保存しました' });
+        res.json({
+            success: true,
+            message: 'クイズ結果を保存しました',
+            savedTo: username ? 'r2+local' : 'local'
+        });
 
     } catch (error) {
         console.error('❌ クイズ結果保存エラー:', error);

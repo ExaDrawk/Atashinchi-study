@@ -18,7 +18,7 @@ export const caseSummaries = [
         ],
         "rank": "A",
         "filePath": "刑法/4.修正された構成要件/4.32-39.js",
-        "lastModified": "2025-12-07T06:22:38.279Z",
+        "lastModified": "2025-12-12T15:44:11.275Z",
         "characters": [
             "村上先生",
             "みかん",
