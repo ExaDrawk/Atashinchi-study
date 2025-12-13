@@ -314,7 +314,7 @@ app.get('/auth/google/callback',
 // カスタム認証ミドルウェア
 const requireAuth = (req, res, next) => {
     // 認証不要なパス
-    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/health', '/api/ping', '/api/subfolders', '/health', '/health.html', '/api/d1-status', '/auth/google'];
+    const publicPaths = ['/login.html', '/api/auth/login', '/api/auth/logout', '/api/auth/status', '/api/health', '/api/ping', '/api/subfolders', '/health', '/health.html', '/api/d1-status', '/auth/google'];
     const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
 
     if (isPublicPath) {

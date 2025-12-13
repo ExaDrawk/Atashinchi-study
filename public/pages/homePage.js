@@ -3472,9 +3472,29 @@ async function fetchUserInfo() {
                     <div class="text-xs text-gray-500">ログイン: ${loginTime}</div>
                 </div>
             `;
+        } else if (userInfoElement) {
+            // ★★★ 認証されていない場合は自動的にログインを試みる ★★★
+            console.log('⚠️ セッション切れ - 自動再認証を試行');
+            userInfoElement.innerHTML = `
+                <div class="text-right">
+                    <div class="text-xs text-gray-500">再認証中...</div>
+                </div>
+            `;
+            // ページを再読み込みして自動ログインをトリガー
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         }
     } catch (error) {
         console.error('ユーザー情報取得エラー:', error);
+        const userInfoElement = document.getElementById('user-info');
+        if (userInfoElement) {
+            userInfoElement.innerHTML = `
+                <div class="text-right">
+                    <div class="text-xs text-red-500">接続エラー</div>
+                </div>
+            `;
+        }
     }
 }
 
