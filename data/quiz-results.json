@@ -104,5 +104,32 @@
       "score": 10,
       "timestamp": "2025-12-07T03:06:28.147Z"
     }
+  ],
+  "2025-12-13": [
+    {
+      "articleNumber": "民法587条",
+      "score": 0,
+      "timestamp": "2025-12-13T02:13:18.773Z"
+    },
+    {
+      "articleNumber": "行政事件訴訟法5条",
+      "score": 3,
+      "timestamp": "2025-12-13T02:13:23.694Z"
+    },
+    {
+      "articleNumber": "民事訴訟法134条",
+      "score": 0,
+      "timestamp": "2025-12-13T02:13:31.042Z"
+    },
+    {
+      "articleNumber": "民法717条",
+      "score": 8,
+      "timestamp": "2025-12-13T02:13:35.386Z"
+    },
+    {
+      "articleNumber": "民法413条",
+      "score": 7,
+      "timestamp": "2025-12-13T02:13:38.997Z"
+    }
   ]
 }

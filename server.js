@@ -3492,6 +3492,60 @@ app.post('/api/quiz-results/sync-to-r2', async (req, res) => {
     }
 });
 
+// ★★★ FillDrill進捗API（R2保存） ★★★
+
+// FillDrill進捗取得
+app.get('/api/fill-drill/progress', async (req, res) => {
+    try {
+        const username = req.session?.username;
+        const { moduleId } = req.query;
+
+        if (!username) {
+            return res.status(401).json({ error: 'ログインが必要です' });
+        }
+
+        if (!process.env.D1_API_URL) {
+            return res.json({ progress: {} });
+        }
+
+        const result = await d1Client.getFillDrillProgress(username, moduleId);
+        res.json({ progress: result.progress || {} });
+
+    } catch (error) {
+        console.error('❌ FillDrill進捗取得エラー:', error);
+        res.json({ progress: {} }); // エラー時も空オブジェクトを返す
+    }
+});
+
+// FillDrill進捗保存
+app.post('/api/fill-drill/progress', async (req, res) => {
+    try {
+        const username = req.session?.username;
+        const { moduleId, qaId, clearedLevels } = req.body;
+
+        if (!username) {
+            return res.status(401).json({ error: 'ログインが必要です' });
+        }
+
+        if (!moduleId || !qaId) {
+            return res.status(400).json({ error: 'moduleIdとqaIdが必要です' });
+        }
+
+        if (!process.env.D1_API_URL) {
+            return res.json({ success: true, message: 'R2未設定のためスキップ' });
+        }
+
+        console.log(`💾 FillDrill進捗保存: ${moduleId}/Q${qaId} → Lv${clearedLevels?.join(',') || 'none'}`);
+
+        await d1Client.saveFillDrillProgress(username, moduleId, qaId, clearedLevels);
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('❌ FillDrill進捗保存エラー:', error);
+        res.status(500).json({ error: '保存に失敗しました' });
+    }
+});
+
 // スピード条文データ読み込みAPI
 app.get('/api/speed-quiz/load/:lawName', async (req, res) => {
     try {

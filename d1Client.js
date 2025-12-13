@@ -156,6 +156,31 @@ export async function saveQuizResult(username, date, result) {
     });
 }
 
+// ===== FillDrill進捗関連 =====
+
+/**
+ * FillDrill進捗取得
+ */
+export async function getFillDrillProgress(username, moduleId = null) {
+    let endpoint = `/api/fill-drill?username=${encodeURIComponent(username)}`;
+    if (moduleId) {
+        endpoint += `&moduleId=${encodeURIComponent(moduleId)}`;
+    }
+    return callR2API(endpoint);
+}
+
+/**
+ * FillDrill進捗保存
+ */
+export async function saveFillDrillProgress(username, moduleId, qaId, clearedLevels) {
+    return callR2API('/api/fill-drill', 'POST', {
+        username,
+        moduleId,
+        qaId,
+        clearedLevels
+    });
+}
+
 // ===== ヘルスチェック =====
 
 /**
@@ -186,6 +211,8 @@ export default {
     saveUserSettings,
     getQuizResults,
     saveQuizResult,
+    getFillDrillProgress,
+    saveFillDrillProgress,
     checkR2Health,
     checkD1Health
 };

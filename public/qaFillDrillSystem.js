@@ -12,6 +12,49 @@ const LEVEL_PRESETS = {
 const containerState = new WeakMap();
 const moduleCaseRegistry = new Map();
 
+// ★★★ R2進捗キャッシュ ★★★
+const r2ProgressCache = new Map(); // moduleId → { qaId: { cleared: [1,2], at: "2025-12-13" } }
+let r2ProgressLoaded = false;
+
+// R2から進捗を読み込み（ページ読み込み時に一度だけ呼ばれる）
+async function loadR2Progress(moduleId = null) {
+    try {
+        const endpoint = moduleId
+            ? `/api/fill-drill/progress?moduleId=${encodeURIComponent(moduleId)}`
+            : '/api/fill-drill/progress';
+
+        const res = await fetch(endpoint);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (data.progress) {
+            if (moduleId) {
+                r2ProgressCache.set(moduleId, data.progress);
+                console.log(`☁️ R2からFillDrill進捗読み込み: ${moduleId} (${Object.keys(data.progress).length}件)`);
+            } else {
+                // 全モジュールの進捗
+                Object.entries(data.progress).forEach(([modId, qaProgress]) => {
+                    r2ProgressCache.set(modId, qaProgress);
+                });
+                console.log(`☁️ R2からFillDrill全進捗読み込み: ${r2ProgressCache.size}モジュール`);
+            }
+        }
+        r2ProgressLoaded = true;
+    } catch (error) {
+        console.warn('⚠️ R2進捗読み込み失敗:', error.message);
+    }
+}
+
+// R2キャッシュからclearedLevelsを取得
+function getR2ClearedLevels(moduleId, qaId) {
+    const modProgress = r2ProgressCache.get(normalizeModuleId(moduleId));
+    if (modProgress && modProgress[qaId]) {
+        return modProgress[qaId].cleared || [];
+    }
+    return null;
+}
+
+
 function escapeHtml(value = '') {
     return String(value)
         .replace(/&/g, '&amp;')
@@ -782,6 +825,16 @@ function ensureFillDrill(qa, moduleId = '') {
                 console.log(`📂 穴埋め進捗読み込み（localStorage）: ${key}`);
             } catch (e) {
                 console.warn('localStorageからの読み込み失敗:', e);
+            }
+        }
+
+        // ★★★ R2キャッシュからclearedLevelsを読み込み（localStorageにない場合） ★★★
+        if ((!qa.fillDrill?.clearedLevels || qa.fillDrill.clearedLevels.length === 0) && r2ProgressLoaded) {
+            const r2Cleared = getR2ClearedLevels(moduleId, qa.id);
+            if (r2Cleared && r2Cleared.length > 0) {
+                if (!qa.fillDrill) qa.fillDrill = {};
+                qa.fillDrill.clearedLevels = r2Cleared;
+                console.log(`☁️ R2からclearedLevels復元: Q${qa.id} → Lv${r2Cleared.join(',')}`);
             }
         }
     }
@@ -1846,6 +1899,26 @@ class QAFillDrillSystem {
                 }
             });
 
+            // ★★★ R2クラウドに保存（低容量：clearedLevelsのみ） ★★★
+            for (const qa of updates) {
+                if (qa.fillDrill?.clearedLevels?.length > 0) {
+                    try {
+                        await fetch('/api/fill-drill/progress', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                moduleId: moduleId,
+                                qaId: qa.id,
+                                clearedLevels: qa.fillDrill.clearedLevels
+                            })
+                        });
+                        console.log(`☁️ R2に進捗保存: ${moduleId}/Q${qa.id} → Lv${qa.fillDrill.clearedLevels.join(',')}`);
+                    } catch (r2Err) {
+                        console.warn('⚠️ R2保存失敗（localStorageには保存済み）:', r2Err.message);
+                    }
+                }
+            }
+
             // ファイル保存は非同期でエラーを無視
             if (window.qaStatusSystem?.saveQADataToFile) {
                 window.qaStatusSystem.saveQADataToFile(moduleId, updates).catch(err => {
@@ -1946,4 +2019,15 @@ export const qaFillDrillSystem = new QAFillDrillSystem();
 
 if (typeof window !== 'undefined') {
     window.qaFillDrillSystem = qaFillDrillSystem;
+    window.loadFillDrillR2Progress = loadR2Progress; // グローバルに公開
+
+    // ★★★ ページ読み込み時にR2から進捗を自動読み込み ★★★
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            // 遅延読み込み（他の初期化を優先）
+            setTimeout(() => loadR2Progress(), 500);
+        });
+    } else {
+        setTimeout(() => loadR2Progress(), 500);
+    }
 }

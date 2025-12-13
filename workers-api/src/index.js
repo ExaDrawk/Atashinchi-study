@@ -83,6 +83,16 @@ export default {
                 return await saveQuizResult(request, env, corsHeaders);
             }
 
+            // FillDrill進捗関連
+            if (path === '/api/fill-drill' && request.method === 'GET') {
+                const username = url.searchParams.get('username');
+                const moduleId = url.searchParams.get('moduleId');
+                return await getFillDrillProgress(username, moduleId, env, corsHeaders);
+            }
+            if (path === '/api/fill-drill' && request.method === 'POST') {
+                return await saveFillDrillProgress(request, env, corsHeaders);
+            }
+
             // デバッグ: R2オブジェクト一覧
             if (path === '/api/debug/list' && request.method === 'GET') {
                 const prefix = url.searchParams.get('prefix') || '';
@@ -476,6 +486,94 @@ async function saveQuizResult(request, env, corsHeaders) {
     resultsData.updatedAt = new Date().toISOString();
 
     await env.BUCKET.put(key, JSON.stringify(resultsData), {
+        httpMetadata: { contentType: 'application/json' }
+    });
+
+    return jsonResponse({ success: true }, 200, corsHeaders);
+}
+
+// ===== FillDrill進捗関連 =====
+
+// FillDrill進捗用のキー生成（モジュール単位）
+function getFillDrillKey(username, moduleId = null) {
+    if (moduleId) {
+        // モジュールID正規化（スラッシュを_に変換）
+        const normalizedModule = moduleId.replace(/\//g, '_').replace(/\.js$/, '');
+        return `fill-drill/${username}/${normalizedModule}.json`;
+    }
+    return `fill-drill/${username}/`;
+}
+
+// FillDrill進捗取得
+async function getFillDrillProgress(username, moduleId, env, corsHeaders) {
+    if (!username) {
+        return jsonResponse({ error: 'username is required' }, 400, corsHeaders);
+    }
+
+    if (moduleId) {
+        // 特定モジュールの進捗を取得
+        const key = getFillDrillKey(username, moduleId);
+        const object = await env.BUCKET.get(key);
+
+        if (!object) {
+            return jsonResponse({ progress: {} }, 200, corsHeaders);
+        }
+
+        const data = JSON.parse(await object.text());
+        return jsonResponse({ progress: data.progress || {} }, 200, corsHeaders);
+    } else {
+        // 全モジュールの進捗を取得
+        const prefix = getFillDrillKey(username);
+        const listed = await env.BUCKET.list({ prefix, limit: 100 });
+
+        const allProgress = {};
+        for (const obj of listed.objects) {
+            try {
+                const content = await env.BUCKET.get(obj.key);
+                if (content) {
+                    const data = JSON.parse(await content.text());
+                    // キーからモジュールIDを抽出
+                    const moduleKey = obj.key.replace(prefix, '').replace('.json', '').replace(/_/g, '/');
+                    allProgress[moduleKey] = data.progress || {};
+                }
+            } catch (e) {
+                console.warn('Failed to parse:', obj.key, e);
+            }
+        }
+
+        return jsonResponse({ progress: allProgress }, 200, corsHeaders);
+    }
+}
+
+// FillDrill進捗保存（低容量：clearedLevelsのみ）
+async function saveFillDrillProgress(request, env, corsHeaders) {
+    const { username, moduleId, qaId, clearedLevels } = await request.json();
+
+    if (!username || !moduleId || !qaId) {
+        return jsonResponse({ error: 'username, moduleId, and qaId are required' }, 400, corsHeaders);
+    }
+
+    const key = getFillDrillKey(username, moduleId);
+
+    // 既存データを取得
+    let progressData = { progress: {}, updatedAt: null };
+    const existing = await env.BUCKET.get(key);
+    if (existing) {
+        progressData = JSON.parse(await existing.text());
+    }
+
+    // 該当Q&Aの進捗を更新（低容量：最小限のデータのみ）
+    if (!progressData.progress) {
+        progressData.progress = {};
+    }
+    progressData.progress[qaId] = {
+        cleared: clearedLevels || [],
+        at: new Date().toISOString().split('T')[0] // 日付のみ（容量削減）
+    };
+
+    progressData.updatedAt = new Date().toISOString();
+
+    await env.BUCKET.put(key, JSON.stringify(progressData), {
         httpMetadata: { contentType: 'application/json' }
     });
 
