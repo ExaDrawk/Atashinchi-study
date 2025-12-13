@@ -375,9 +375,54 @@ let currentAIProvider = 'grok';
 // ★★★ Grok API呼び出し関数（RAG対応） ★★★
 async function callGrokAPI(prompt, systemPrompt = '', useCollectionSearch = false) {
     const messages = [];
+    let searchHitCount = 0;
+    let searchContext = '';
 
-    if (systemPrompt) {
-        messages.push({ role: 'system', content: systemPrompt });
+    // ★★★ RAG（コレクション検索）を使用する場合 ★★★
+    if (useCollectionSearch && process.env.XAI_COLLECTION_ID) {
+        const collectionId = process.env.XAI_COLLECTION_ID;
+        console.log(`📚 コレクション検索開始: ${collectionId}`);
+
+        try {
+            // まずコレクション検索を実行
+            const searchRes = await fetch('https://api.x.ai/v1/documents/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROK_API_KEY}`,
+                },
+                body: JSON.stringify({
+                    query: prompt.substring(0, 500), // 検索クエリはプロンプトの先頭500文字
+                    source: { collection_ids: [collectionId] },
+                    retrieval_mode: { type: 'hybrid' },
+                }),
+            });
+
+            if (searchRes.ok) {
+                const searchData = await searchRes.json();
+                const matches = searchData.matches || [];
+                searchHitCount = matches.length;
+
+                // 検索結果をコンテキストとして構築（上位5件）
+                searchContext = matches.slice(0, 5).map(m => m.chunk_content).join('\n\n---\n\n');
+
+                console.log(`🔍 コレクション検索ヒット数: ${searchHitCount}件`);
+            } else {
+                console.warn('⚠️ コレクション検索失敗:', searchRes.status);
+            }
+        } catch (searchErr) {
+            console.warn('⚠️ コレクション検索エラー:', searchErr.message);
+        }
+    }
+
+    // システムプロンプトにコレクション検索結果を追加
+    let finalSystemPrompt = systemPrompt;
+    if (searchContext) {
+        finalSystemPrompt = `${systemPrompt}\n\n【参考資料（コレクション検索結果: ${searchHitCount}件ヒット）】\n${searchContext}`;
+    }
+
+    if (finalSystemPrompt) {
+        messages.push({ role: 'system', content: finalSystemPrompt });
     }
     messages.push({ role: 'user', content: prompt });
 
@@ -387,13 +432,6 @@ async function callGrokAPI(prompt, systemPrompt = '', useCollectionSearch = fals
         messages: messages,
         temperature: 0.7
     };
-
-    // ★★★ RAG（コレクション検索）を使用する場合 ★★★
-    // collection_id をトップレベルパラメータとして指定
-    if (useCollectionSearch && GROK_QA_COLLECTION_ID) {
-        requestBody.collection_id = GROK_QA_COLLECTION_ID;
-        console.log(`📚 RAG有効: コレクション=${GROK_QA_COLLECTION_ID}, モデル=${GROK_MODEL_FOR_RAG}`);
-    }
 
     const response = await fetch(GROK_API_URL, {
         method: 'POST',
@@ -410,6 +448,12 @@ async function callGrokAPI(prompt, systemPrompt = '', useCollectionSearch = fals
     }
 
     const data = await response.json();
+
+    // ★★★ 検索ヒット数をログに表示 ★★★
+    if (useCollectionSearch) {
+        console.log(`✅ Grok応答完了 (コレクション参照: ${searchHitCount}件)`);
+    }
+
     return data.choices[0].message.content;
 }
 

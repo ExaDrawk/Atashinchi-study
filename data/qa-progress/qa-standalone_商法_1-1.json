@@ -1,0 +1,292 @@
+[
+  {
+    "id": "1-1",
+    "fillDrill": {
+      "clearedLevels": [],
+      "templates": {
+        "2": {
+          "text": "{{商事取引}}における{{取引の安全}}を図る観点から、{{事業意思}}の{{客観的認識可能性}}が生じた時点で{{商人資格}}を取得する(ただし、{{客観的認識可能性}}が生じる以前でも、相手方が{{事業意思}}に{{悪意}}の場合、その時点で{{商人資格}}を取得する)。",
+          "blanks": [
+            {
+              "id": "B1",
+              "label": "(1)",
+              "answer": "商事取引",
+              "prompt": "空欄B1",
+              "placeholder": ""
+            },
+            {
+              "id": "B2",
+              "label": "(2)",
+              "answer": "取引の安全",
+              "prompt": "空欄B2",
+              "placeholder": ""
+            },
+            {
+              "id": "B3",
+              "label": "(3)",
+              "answer": "事業意思",
+              "prompt": "空欄B3",
+              "placeholder": ""
+            },
+            {
+              "id": "B4",
+              "label": "(4)",
+              "answer": "客観的認識可能性",
+              "prompt": "空欄B4",
+              "placeholder": ""
+            },
+            {
+              "id": "B5",
+              "label": "(5)",
+              "answer": "商人資格",
+              "prompt": "空欄B5",
+              "placeholder": ""
+            },
+            {
+              "id": "B6",
+              "label": "(6)",
+              "answer": "客観的認識可能性",
+              "prompt": "空欄B6",
+              "placeholder": ""
+            },
+            {
+              "id": "B7",
+              "label": "(7)",
+              "answer": "事業意思",
+              "prompt": "空欄B7",
+              "placeholder": ""
+            },
+            {
+              "id": "B8",
+              "label": "(8)",
+              "answer": "悪意",
+              "prompt": "空欄B8",
+              "placeholder": ""
+            },
+            {
+              "id": "B9",
+              "label": "(9)",
+              "answer": "商人資格",
+              "prompt": "空欄B9",
+              "placeholder": ""
+            }
+          ],
+          "canonicalBlanks": [],
+          "inlineBody": [
+            {
+              "type": "blank",
+              "id": "B1",
+              "label": "(1)",
+              "placeholder": "",
+              "answer": "商事取引"
+            },
+            {
+              "type": "text",
+              "text": "における"
+            },
+            {
+              "type": "blank",
+              "id": "B2",
+              "label": "(2)",
+              "placeholder": "",
+              "answer": "取引の安全"
+            },
+            {
+              "type": "text",
+              "text": "を図る観点から、"
+            },
+            {
+              "type": "blank",
+              "id": "B3",
+              "label": "(3)",
+              "placeholder": "",
+              "answer": "事業意思"
+            },
+            {
+              "type": "text",
+              "text": "の"
+            },
+            {
+              "type": "blank",
+              "id": "B4",
+              "label": "(4)",
+              "placeholder": "",
+              "answer": "客観的認識可能性"
+            },
+            {
+              "type": "text",
+              "text": "が生じた時点で"
+            },
+            {
+              "type": "blank",
+              "id": "B5",
+              "label": "(5)",
+              "placeholder": "",
+              "answer": "商人資格"
+            },
+            {
+              "type": "text",
+              "text": "を取得する(ただし、"
+            },
+            {
+              "type": "blank",
+              "id": "B6",
+              "label": "(6)",
+              "placeholder": "",
+              "answer": "客観的認識可能性"
+            },
+            {
+              "type": "text",
+              "text": "が生じる以前でも、相手方が"
+            },
+            {
+              "type": "blank",
+              "id": "B7",
+              "label": "(7)",
+              "placeholder": "",
+              "answer": "事業意思"
+            },
+            {
+              "type": "text",
+              "text": "に"
+            },
+            {
+              "type": "blank",
+              "id": "B8",
+              "label": "(8)",
+              "placeholder": "",
+              "answer": "悪意"
+            },
+            {
+              "type": "text",
+              "text": "の場合、その時点で"
+            },
+            {
+              "type": "blank",
+              "id": "B9",
+              "label": "(9)",
+              "placeholder": "",
+              "answer": "商人資格"
+            },
+            {
+              "type": "text",
+              "text": "を取得する)。"
+            }
+          ]
+        }
+      },
+      "attempts": {
+        "2": {
+          "timestamp": "2025-12-13T04:10:28.865Z",
+          "evaluation": {
+            "blanks": [
+              {
+                "id": "B1",
+                "result": "☓",
+                "feedback": "「取引」だけじゃ不十分よ！ 正解は「商事取引」よ。商法の基本は商事取引の安全を守ることだから、「商事」の部分が欠かせないの。商法1条の趣旨を忘れずに、取引の安全を商事取引に限定して考えなさい。",
+                "speaker": "小川先生",
+                "expression": "serious",
+                "userAnswer": "取引",
+                "correctAnswer": "商事取引"
+              },
+              {
+                "id": "B2",
+                "result": "☓",
+                "feedback": "「安全」だけじゃ中途半端よ！ 「取引の安全」が正解。なぜなら商法総則は商人間の取引で生じる信頼関係の保護が目的で、単なる「安全」じゃ民法とかと混同しちゃうわ。司法試験ではこの趣旨を押さえて！",
+                "speaker": "小川先生",
+                "expression": "annoyed",
+                "userAnswer": "安全",
+                "correctAnswer": "取引の安全"
+              },
+              {
+                "id": "B3",
+                "result": "☓",
+                "feedback": "「相手方」なんて的外れよ！ 正解は「事業意思」。商法5条の商人資格取得は、本人の事業意思が起点だけど、相手方が事業意思を知らなくても自分の意思で商人になるのよ。相手方の認識を先に持ってきちゃダメ！ 総則の基本を間違えやすいポイントね。",
+                "speaker": "小川先生",
+                "expression": "angry",
+                "userAnswer": "相手方",
+                "correctAnswer": "事業意思"
+              },
+              {
+                "id": "B4",
+                "result": "△",
+                "feedback": "「信頼」は惜しいけど不正確よ。正解は「客観的認識可能性」。判例が用いるのは相手方にとって事業意思が客観的に認識可能な時点よ。「信頼」は抽象的すぎて、試験では具体的な判例基準を求められるわ。混同しやすいけど、認識可能性を明確に！",
+                "speaker": "小川先生",
+                "expression": "thinking",
+                "userAnswer": "信頼",
+                "correctAnswer": "客観的認識可能性"
+              },
+              {
+                "id": "B5",
+                "result": "○",
+                "feedback": "正解よ、「商人資格」！ 完璧。これを押さえると商法総則全体の資格要件が繋がるわ。会社法の株主資格とか他の商人関連論点にも活きるから、この理解を広げてね。",
+                "speaker": "小川先生",
+                "expression": "happy",
+                "userAnswer": "商人資格",
+                "correctAnswer": "商人資格"
+              },
+              {
+                "id": "B6",
+                "result": "☓",
+                "feedback": "また「信頼」？ 前と同じ間違いよ！ ここも「客観的認識可能性」が正解。繰り返しだけど、判例の要件は「事業意思の客観的認識可能性」で、悪意の例外を理解しないと取引安全の趣旨が崩れるわ。パターンで覚えなさい！",
+                "speaker": "小川先生",
+                "expression": "annoyed",
+                "userAnswer": "信頼",
+                "correctAnswer": "客観的認識可能性"
+              },
+              {
+                "id": "B7",
+                "result": "☓",
+                "feedback": "「商人資格」を入れてるけど、ここは「事業意思」よ！ 順序が逆で混同してるわね。事業意思が先で、それが認識可能になって資格取得、悪意ならもっと早く取得。これを逆転させると商法5条の運用がわからなくなるから注意！",
+                "speaker": "小川先生",
+                "expression": "serious",
+                "userAnswer": "商人資格",
+                "correctAnswer": "事業意思"
+              },
+              {
+                "id": "B8",
+                "result": "○",
+                "feedback": "バッチリ、「悪意」正解！ 例外規定の核心よ。これを知ると、善意保護の限界が理解できて、商法の取引安全観が深まるわ。詐欺や錯誤の債権法論点にもつながるから優秀ね。",
+                "speaker": "小川先生",
+                "expression": "impressed",
+                "userAnswer": "悪意",
+                "correctAnswer": "悪意"
+              },
+              {
+                "id": "B9",
+                "result": "○",
+                "feedback": "また「商人資格」、正解よ！ 繰り返し出てくるキーワードだから押さえてるのはいいわ。これで商法総則の資格取得全体像が掴めて、短答・論文両方で使える基盤になるわね。",
+                "speaker": "小川先生",
+                "expression": "happy",
+                "userAnswer": "商人資格",
+                "correctAnswer": "商人資格"
+              }
+            ],
+            "overall": {
+              "passed": false,
+              "summary": "この問題の核心は商法5条の商人資格取得時期よ。事業意思の客観的認識可能性が生じた時点で取得、悪意例外を取引安全の観点から正確に押さえなさい。間違えやすいのは民法の意思表示論との混同だから、判例要件を繰り返し書いて暗記して。総則を固めれば会社法も楽になるわよ！",
+              "speaker": "小川先生",
+              "expression": "serious",
+              "relatedQAs": [
+                "商法.総則.商人資格取得",
+                "商法.取引安全.判例要件"
+              ]
+            }
+          },
+          "answers": {
+            "B1": "取引",
+            "B2": "安全",
+            "B3": "相手方",
+            "B4": "信頼",
+            "B5": "商人資格",
+            "B6": "信頼",
+            "B7": "商人資格",
+            "B8": "悪意",
+            "B9": "商人資格"
+          }
+        }
+      },
+      "updatedAt": "2025-12-13T04:10:28.865Z"
+    }
+  }
+]
